@@ -43,6 +43,7 @@ use App\Livewire\Admin\StaffAttendance;
 use App\Livewire\Admin\StaffSallary;
 use App\Livewire\Admin\LoanManage;
 use App\Livewire\Admin\SalesApproval;
+use App\Livewire\Admin\Expenses;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,6 +103,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
         Route::get('/loan-management', LoanManage::class)->name('loan-management');
         Route::get('/sales-approvals', SalesApproval::class)->name('sales-approvals');
+        Route::get('/expenses', Expenses::class)->name('expenses');
 
         // Uncomment the above line if App\Livewire\Admin\DuePayments exists and is implemented.
 
@@ -109,7 +111,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     });
 
-   
+
     //!! Staff routes
     Route::middleware('role:staff')->prefix('staff')->name('staff.')->group(function () {
         Route::get('/dashboard', StaffDashboard::class)->name('dashboard');
@@ -117,7 +119,6 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/customer-sale-management', CustomerSaleManagement::class)->name('customer-sale-management');
         Route::get('/staff-stock-overview', StaffStockOverview::class)->name('staff-stock-overview');
         Route::get('/due-payments', DuePayments::class)->name('due-payments');
-
     });
 
 
@@ -125,15 +126,14 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
     Route::get('/Productes/export', [ProductsExportController::class, 'export'])->name('Productes.export')->middleware(['auth']);
     Route::get('/staff-sales/export', [StaffSaleExportController::class, 'export'])
-    ->name('staff-sales.export')->middleware(['auth']);
+        ->name('staff-sales.export')->middleware(['auth']);
     // Receipt download (accessible to authenticated users)
     Route::get('/receipts/{id}/download', [App\Http\Controllers\ReceiptController::class, 'download'])
         ->name('receipts.download')
         ->middleware(['auth']);
 
     // Export staff stock details
-    Route::get('/export/staff-stock', function() {
+    Route::get('/export/staff-stock', function () {
         return app(StaffStockDetails::class)->exportToCSV();
     })->name('export.staff-stock');
-
 });

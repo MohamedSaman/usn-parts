@@ -603,7 +603,7 @@
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
                                 </a>
                             </li>
-                           <!-- <li class="nav-item">
+                            <!-- <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-dial-color') }}">
                                     <i class="bi bi-circle-half"></i> <span>Product Dial Color</span>
                                 </a>
@@ -712,6 +712,28 @@
                         </ul>
                     </div>
                 </li>
+                <!-- //add financing -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#stockSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="stockSubmenu">
+                        <i class="bi bi-journal-richtext"></i> <span>Financing</span>
+                    </a>
+                    <div class="collapse" id="stockSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.expenses') }}">
+                                    <i class="bi bi-wallet2"></i> <span>Expenses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-graph-up-arrow"></i> <span>Income</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+
                 <!--<li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.billing-page') }}">
                         <i class="bi bi-person-badge"></i> <span>Staff Stock Assign</span>
@@ -797,7 +819,7 @@
             function initializeSidebar() {
                 // Check if sidebar state is saved in localStorage
                 const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-                
+
                 if (sidebarCollapsed && window.innerWidth >= 768) {
                     sidebar.classList.add('collapsed');
                     topBar.classList.add('collapsed');
@@ -817,7 +839,7 @@
                 if (event) {
                     event.stopPropagation();
                 }
-                
+
                 if (window.innerWidth < 768) {
                     // Mobile behavior
                     sidebar.classList.toggle('show');
@@ -854,7 +876,7 @@
                 window.addEventListener('resize', function() {
                     if (window.innerWidth >= 768) {
                         sidebar.classList.remove('show');
-                        
+
                         // Restore collapsed state on desktop
                         const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
                         if (sidebarCollapsed) {
@@ -881,15 +903,15 @@
                     tab.addEventListener('click', function() {
                         // Remove active class from all tabs
                         tabs.forEach(t => t.classList.remove('active'));
-                        
+
                         // Add active class to clicked tab
                         this.classList.add('active');
-                        
+
                         // Hide all tab contents
                         document.querySelectorAll('.tab-content').forEach(content => {
                             content.classList.remove('active');
                         });
-                        
+
                         // Show the selected tab content
                         const tabId = this.getAttribute('data-tab');
                         document.getElementById(tabId).classList.add('active');
@@ -907,7 +929,7 @@
                     if (window.salesChart) {
                         window.salesChart.destroy();
                     }
-                    
+
                     const ctx = salesChartEl.getContext('2d');
                     window.salesChart = new Chart(ctx, {
                         // Your existing chart configuration
@@ -932,10 +954,10 @@
                     });
                 }
             }
-            
+
             // Initialize chart
             initializeChart();
-            
+
             // Re-initialize chart when Livewire updates
             document.addEventListener('livewire:load', function() {
                 Livewire.hook('message.processed', () => {
@@ -988,12 +1010,12 @@
             function setActiveMenuItem() {
                 // Get current path
                 const currentPath = window.location.pathname;
-                
+
                 // First clear all active states
                 document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                     link.classList.remove('active');
                 });
-                
+
                 // Reset all expanded states for dropdowns
                 document.querySelectorAll('.collapse').forEach(submenu => {
                     submenu.classList.remove('show');
@@ -1001,21 +1023,21 @@
                 document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
                     toggle.setAttribute('aria-expanded', 'false');
                 });
-                
+
                 // Check for exact match first (highest priority)
                 let activeFound = false;
-                
+
                 // First try to find exact matches
                 document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                     const href = link.getAttribute('href');
                     if (href && href !== '#' && !href.startsWith('#')) {
                         const hrefPath = href.replace(/^(https?:\/\/[^\/]+)/, '').split('?')[0];
-                        
+
                         // Exact match gets priority
                         if (currentPath === hrefPath) {
                             link.classList.add('active');
                             activeFound = true;
-                            
+
                             // If this is a submenu link, expand its parent
                             const submenu = link.closest('.collapse');
                             if (submenu) {
@@ -1029,18 +1051,18 @@
                         }
                     }
                 });
-                
+
                 // If no exact match was found, try partial matches
                 if (!activeFound) {
                     document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                         const href = link.getAttribute('href');
                         if (href && href !== '#' && !href.startsWith('#')) {
                             const hrefPath = href.replace(/^(https?:\/\/[^\/]+)/, '').split('?')[0];
-                            
+
                             // Skip root path to avoid false positives
                             if (hrefPath !== '/' && currentPath.includes(hrefPath)) {
                                 link.classList.add('active');
-                                
+
                                 // If this is a submenu link, expand its parent
                                 const submenu = link.closest('.collapse');
                                 if (submenu) {
@@ -1064,11 +1086,11 @@
             function adjustSidebarHeight() {
                 const sidebar = document.querySelector('.sidebar');
                 const windowHeight = window.innerHeight;
-                
+
                 if (sidebar) {
                     // Ensure the sidebar takes the full viewport height
                     sidebar.style.height = windowHeight + 'px';
-                    
+
                     // Check if content is taller than viewport
                     const sidebarContent = sidebar.querySelector('.nav.flex-column');
                     if (sidebarContent && sidebarContent.scrollHeight > windowHeight) {
@@ -1079,7 +1101,7 @@
                     }
                 }
             }
-            
+
             // Run on load and resize
             adjustSidebarHeight();
             window.addEventListener('resize', adjustSidebarHeight);
