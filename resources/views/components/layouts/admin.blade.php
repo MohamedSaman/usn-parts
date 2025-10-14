@@ -140,7 +140,8 @@
         #inventorySubmenu .nav-link,
         #hrSubmenu .nav-link,
         #salesSubmenu .nav-link,
-        #stockSubmenu .nav-link {
+        #stockSubmenu .nav-link,
+        #purchaseSubmenu .nav-link {
             padding: 5px 15px;
             /* Reduced padding for all submenu links */
             font-size: 0.9rem;
@@ -588,11 +589,7 @@
                                     <i class="bi bi-box-seam"></i> <span>Product Details</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-color') }}">
-                                    <i class="bi bi-palette-fill"></i> <span>Product Color</span>
-                                </a>
-                            </li>
+                            
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
                                     <i class="bi bi-tag-fill"></i> <span>Product Brand</span>
@@ -603,7 +600,7 @@
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
                                 </a>
                             </li>
-                            <!-- <li class="nav-item">
+                           <!-- <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-dial-color') }}">
                                     <i class="bi bi-circle-half"></i> <span>Product Dial Color</span>
                                 </a>
@@ -704,36 +701,9 @@
                                     <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                                 </a>
                             </li>
-                            <!--<li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-stock-details') }}">
-                                    <i class="bi bi-person-lines-fill"></i> <span>Staff Stock</span>
-                                </a>
-                            </li>-->
                         </ul>
                     </div>
                 </li>
-                <!-- //add financing -->
-                <li class="nav-item">
-                    <a class="nav-link dropdown-toggle" href="#stockSubmenu" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="stockSubmenu">
-                        <i class="bi bi-journal-richtext"></i> <span>Financing</span>
-                    </a>
-                    <div class="collapse" id="stockSubmenu">
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.expenses') }}">
-                                    <i class="bi bi-wallet2"></i> <span>Expenses</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="">
-                                    <i class="bi bi-graph-up-arrow"></i> <span>Income</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-
                 <!--<li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.billing-page') }}">
                         <i class="bi bi-person-badge"></i> <span>Staff Stock Assign</span>
@@ -754,7 +724,7 @@
 
             <!-- Centered Company Name -->
             <div class="flex-grow-1 d-flex justify-content-center">
-                <h2 class="mb-0"> <b>SAHARA COMPANY </b></h2>
+                <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
             </div>
 
             <!-- Admin dropdown -->
@@ -1005,6 +975,7 @@
             activateParentMenuIfSubmenuActive('a[href="#inventorySubmenu"]', '#inventorySubmenu');
             activateParentMenuIfSubmenuActive('a[href="#salesSubmenu"]', '#salesSubmenu');
             activateParentMenuIfSubmenuActive('a[href="#stockSubmenu"]', '#stockSubmenu');
+            activateParentMenuIfSubmenuActive('a[href="#purchaseSubmenu"]', '#purchaseSubmenu');
 
             // Replace the existing submenu activation logic with this comprehensive function
             function setActiveMenuItem() {

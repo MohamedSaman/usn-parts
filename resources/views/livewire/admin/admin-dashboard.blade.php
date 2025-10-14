@@ -899,8 +899,7 @@
                                 aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <small class="text-muted text-truncate-mobile">{{ number_format($soldStock) }} sold of {{
-                                number_format($assignedStock) }}</small>
+                            <small class="text-muted text-truncate-mobile">{{ number_format($soldStock) }}</small>
                         </div>
                     </div>
 
@@ -941,16 +940,7 @@
                                 assignments</small>
                         </div>
                     </div>
-
-                    <!-- Assigned Stock Info -->
-                    <div class="stat-info mt-3 pt-2 border-top">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted"><i class="bi bi-person-check-fill text-info me-1"></i>
-                                Assigned</small>
-                            <span class="badge bg-info">{{ $assignedStock }}</span>
-                        </div>
-                        <small class="d-block text-end text-info">Rs.{{number_format($totalStaffSalesValue, 2)}}</small>
-                    </div>
+                    
                 </div>
             </div>
         </div>

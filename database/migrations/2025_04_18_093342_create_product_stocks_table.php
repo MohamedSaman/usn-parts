@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('product_stocks', function (Blueprint $table) {
             $table->id();
-            $table->integer('shop_stock')->default(0)->comment('Quantity available in shop');
-            $table->integer('store_stock')->default(0)->comment('Quantity available in warehouse/store');
+            $table->integer('available_stock')->default(0)->comment('Stock available for sale');
             $table->integer('damage_stock')->default(0)->comment('Quantity of damaged items');
             $table->integer('total_stock')->default(0)->comment('Total of all stock types');
-            $table->integer('available_stock')->default(0)->comment('Stock available for sale');
-            $table->foreignId('product_id')->constrained('product_details')->onDelete('cascade');
+            $table->integer('sold_count')->default(0);
+            $table->integer('restocked_quantity')->default(0);
             $table->timestamps();
         });
     }

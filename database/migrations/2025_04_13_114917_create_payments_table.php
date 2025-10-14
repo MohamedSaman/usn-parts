@@ -17,9 +17,6 @@ return new class extends Migration
             $table->decimal('amount', 10, 2);
             $table->enum('payment_method', [
                 'cash',
-                'credit_card',
-                'debit_card',
-                'bank_transfer',
                 'cheque',
                 'credit'
             ])->default('cash');
@@ -29,6 +26,14 @@ return new class extends Migration
             $table->boolean('is_completed')->default(true);
             $table->timestamp('payment_date')->nullable();
             $table->date('due_date')->nullable();
+            $table->string('due_payment_method')->nullable();
+            $table->string('due_payment_attachment')->nullable();
+            $table->enum('status', [
+                'pending',
+                'approved',
+                'rejected',
+                'paid'
+            ])->default('pending');
             $table->timestamps();
         });
     }

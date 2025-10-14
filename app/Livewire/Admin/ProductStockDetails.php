@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\ProductStock;
-use App\Models\ProductDetails;
+use App\Models\ProductDetail;
 
 #[Layout('components.layouts.admin')]
 #[Title('Product Stock Details')]
@@ -14,21 +15,37 @@ class ProductStockDetails extends Component
 {
     public function render()
     {
-        $ProductStocks = ProductStock::join('product_details', 'product_stocks.product_id', '=', 'product_details.id')
-            ->select('product_stocks.*', 'product_details.name as Product_name', 'product_details.brand as Product_brand','product_details.model as Product_model', 'product_details.code as Product_code', 'product_details.image as Product_image')
+        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->select(
+                'product_stocks.*',
+                'product_details.name as Product_name',
+                'brand_lists.brand_name as Product_brand',
+                'product_details.model as Product_model',
+                'product_details.code as Product_code',
+                'product_details.image as Product_image'
+            )
             ->get();
-        return view('livewire.admin.Product-stock-details',[
-            'ProductStocks'=> $ProductStocks
+        return view('livewire.admin.Product-stock-details', [
+            'ProductStocks' => $ProductStocks
         ]);
     }
 
     public function exportToCSV()
     {
         // Get data
-        $ProductStocks = ProductStock::join('product_details', 'product_stocks.product_id', '=', 'product_details.id')
-            ->select('product_details.name', 'product_details.code', 'product_details.brand', 'product_details.model', 
-                    'product_stocks.total_stock', 'product_stocks.available_stock', 
-                    'product_stocks.sold_count', 'product_stocks.damage_stock')
+        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->select(
+                'product_details.name',
+                'product_details.code',
+                'brand_lists.brand_name as brand',
+                'product_details.model',
+                'product_stocks.total_stock',
+                'product_stocks.available_stock',
+                'product_stocks.sold_count',
+                'product_stocks.damage_stock'
+            )
             ->get();
 
         if ($ProductStocks->isEmpty()) {
@@ -38,10 +55,10 @@ class ProductStockDetails extends Component
             ]);
             return;
         }
-        
+
         // Generate filename with date
         $fileName = 'Product_stock_' . date('Y-m-d_His') . '.csv';
-        
+
         // Create CSV content with headers
         $headers = [
             'Name',
@@ -53,11 +70,11 @@ class ProductStockDetails extends Component
             'Sold Count',
             'Damage Stock'
         ];
-        
-        $callback = function() use($ProductStocks, $headers) {
+
+        $callback = function () use ($ProductStocks, $headers) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $headers);
-            
+
             foreach ($ProductStocks as $stock) {
                 $row = [
                     $stock->name ?? '-',
@@ -71,10 +88,10 @@ class ProductStockDetails extends Component
                 ];
                 fputcsv($file, $row);
             }
-            
+
             fclose($file);
         };
-        
+
         // Create response with headers for browser download
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',

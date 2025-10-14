@@ -21,6 +21,8 @@ return new class extends Migration
             $table->decimal('total_amount', 10, 2);
             $table->enum('payment_type', ['full', 'partial'])->default('full');
             $table->enum('payment_status', ['paid', 'partial', 'pending'])->default('paid');
+            $table->enum('status', ['pending', 'confirm', 'rejected'])->default('pending');
+            $table->decimal('due_amount', 10, 2)->default(0);
             $table->text('notes')->nullable();
             $table->timestamps();
         });
