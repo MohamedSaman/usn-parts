@@ -39,10 +39,13 @@ use App\Livewire\Admin\StaffStockDetails as StaffStockDetailsExport;
 use App\Livewire\Staff\StoreBilling as StaffStoreBilling;
 use App\Http\Controllers\ProductsExportController;
 use App\Http\Controllers\StaffSaleExportController;
+use App\Livewire\Admin\GRN;
 use App\Livewire\Admin\StaffAttendance;
 use App\Livewire\Admin\StaffSallary;
 use App\Livewire\Admin\LoanManage;
+use App\Livewire\Admin\Quotation;
 use App\Livewire\Admin\SalesApproval;
+use App\Livewire\Admin\SupplierManage;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,16 +76,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
         Route::get('/Product-list', Products::class)->name('Productes');
-        Route::get('/Product-color', AddProductColor::class)->name('Product-color');
         Route::get('/add-Product-brand', ProductBrandlist::class)->name('Product-brand');
         Route::get('/Product-category', ProductCategorylist::class)->name('Product-category');
-        Route::get('/Product-dial-colorlist', ProductDialColorlist::class)->name('Product-dial-color');
-        Route::get('/Product-glass-type', ProductGlassTypeList::class)->name('Product-glass-type');
-        Route::get('/Product-strap-material', ProductStrapMaterial::class)->name('Product-strap-material');
-        Route::get('/Product-types', ProductTypes::class)->name('Product-types');
-        Route::get('/made-by-list', MadeByList::class)->name('made-by-list');
-        Route::get('/supplier-list', SupplierList::class)->name('supplier-list');
-        Route::get('/Product-strap-colorlist', ProductStrapColorlist::class)->name('Product-strap-color');
         Route::get('/billing-page', BillingPage::class)->name('billing-page');
         Route::get('/manage-admin', ManageAdmin::class)->name('manage-admin');
         Route::get('/manage-staff', ManageStaff::class)->name('manage-staff');
@@ -103,9 +98,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/loan-management', LoanManage::class)->name('loan-management');
         Route::get('/sales-approvals', SalesApproval::class)->name('sales-approvals');
 
-        // Uncomment the above line if App\Livewire\Admin\DuePayments exists and is implemented.
-
-
+        Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
+        Route::get('/quotation', Quotation::class)->name('quotation');
+        Route::get('/goods-receive-note', GRN::class)->name('grn');
 
     });
 

@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -69,10 +70,10 @@ class Products extends Component
     {
         // Cache the supplier ID to avoid repeated database queries
         static $supplierId = null;
-        
+
         if ($supplierId === null) {
             $defaultSupplier = ProductSupplier::latest('id')->first();
-            
+
             if (!$defaultSupplier) {
                 $defaultSupplier = ProductSupplier::create([
                     'name' => 'Default Supplier',
@@ -81,85 +82,55 @@ class Products extends Component
                     'address' => null,
                 ]);
             }
-            
+
             $supplierId = $defaultSupplier->id;
         }
-        
+
         return $supplierId;
     }
     public function render()
     {
         $Productes = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
                 'product_details.id',
                 'product_details.code',
                 'product_details.name as Product_name',
                 'product_details.model',
-                'product_details.color',
-                'product_details.made_by',
-                'product_details.gender',
-                'product_details.type',
-                'product_details.movement',
-                'product_details.dial_color',
-                'product_details.strap_color',
-                'product_details.strap_material',
-                'product_details.case_diameter_mm',
-                'product_details.case_thickness_mm',
-                'product_details.glass_type',
-                'product_details.water_resistance',
-                'product_details.features',
                 'product_details.image',
-                'product_details.warranty',
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.location',
-                'product_details.brand',
-                'product_details.category',
                 'product_details.supplier_id',
-                'product_suppliers.id as supplier_id',
                 'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
-                'product_stocks.shop_stock',
-                'product_stocks.store_stock',
+                'product_stocks.available_stock',
                 'product_stocks.damage_stock',
                 'product_stocks.total_stock',
-                'product_stocks.available_stock'
+                'brand_lists.brand_name as brand',
+                'category_lists.category_name as category'
             )
             ->where('product_details.name', 'like', '%' . $this->search . '%')
             ->orWhere('product_details.code', 'like', '%' . $this->search . '%')
             ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
-            ->orWhere('product_details.brand', 'like', '%' . $this->search . '%')
+            ->orWhere('brand_lists.brand_name', 'like', '%' . $this->search . '%')
             ->orWhere('product_details.status', 'like', '%' . $this->search . '%')
             ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%')
             ->orderBy('product_details.created_at', 'desc')
             ->paginate(10);
 
-        $ProductColors = ProductColors::orderBy('id', 'asc')->get();
-        $ProductStrapColors = StrapColorList::orderBy('id', 'asc')->get();
-        $ProductStrapMaterials = StrapMaterialList::orderBy('id', 'asc')->get();
         $ProductBarnds = BrandList::orderBy('id', 'asc')->get();
         $ProductCategories = CategoryList::orderBy('id', 'asc')->get();
-        $ProductDialColors = DialColorList::orderBy('id', 'asc')->get();
-        $ProductGlassTypes = GlassTypeList::orderBy('id', 'asc')->get();
-        $ProductMadeins = ProductMadeBy::orderBy('id', 'asc')->get();
-        $ProductType = ProductTypeList::orderBy('id', 'asc')->get();
         $ProductSuppliers = ProductSupplier::orderBy('id', 'asc')->get();
         return view('livewire.admin.Productes', [
             'Productes' => $Productes,
-            'ProductColors' => $ProductColors,
-            'ProductStrapColors' => $ProductStrapColors,
-            'ProductStrapMaterials' => $ProductStrapMaterials,
             'ProductCategories' => $ProductCategories,
             'ProductBarnds' => $ProductBarnds,
-            'ProductDialColors' => $ProductDialColors,
-            'ProductGlassTypes' => $ProductGlassTypes,
-            'ProductMadeins' => $ProductMadeins,
-            'ProductType' => $ProductType,
             'ProductSuppliers' => $ProductSuppliers,
         ]);
     }
@@ -169,59 +140,44 @@ class Products extends Component
     {
         // Find the Product with its related data
         $this->ProductDetails = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
                 'product_details.id',
                 'product_details.code',
                 'product_details.name as Product_name',
                 'product_details.model',
-                'product_details.color',
-                'product_details.made_by',
-                'product_details.gender',
-                'product_details.type',
-                'product_details.movement',
-                'product_details.dial_color',
-                'product_details.strap_color',
-                'product_details.strap_material',
-                'product_details.case_diameter_mm',
-                'product_details.case_thickness_mm',
-                'product_details.glass_type',
-                'product_details.water_resistance',
-                'product_details.features',
                 'product_details.image',
-                'product_details.warranty',
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.location',
-                'product_details.brand',
-                'product_details.category',
                 'product_details.supplier_id',
                 'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
-                'product_stocks.shop_stock',
-                'product_stocks.store_stock',
+                'product_stocks.available_stock',
                 'product_stocks.damage_stock',
                 'product_stocks.total_stock',
-                'product_stocks.available_stock'
+                'brand_lists.brand_name as brand',
+                'category_lists.category_name as category'
             )
             ->where('product_details.id', $id)
             ->first();
-// dd($this->ProductDetails);        
+        // dd($this->ProductDetails);        
         $this->js("$('#viewProductModal').modal('show')");
     }
 
     public function createProduct()
     {
         $this->resetForm();
-        
+
         // Set default supplier
         $this->supplier = $this->getDefaultSupplier();
         $this->supplierPrice = 0;
-        
+
         $this->js("
             setTimeout(() => {
                 const modal = new bootstrap.Modal(document.getElementById('createProductModal'));
@@ -247,52 +203,40 @@ class Products extends Component
                 $imagePath = 'images/ProductImages/' . $imageName;
             }
 
-            $Product = ProductDetail::create([
-                'code' => $this->code,
-                'name' => $this->name,
-                'model' => $this->model,
-                'color' => $this->color,
-                'made_by' => $this->madeBy,
-                'gender' => $this->gender,
-                'type' => $this->type,
-                'movement' => null,
-                'dial_color' => null,
-                'strap_color' => null,
-                'strap_material' => $this->strapMaterial,
-                'case_diameter_mm' => 0,
-                'case_thickness_mm' => 0,
-                'glass_type' => null,
-                'water_resistance' => null,
-                'features' => $this->features,
-                'image' => $imagePath,
-                'warranty' => null,
-                'description' => $this->description,
-                'barcode' => $this->barcode,
-                'status' => $this->status,
-                'location' => null,
-                'brand' => $this->brand,
-                'category' => $this->category,
-                'supplier_id' => $this->supplier
-            ]);
-
-            ProductPrice::create([
+            // Create price record first
+            $price = ProductPrice::create([
                 'supplier_price' => $this->supplierPrice ?? 0,
                 'selling_price' => $this->sellingPrice,
-                'discount_price' => $this->discountPrice,
-                'product_id' => $Product->id
+                'discount_price' => $this->discountPrice
             ]);
 
+            // Create stock record
             $shopStock = (int) $this->shopStock;
             $storeStock = (int) $this->storeStock;
             $damageStock = (int) $this->damageStock;
 
-            ProductStock::create([
-                'shop_stock' => $shopStock,
-                'store_stock' => $storeStock,
+            $stock = ProductStock::create([
+                'available_stock' => $shopStock + $storeStock,
                 'damage_stock' => $damageStock,
                 'total_stock' => $shopStock + $storeStock + $damageStock,
-                'available_stock' => $shopStock + $storeStock,
-                'product_id' => $Product->id
+                'sold_count' => 0,
+                'restocked_quantity' => 0
+            ]);
+
+            // Create product with references to price and stock
+            $Product = ProductDetail::create([
+                'code' => $this->code,
+                'name' => $this->name,
+                'model' => $this->model,
+                'image' => $imagePath,
+                'description' => $this->description,
+                'barcode' => $this->barcode,
+                'status' => $this->status,
+                'brand_id' => $this->brand,
+                'category_id' => $this->category,
+                'stock_id' => $stock->id,
+                'price_id' => $price->id,
+                'supplier_id' => $this->supplier
             ]);
 
             DB::commit();
@@ -302,7 +246,6 @@ class Products extends Component
             $this->dispatch('Product-created');
             $this->js("Swal.fire('Success!', 'Product created successfully', 'success')");
             return redirect()->route('admin.Productes');
-
         } catch (Exception $e) {
             DB::rollBack();
             logger('Error creating Product: ' . $e->getMessage());
@@ -312,14 +255,13 @@ class Products extends Component
                 text: '" . $e->getMessage() . "',
             })");
         }
-        
     }
 
     public $editId;
     public $editCode;
     public $editName;
     public $editModel;
-    public $editBrand;    
+    public $editBrand;
     public $editColor;
     public $editMadeBy;
     public $editCategory;
@@ -355,42 +297,28 @@ class Products extends Component
         $this->resetEditImage();
         // Find the Product with its related data
         $Product = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
                 'product_details.id',
                 'product_details.code',
                 'product_details.name as Product_name',
                 'product_details.model',
-                'product_details.color',
-                'product_details.made_by',
-                'product_details.gender',
-                'product_details.type',
-                'product_details.movement',
-                'product_details.dial_color',
-                'product_details.strap_color',
-                'product_details.strap_material',
-                'product_details.case_diameter_mm',
-                'product_details.case_thickness_mm',
-                'product_details.glass_type',
-                'product_details.water_resistance',
-                'product_details.features',
                 'product_details.image',
-                'product_details.warranty',
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.location',
-                'product_details.brand',
-                'product_details.category',
                 'product_details.supplier_id',
                 'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
-                'product_stocks.shop_stock',
-                'product_stocks.store_stock',
-                'product_stocks.damage_stock'
+                'product_stocks.available_stock',
+                'product_stocks.damage_stock',
+                'brand_lists.brand_name as brand',
+                'category_lists.category_name as category'
             )
             ->where('product_details.id', $id)
             ->first();
@@ -401,28 +329,12 @@ class Products extends Component
         $this->editName = $Product->Product_name;
         $this->editModel = $Product->model;
         $this->editBrand = $Product->brand;
-        $this->editColor = $Product->color;
-        $this->editMadeBy = $Product->made_by;
 
         // Classification
         $this->editCategory = $Product->category;
-        $this->editGender = $Product->gender;
-        $this->editType = $Product->type;
-
-        // Technical Specifications
-        $this->editMovement = $Product->movement;
-        $this->editDialColor = $Product->dial_color;
-        $this->editStrapColor = $Product->strap_color;
-        $this->editStrapMaterial = $Product->strap_material;
-        $this->editCaseDiameter = $Product->case_diameter_mm;
-        $this->editCaseThickness = $Product->case_thickness_mm;
-        $this->editGlassType = $Product->glass_type;
-        $this->editWaterResistance = $Product->water_resistance;
-        $this->editFeatures = $Product->features;
 
         // Product Information
         $this->existingImage = $Product->image;
-        $this->editWarranty = $Product->warranty;
         $this->editBarcode = $Product->barcode;
         $this->editDescription = $Product->description;
 
@@ -434,11 +346,8 @@ class Products extends Component
         // Pricing and Inventory
         $this->editSellingPrice = $Product->selling_price;
         $this->editDiscountPrice = $Product->discount_price;
-        $this->editShopStock = $Product->shop_stock;
-        $this->editStoreStock = $Product->store_stock;
         $this->editDamageStock = $Product->damage_stock;
         $this->editStatus = $Product->status;
-        $this->editLocation = $Product->location;
 
         $this->dispatch('open-edit-modal');
     }
@@ -460,54 +369,38 @@ class Products extends Component
             }
 
             $code = $this->editCode();
-            
+
+            // Get the product to find its price_id and stock_id
+            $product = ProductDetail::find($id);
+
             // Update the main Product record
             ProductDetail::where('id', $id)->update([
                 'code' => $code,
                 'name' => $this->editName,
                 'model' => $this->editModel,
-                'color' => $this->editColor,
-                'made_by' => $this->editMadeBy,
-                'brand' => $this->editBrand,
-                'category' => $this->editCategory,
-                'gender' => $this->editGender,
-                'type' => $this->editType,
-                'movement' => $this->editMovement,
-                'dial_color' => $this->editDialColor,
-                'strap_color' => $this->editStrapColor,
-                'strap_material' => $this->editStrapMaterial,
-                'case_diameter_mm' => $this->editCaseDiameter,
-                'case_thickness_mm' => $this->editCaseThickness,
-                'glass_type' => $this->editGlassType,
-                'water_resistance' => $this->editWaterResistance,
-                'features' => $this->editFeatures,
-                'warranty' => $this->editWarranty,
                 'barcode' => $this->editBarcode,
                 'description' => $this->editDescription,
                 'image' => $imagePath,
                 'status' => $this->editStatus,
-                'location' => $this->editLocation,
-                'supplier_id' => $this->editSupplier ?? $this->getDefaultSupplier(), // Use the correct supplier ID
+                'brand_id' => $this->editBrand,
+                'category_id' => $this->editCategory,
+                'supplier_id' => $this->editSupplier ?? $this->getDefaultSupplier(),
             ]);
 
-            // Update the price record
-            ProductPrice::where('product_id', $this->editId)->update([
+            // Update the price record using the price_id from product
+            ProductPrice::where('id', $product->price_id)->update([
                 'supplier_price' => $this->editSupplierPrice ?? 0,
                 'selling_price' => $this->editSellingPrice,
                 'discount_price' => $this->editDiscountPrice,
             ]);
 
-            // Update stock record
-            $shopStock = (int) $this->editShopStock;
-            $storeStock = (int) $this->editStoreStock;
+            // Update stock record using the stock_id from product
             $damageStock = (int) $this->editDamageStock;
-            
-            ProductStock::where('product_id', $this->editId)->update([
-                'shop_stock' => $shopStock,
-                'store_stock' => $storeStock,
+
+            ProductStock::where('id', $product->stock_id)->update([
                 'damage_stock' => $damageStock,
-                'total_stock' => $shopStock + $storeStock + $damageStock,
-                'available_stock' => $shopStock + $storeStock
+                'total_stock' => $damageStock, // Simplified for now
+                'available_stock' => 0 // Will be calculated separately
             ]);
 
             DB::commit();
@@ -520,7 +413,7 @@ class Products extends Component
             DB::rollBack();
             $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
-    }   
+    }
 
     public function duplicateProduct()
     {
@@ -599,7 +492,6 @@ class Products extends Component
             $this->js('$("#editProductModal").modal("hide")');
             $this->resetForm();
             $this->js("Swal.fire('Success!', 'Product duplicated successfully', 'success')");
-
         } catch (Exception $e) {
             DB::rollBack();
             logger('Error duplicating Product: ' . $e->getMessage());
@@ -639,15 +531,22 @@ class Products extends Component
     {
         try {
             DB::beginTransaction();
-            
+
+            // Get the product to find its price_id and stock_id
+            $product = ProductDetail::find($this->deleteId);
+
             // First delete any related sale_items
             DB::table('sale_items')->where('product_id', $this->deleteId)->delete();
-            
-            // Then delete the Product and its related data
-            ProductStock::where('product_id', $this->deleteId)->delete();
-            ProductPrice::where('product_id', $this->deleteId)->delete();
+
+            // Delete the Product first
             ProductDetail::where('id', $this->deleteId)->delete();
-            
+
+            // Then delete the related price and stock records
+            if ($product) {
+                ProductStock::where('id', $product->stock_id)->delete();
+                ProductPrice::where('id', $product->price_id)->delete();
+            }
+
             DB::commit();
             return true;
         } catch (Exception $e) {
@@ -777,14 +676,38 @@ class Products extends Component
     {
         // Enhanced reset that clears all relevant properties
         $this->reset([
-            'code', 'name', 'model', 'color', 'madeBy', 'category', 'gender',
-            'type', 'movement', 'dialColor', 'strapColor', 'strapMaterial',
-            'caseDiameter', 'caseThickness', 'glassType', 'waterResistance',
-            'features', 'warranty', 'description', 'barcode', 'status',
-            'location', 'sellingPrice', 'discountPrice', 'shopStock',
-            'storeStock', 'damageStock', 'image', 'supplier', 'supplierPrice'
+            'code',
+            'name',
+            'model',
+            'color',
+            'madeBy',
+            'category',
+            'gender',
+            'type',
+            'movement',
+            'dialColor',
+            'strapColor',
+            'strapMaterial',
+            'caseDiameter',
+            'caseThickness',
+            'glassType',
+            'waterResistance',
+            'features',
+            'warranty',
+            'description',
+            'barcode',
+            'status',
+            'location',
+            'sellingPrice',
+            'discountPrice',
+            'shopStock',
+            'storeStock',
+            'damageStock',
+            'image',
+            'supplier',
+            'supplierPrice'
         ]);
-        
+
         // Reset validation errors
         $this->resetValidation();
         $this->resetErrorBag();
@@ -805,11 +728,11 @@ class Products extends Component
                 'icon' => null
             ];
         }
-        
+
         $extension = strtolower($file->getClientOriginalExtension());
         $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif']);
         $isPdf = $extension === 'pdf';
-        
+
         $result = [
             'type' => $isImage ? 'image' : ($isPdf ? 'pdf' : 'other'),
             'name' => $file->getClientOriginalName(),
@@ -817,7 +740,7 @@ class Products extends Component
             'icon' => $isImage ? 'bi-file-image' : ($isPdf ? 'bi-file-earmark-pdf' : 'bi-file'),
             'icon_color' => $isImage ? 'text-primary' : ($isPdf ? 'text-danger' : 'text-secondary')
         ];
-        
+
         // Only try to get temporary URL for images
         if ($isImage) {
             try {
@@ -827,7 +750,7 @@ class Products extends Component
                 $result['url'] = null;
             }
         }
-        
+
         return $result;
     }
 

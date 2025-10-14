@@ -14,10 +14,13 @@ return new class extends Migration
         Schema::create('product_suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('businessname')->nullable();
             $table->string('contact')->nullable();
             $table->text('address')->nullable();
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->enum('status',['active','inactive'])->default('active');
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }

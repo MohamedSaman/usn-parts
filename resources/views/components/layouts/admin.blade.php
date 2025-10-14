@@ -140,7 +140,8 @@
         #inventorySubmenu .nav-link,
         #hrSubmenu .nav-link,
         #salesSubmenu .nav-link,
-        #stockSubmenu .nav-link {
+        #stockSubmenu .nav-link,
+        #purchaseSubmenu .nav-link {
             padding: 5px 15px;
             /* Reduced padding for all submenu links */
             font-size: 0.9rem;
@@ -588,11 +589,7 @@
                                     <i class="bi bi-box-seam"></i> <span>Product Details</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-color') }}">
-                                    <i class="bi bi-palette-fill"></i> <span>Product Color</span>
-                                </a>
-                            </li>
+                            
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
                                     <i class="bi bi-tag-fill"></i> <span>Product Brand</span>
@@ -601,36 +598,6 @@
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-category') }}">
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
-                                </a>
-                            </li>
-                           <!-- <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-dial-color') }}">
-                                    <i class="bi bi-circle-half"></i> <span>Product Dial Color</span>
-                                </a>
-                            </li> -->
-                            <!-- <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-glass-type') }}">
-                                    <i class="bi bi-diamond"></i> <span>Product Glass Type</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-strap-color') }}">
-                                    <i class="bi bi-paint-bucket"></i> <span>Product Strap Color</span>
-                                </a>
-                            </li> -->
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-strap-material') }}">
-                                    <i class="bi bi-link"></i> <span>Product Material</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-types') }}">
-                                    <i class="bi bi-grid-3x3-gap"></i> <span>Product Type</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.made-by-list') }}">
-                                    <i class="bi bi-flag"></i> <span>Product Made By</span>
                                 </a>
                             </li>
                         </ul>
@@ -704,22 +671,40 @@
                                     <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                                 </a>
                             </li>
-                            <!--<li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-stock-details') }}">
-                                    <i class="bi bi-person-lines-fill"></i> <span>Staff Stock</span>
-                                </a>
-                            </li>-->
                         </ul>
                     </div>
                 </li>
-                <!--<li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.billing-page') }}">
-                        <i class="bi bi-person-badge"></i> <span>Staff Stock Assign</span>
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#purchaseSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="purchaseSubmenu">
+                        <i class="bi bi-key"></i><span>Purchase</span>
                     </a>
-                </li>-->
-                <a class="nav-link" href="{{ route('admin.store-billing') }}">
-                    <i class="bi bi-cash"></i> <span>Store Billing</span>
-                </a>
+                    <div class="collapse" id="purchaseSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.supplier-management') }}">
+                                    <i class="bi bi-briefcase"></i> <span>Supplier Manage</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.quotation') }}">
+                                    <i class="bi bi-receipt"></i> <span>Quotation</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.grn') }}">
+                                    <i class="bi bi-box-seam"></i><span>GRN</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <a class="nav-link" href="{{ route('admin.store-billing') }}">
+                        <i class="bi bi-cash"></i> <span>Store Billing</span>
+                    </a>
+                </li>
+
             </ul>
         </div>
 
@@ -732,7 +717,7 @@
 
             <!-- Centered Company Name -->
             <div class="flex-grow-1 d-flex justify-content-center">
-                <h2 class="mb-0"> <b>SAHARA COMPANY </b></h2>
+                <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
             </div>
 
             <!-- Admin dropdown -->
@@ -797,7 +782,7 @@
             function initializeSidebar() {
                 // Check if sidebar state is saved in localStorage
                 const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
-                
+
                 if (sidebarCollapsed && window.innerWidth >= 768) {
                     sidebar.classList.add('collapsed');
                     topBar.classList.add('collapsed');
@@ -817,7 +802,7 @@
                 if (event) {
                     event.stopPropagation();
                 }
-                
+
                 if (window.innerWidth < 768) {
                     // Mobile behavior
                     sidebar.classList.toggle('show');
@@ -854,7 +839,7 @@
                 window.addEventListener('resize', function() {
                     if (window.innerWidth >= 768) {
                         sidebar.classList.remove('show');
-                        
+
                         // Restore collapsed state on desktop
                         const sidebarCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
                         if (sidebarCollapsed) {
@@ -881,15 +866,15 @@
                     tab.addEventListener('click', function() {
                         // Remove active class from all tabs
                         tabs.forEach(t => t.classList.remove('active'));
-                        
+
                         // Add active class to clicked tab
                         this.classList.add('active');
-                        
+
                         // Hide all tab contents
                         document.querySelectorAll('.tab-content').forEach(content => {
                             content.classList.remove('active');
                         });
-                        
+
                         // Show the selected tab content
                         const tabId = this.getAttribute('data-tab');
                         document.getElementById(tabId).classList.add('active');
@@ -907,7 +892,7 @@
                     if (window.salesChart) {
                         window.salesChart.destroy();
                     }
-                    
+
                     const ctx = salesChartEl.getContext('2d');
                     window.salesChart = new Chart(ctx, {
                         // Your existing chart configuration
@@ -932,10 +917,10 @@
                     });
                 }
             }
-            
+
             // Initialize chart
             initializeChart();
-            
+
             // Re-initialize chart when Livewire updates
             document.addEventListener('livewire:load', function() {
                 Livewire.hook('message.processed', () => {
@@ -983,17 +968,18 @@
             activateParentMenuIfSubmenuActive('a[href="#inventorySubmenu"]', '#inventorySubmenu');
             activateParentMenuIfSubmenuActive('a[href="#salesSubmenu"]', '#salesSubmenu');
             activateParentMenuIfSubmenuActive('a[href="#stockSubmenu"]', '#stockSubmenu');
+            activateParentMenuIfSubmenuActive('a[href="#purchaseSubmenu"]', '#purchaseSubmenu');
 
             // Replace the existing submenu activation logic with this comprehensive function
             function setActiveMenuItem() {
                 // Get current path
                 const currentPath = window.location.pathname;
-                
+
                 // First clear all active states
                 document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                     link.classList.remove('active');
                 });
-                
+
                 // Reset all expanded states for dropdowns
                 document.querySelectorAll('.collapse').forEach(submenu => {
                     submenu.classList.remove('show');
@@ -1001,21 +987,21 @@
                 document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
                     toggle.setAttribute('aria-expanded', 'false');
                 });
-                
+
                 // Check for exact match first (highest priority)
                 let activeFound = false;
-                
+
                 // First try to find exact matches
                 document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                     const href = link.getAttribute('href');
                     if (href && href !== '#' && !href.startsWith('#')) {
                         const hrefPath = href.replace(/^(https?:\/\/[^\/]+)/, '').split('?')[0];
-                        
+
                         // Exact match gets priority
                         if (currentPath === hrefPath) {
                             link.classList.add('active');
                             activeFound = true;
-                            
+
                             // If this is a submenu link, expand its parent
                             const submenu = link.closest('.collapse');
                             if (submenu) {
@@ -1029,18 +1015,18 @@
                         }
                     }
                 });
-                
+
                 // If no exact match was found, try partial matches
                 if (!activeFound) {
                     document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                         const href = link.getAttribute('href');
                         if (href && href !== '#' && !href.startsWith('#')) {
                             const hrefPath = href.replace(/^(https?:\/\/[^\/]+)/, '').split('?')[0];
-                            
+
                             // Skip root path to avoid false positives
                             if (hrefPath !== '/' && currentPath.includes(hrefPath)) {
                                 link.classList.add('active');
-                                
+
                                 // If this is a submenu link, expand its parent
                                 const submenu = link.closest('.collapse');
                                 if (submenu) {
@@ -1064,11 +1050,11 @@
             function adjustSidebarHeight() {
                 const sidebar = document.querySelector('.sidebar');
                 const windowHeight = window.innerHeight;
-                
+
                 if (sidebar) {
                     // Ensure the sidebar takes the full viewport height
                     sidebar.style.height = windowHeight + 'px';
-                    
+
                     // Check if content is taller than viewport
                     const sidebarContent = sidebar.querySelector('.nav.flex-column');
                     if (sidebarContent && sidebarContent.scrollHeight > windowHeight) {
@@ -1079,7 +1065,7 @@
                     }
                 }
             }
-            
+
             // Run on load and resize
             adjustSidebarHeight();
             window.addEventListener('resize', adjustSidebarHeight);

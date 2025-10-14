@@ -362,41 +362,6 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="color" class="form-label fw-bold">Color:</label>
-                                                <select class="form-select" id="color" wire:model="color">
-                                                    <option value="">Select Color</option>
-                                                    @foreach ($ProductColors as $ProductColor)
-                                                        <option value="{{ $ProductColor->name }}">
-                                                            {{ $ProductColor->name }} ({{ $ProductColor->hex_code }})
-
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('color')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="madeBy" class="form-label fw-bold">Made By:</label>
-                                                <select class="form-select" id="madeBy" wire:model="madeBy">
-                                                    <option value="">Select Country</option>
-                                                    @foreach ($ProductMadeins as $madein)
-                                                        <option value="{{ $madein->country_name }}">
-                                                            {{ $madein->country_name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('madeBy')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -423,36 +388,7 @@
                                                 @enderror
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="gender" class="form-label fw-bold">Gender:</label>
-                                                <select class="form-select" id="gender" wire:model="gender">
-                                                    <option value="">Select Gender</option>
-                                                    <option value="male">Men</option>
-                                                    <option value="female">Women</option>
-                                                    <option value="unisex">Unisex</option>
-                                                </select>
-                                                @error('gender')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="type" class="form-label fw-bold">Type:</label>
-                                                <select class="form-select" id="type" wire:model="type">
-                                                    <option value="">Select Type</option>
-                                                    @foreach ($ProductType as $type)
-                                                        <option value="{{ $type->type_name }}">
-                                                            {{ $type->type_name }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('type')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -526,26 +462,6 @@
                                         </div>
                                     </div> --}}
                                     <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="strapMaterial" class="form-label fw-bold">Material:</label>
-                                                <select class="form-select" id="strapMaterial"
-                                                    wire:model="strapMaterial">
-                                                    <option value="">Select Material</option>
-                                                    @foreach ($ProductStrapMaterials as $material)
-                                                        <option value="{{ $material->strap_material_name }}">
-                                                            {{ $material->strap_material_name }}
-                                                            @if (isset($material->material_quality))
-                                                                ({{ $material->material_quality }} Quality)
-                                                            @endif
-                                                        </option>
-                                                    @endforeach
-                                                </select>
-                                                @error('strapMaterial')
-                                                    <span class="text-danger">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
                                         <div class="col-md-4">
                                             <div class="mb-3">
                                                 <label for="features" class="form-label fw-bold">Features:</label>
@@ -960,11 +876,7 @@
                                                         <p class="text-muted mb-1">Category</p>
                                                         <h5 class="text-primary">{{ $ProductDetails->category }}</h5>
                                                     </div>
-                                                    <div class="col-md-6">
-                                                        <p class="text-muted mb-1">Gender</p>
-                                                        <h5 class="text-primary">{{ ucfirst($ProductDetails->gender) }}
-                                                        </h5>
-                                                    </div>
+                                                  
                                                 </div>
 
                                                 <div class="mb-4">
@@ -1485,38 +1397,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="editColor" class="form-label fw-bold">Color:</label>
-                                        <select class="form-select" id="editColor" wire:model="editColor">
-                                            <option value="">Select Color</option>
-                                            @foreach ($ProductColors as $ProductColor)
-                                                <option value="{{ $ProductColor->name }}">
-                                                    {{ $ProductColor->name }} ({{ $ProductColor->hex_code }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('editColor')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="editMadeBy" class="form-label fw-bold">Made By:</label>
-                                        <select class="form-select" id="editMadeBy" wire:model="editMadeBy">
-                                            <option value="">Select Country</option>
-                                            @foreach ($ProductMadeins as $madein)
-                                                <option value="{{ $madein->country_name }}">
-                                                    {{ $madein->country_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('editMadeBy')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
+                        
                             </div>
                         </div>
                     </div>
@@ -1544,35 +1425,7 @@
                                         @enderror
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="editGender" class="form-label fw-bold">Gender:</label>
-                                        <select class="form-select" id="editGender" wire:model="editGender">
-                                            <option value="male">Men</option>
-                                            <option value="female">Women</option>
-                                            <option value="unisex">Unisex</option>
-                                        </select>
-                                        @error('editGender')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="mb-3">
-                                        <label for="editType" class="form-label fw-bold">Type:</label>
-                                        <select class="form-select" id="editType" wire:model="editType">
-                                            <option value="">Select Type</option>
-                                            @foreach ($ProductType as $type)
-                                                <option value="{{ $type->type_name }}">
-                                                    {{ $type->type_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('editType')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
+                               
                             </div>
                         </div>
                     </div>
@@ -1584,27 +1437,6 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="editStrapMaterial" class="form-label fw-bold">Product
-                                            Material:</label>
-                                        <select class="form-select" id="editStrapMaterial"
-                                            wire:model="editStrapMaterial">
-                                            <option value="">Select Product Material</option>
-                                            @foreach ($ProductStrapMaterials as $material)
-                                                <option value="{{ $material->strap_material_name }}">
-                                                    {{ $material->strap_material_name }}
-                                                    @if (isset($material->material_quality))
-                                                        ({{ $material->material_quality }} Quality)
-                                                    @endif
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('editStrapMaterial')
-                                            <span class="text-danger">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="editFeatures" class="form-label fw-bold">Features:</label>

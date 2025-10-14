@@ -10,7 +10,7 @@ class ProductPrice extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['supplier_price', 'selling_price', 'discount_price', 'product_id'];
+    protected $fillable = ['supplier_price', 'selling_price', 'discount_price'];
     
     /**
      * Get the Product that owns this price information

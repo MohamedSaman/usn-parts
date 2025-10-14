@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_made_bies', function (Blueprint $table) {
+        Schema::create('product_prices', function (Blueprint $table) {
             $table->id();
-            $table->string('country_name')->unique();
+            $table->decimal('supplier_price', 10, 2)->comment('Price from supplier');
+            $table->decimal('selling_price', 10, 2)->comment('Regular selling price');
+            $table->decimal('discount_price', 10, 2)->nullable()->comment('Discounted price if applicable');
+            
             $table->timestamps();
         });
     }
@@ -23,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_made_bies');
+        Schema::dropIfExists('product_prices');
     }
 };

@@ -10,10 +10,7 @@ class ProductStock extends Model
 {
     use HasFactory;
     
-    protected $fillable = [
-        'shop_stock', 'store_stock', 'damage_stock', 
-        'total_stock', 'available_stock', 'product_id','sold_count','assigned_stock',
-    ];
+    protected $fillable = [ 'available_stock',  'damage_stock', 'total_stock','sold_count','restocked_quantity',];
     
     /**
      * Get the Product that owns this stock information
@@ -28,8 +25,8 @@ class ProductStock extends Model
      */
     public function updateTotals()
     {
-        $this->total_stock = $this->shop_stock + $this->store_stock + $this->damage_stock;
-        $this->available_stock = $this->shop_stock + $this->store_stock;
+        $this->total_stock = $this->available_stock + $this->damage_stock;
+        $this->available_stock = $this->available_stock;
         $this->save();
     }
 }

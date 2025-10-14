@@ -27,7 +27,6 @@ class AdminDashboard extends Component
     public $partialPaidAmount = 0;
 
     public $totalStock = 0;
-    public $assignedStock = 0;
     public $soldStock = 0;
     public $availableStock = 0;
     public $assignmentPercentage = 0;
@@ -75,7 +74,7 @@ class AdminDashboard extends Component
     {
         // Restore active tab from session if available
         $this->activeTab = session('activeTab', 'overview');
-        
+
         // Get sales statistics
         $salesStats = Sale::select(
             DB::raw('SUM(total_amount) as total_sales'),
@@ -100,8 +99,8 @@ class AdminDashboard extends Component
             '=',
             now()->subMonth()->month
         )->select(
-                DB::raw('SUM(total_amount - due_amount) as revenue')
-            )->first();
+            DB::raw('SUM(total_amount - due_amount) as revenue')
+        )->first();
 
         $this->previousMonthRevenue = $previousMonthSales->revenue ?? 0;
 
@@ -134,43 +133,41 @@ class AdminDashboard extends Component
         $stockStats = DB::table('product_stocks')
             ->select(
                 DB::raw('SUM(total_stock) as total_stock'),
-                DB::raw('SUM(assigned_stock) as assigned_stock'),
                 DB::raw('SUM(sold_count) as sold_stock'),
                 DB::raw('SUM(damage_stock) as damaged_stock'),
                 DB::raw('SUM(available_stock) as available_stock')
             )->first();
 
         $this->totalStock = $stockStats->total_stock ?? 0;
-        $this->assignedStock = $stockStats->assigned_stock ?? 0;
+
         $this->soldStock = $stockStats->sold_stock ?? 0;
         $this->damagedStock = $stockStats->damaged_stock ?? 0;
         $this->availableStock = $stockStats->available_stock ?? 0;
 
         // Calculate percentages
-        if ($this->assignedStock > 0) {
-            $this->soldPercentage = round(($this->soldStock / $this->assignedStock) * 100, 1);
-        }
-
         if ($this->totalStock > 0) {
-            $this->assignmentPercentage = round(($this->assignedStock / $this->totalStock) * 100, 1);
+            $this->soldPercentage = round(($this->soldStock / $this->totalStock) * 100, 1);
         }
 
         // Calculate damaged inventory value
-        $damagedValue = DB::table('product_stocks')
-            ->join('product_prices', 'product_stocks.product_id', '=', 'product_prices.product_id')
+        $damagedValue = DB::table('product_details')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
             ->select(DB::raw('SUM(product_stocks.damage_stock * product_prices.supplier_price) as damaged_value'))
             ->first();
 
         $this->damagedValue = $damagedValue->damaged_value ?? 0;
 
         // Calculate total inventory value (all stocks)
-        $totalInventoryValue = DB::table('product_stocks')
-            ->join('product_prices', 'product_stocks.product_id', '=', 'product_prices.product_id')
+        $totalInventoryValue = DB::table('product_details')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
             ->select(DB::raw('SUM(product_stocks.available_stock * product_prices.supplier_price) as total_value'))
             ->first();
 
-        $totalAvailableInventory = DB::table('product_stocks')
-            ->join('product_prices', 'product_stocks.product_id', '=', 'product_prices.product_id')
+        $totalAvailableInventory = DB::table('product_details')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
             ->select(DB::raw('SUM(product_stocks.available_stock * product_prices.supplier_price) as total_value'))
             ->first();
 
@@ -190,7 +187,7 @@ class AdminDashboard extends Component
         $staffSalesTotal = DB::table('staff_sales')
             ->select(DB::raw('SUM(total_value) as total_value'))
             ->first();
-            
+
         $this->totalStaffSalesValue = $staffSalesTotal->total_value ?? 0;
 
         // Fetch recent sales
@@ -226,7 +223,7 @@ class AdminDashboard extends Component
             ->orderBy('year', 'asc')
             ->orderBy('month', 'asc')
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'year' => $item->year,
                     'month' => $item->month,
@@ -248,7 +245,7 @@ class AdminDashboard extends Component
             )
             ->groupBy('payment_status')
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'payment_status' => $item->payment_status,
                     'count' => $item->count,
@@ -270,7 +267,7 @@ class AdminDashboard extends Component
             ->orderBy('year', 'asc')
             ->orderBy('month', 'asc')
             ->get()
-            ->map(function($item) {
+            ->map(function ($item) {
                 return [
                     'year' => $item->year,
                     'month' => $item->month,
@@ -313,13 +310,14 @@ class AdminDashboard extends Component
     {
         // Join Productes and stock tables to get full inventory data
         $this->ProductInventory = DB::table('product_details')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->select(
                 'product_details.id',
                 'product_details.code',
                 'product_details.name',
                 'product_details.model',
-                'product_details.brand',
+                'brand_lists.brand_name as brand',
                 'product_stocks.available_stock',
                 'product_stocks.total_stock',
                 'product_stocks.damage_stock'
@@ -334,8 +332,9 @@ class AdminDashboard extends Component
         // Get total sales per brand
         $this->brandSales = DB::table('sale_items')
             ->join('product_details', 'sale_items.product_id', '=', 'product_details.id')
-            ->select('product_details.brand', DB::raw('SUM(sale_items.total) as total_sales'))
-            ->groupBy('product_details.brand')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->select('brand_lists.brand_name as brand', DB::raw('SUM(sale_items.total) as total_sales'))
+            ->groupBy('brand_lists.id', 'brand_lists.brand_name')
             ->orderBy('total_sales', 'desc')
             ->get()
             ->toArray();
@@ -357,7 +356,7 @@ class AdminDashboard extends Component
             )
             ->groupBy('users.id', 'users.name', 'users.email')
             ->get()
-            ->map(function($staff) {
+            ->map(function ($staff) {
                 // Calculate due amount from sales table
                 $salesInfo = DB::table('sales')
                     ->where('user_id', $staff->id)
@@ -366,18 +365,18 @@ class AdminDashboard extends Component
                         DB::raw('COALESCE(SUM(due_amount), 0) as total_due')
                     )
                     ->first();
-                
+
                 $staff->total_sales = $salesInfo->total_sales ?? 0;
                 $staff->total_due = $salesInfo->total_due ?? 0;
                 $staff->collected_amount = $staff->total_sales - $staff->total_due;
-                
+
                 // Calculate percentages for progress bars
-                $staff->sales_percentage = $staff->assigned_value > 0 ? 
+                $staff->sales_percentage = $staff->assigned_value > 0 ?
                     round(($staff->sold_value / $staff->assigned_value) * 100, 1) : 0;
-                
-                $staff->payment_percentage = $staff->total_sales > 0 ? 
+
+                $staff->payment_percentage = $staff->total_sales > 0 ?
                     round(($staff->collected_amount / $staff->total_sales) * 100, 1) : 0;
-                    
+
                 return $staff;
             });
     }
@@ -482,8 +481,9 @@ class AdminDashboard extends Component
     public function getInventoryReport($start = null, $end = null)
     {
         $query = DB::table('product_details')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
-            ->select('product_details.name', 'product_details.model', 'product_details.brand', 'product_stocks.*')
+            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->select('product_details.name', 'product_details.model', 'brand_lists.brand_name as brand', 'product_stocks.*')
             ->orderBy('product_stocks.available_stock', 'desc');
         // Inventory may not have a date, so skip date filter or add if you have a date column
         return $query->get();
