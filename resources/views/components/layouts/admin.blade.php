@@ -708,10 +708,39 @@
                     <a class="nav-link" href="{{ route('admin.billing-page') }}">
                         <i class="bi bi-person-badge"></i> <span>Staff Stock Assign</span>
                     </a>
+<<<<<<< HEAD
                 </li>-->
                 <a class="nav-link" href="{{ route('admin.store-billing') }}">
                     <i class="bi bi-cash"></i> <span>Store Billing</span>
                 </a>
+=======
+                    <div class="collapse" id="purchaseSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.supplier-management') }}">
+                                    <i class="bi bi-briefcase"></i> <span>Supplier Manage</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.quotation') }}">
+                                    <i class="bi bi-receipt"></i> <span>Purchase Order</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.grn') }}">
+                                    <i class="bi bi-box-seam"></i><span>GRN</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <a class="nav-link" href="{{ route('admin.store-billing') }}">
+                        <i class="bi bi-cash"></i> <span>Store Billing</span>
+                    </a>
+                </li>
+
+>>>>>>> c1e91ed6ed930602f8b0a07bd25e89259f052f4c
             </ul>
         </div>
 
