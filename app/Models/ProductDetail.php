@@ -50,4 +50,5 @@ class ProductDetail extends Model
     {
         return $this->hasOne(ProductStock::class, 'product_id');
     }
+
 }
