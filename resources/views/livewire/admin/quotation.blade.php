@@ -59,10 +59,10 @@
                                 <td>Global Tech Supplies</td>
                                 <td>Jane Smith</td>
                         
-                                <td><span class="badge bg-success-subtle text-success-emphasis text-capitalize">Received</span></td>
+                                <td><span class="badge bg-success-subtle text-success-emphasis text-capitalize">Complete</span></td>
                                 <td>2025-10-12</td>
                                 <td><a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-right"></i></a>
+                                
                                 </td>
                             </tr>
                             <tr>
@@ -72,18 +72,18 @@
                                 <td><span class="badge bg-warning-subtle text-warning-emphasis text-capitalize">Pending</span></td>
                                 <td>2025-10-13</td>
                                 <td><a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-right"></i></a>
+                                <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-check-lg"></i></i></a>
                                 </td>
                             </tr>
                             <tr>
-                                <td>#PO-2025-050</td>
+                                <td>ORD-2025-050</td>
                                 <td>Office Essentials Co.</td>
                                 <td>Jane Smith</td>
                                 
-                                <td><span class="badge bg-success-subtle text-success-emphasis text-capitalize">Received</span></td>
+                                <td><span class="badge bg-success-subtle text-success-emphasis text-capitalize">Complete</span></td>
                                 <td>2025-10-10</td>
                                 <td><a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
-                                <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-right"></i></a>
+                                
                                 </td>
                             </tr>
                             </tbody>

@@ -6,7 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title("Quotation")]
+#[Title("Purchase Order")]
 #[Layout('components.layouts.admin')]
 class Quotation extends Component
 {

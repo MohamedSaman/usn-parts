@@ -688,7 +688,7 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.quotation') }}">
-                                    <i class="bi bi-receipt"></i> <span>Quotation</span>
+                                    <i class="bi bi-receipt"></i> <span>Purchase Order</span>
                                 </a>
                             </li>
                             <li class="nav-item">
