@@ -21,7 +21,6 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(ProductSupplier::class, 'supplier_id');
     }
-    // app/Models/PurchaseOrder.php
 
     public function items()
     {

@@ -102,7 +102,11 @@ class Quotation extends Component
 
     public function loadOrders()
     {
-        $this->orders = PurchaseOrder::with(['supplier', 'items.product'])->latest()->get();
+        $this->orders = PurchaseOrder::with(['supplier', 'items.product'])
+            ->latest()
+            ->where('status', ['pending', 'complete'])
+            ->orderBy('id', 'desc')
+            ->get();
     }
 
     public function viewOrder($id)

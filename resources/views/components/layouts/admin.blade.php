@@ -768,6 +768,28 @@
                         </ul>
                     </div>
                 </li>
+                <!-- //add financing -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#FinancingSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="FinancingSubmenu">
+                        <i class="bi bi-cash-stack"></i> <span>Financing</span>
+                    </a>
+                    <div class="collapse" id="FinancingSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{route('admin.expenses')}}">
+                                    <i class="bi bi-wallet2"></i> <span>Expenses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{route('admin.income')}}">
+                                    <i class="bi bi-graph-up-arrow"></i> <span>Income</span>
+
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
                 <li>
                     <a class="nav-link" href="{{ route('admin.store-billing') }}">
                         <i class="bi bi-cash"></i> <span>Store Billing</span>
