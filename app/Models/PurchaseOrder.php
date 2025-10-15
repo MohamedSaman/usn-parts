@@ -11,20 +11,20 @@ class PurchaseOrder extends Model
 
     protected $fillable = [
         'order_code',
-        'product_id',
         'supplier_id',
         'order_date',
         'received_date',
         'status',
     ];
 
-    public function product()
-    {
-        return $this->belongsTo(ProductDetail::class, 'product_id');
-    }
-
     public function supplier()
     {
         return $this->belongsTo(ProductSupplier::class, 'supplier_id');
+    }
+    // app/Models/PurchaseOrder.php
+
+    public function items()
+    {
+        return $this->hasMany(PurchaseOrderItem::class, 'order_id');
     }
 }
