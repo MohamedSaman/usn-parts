@@ -796,6 +796,12 @@
                     </a>
                 </li>
 
+                </li>
+              
+                <a class="nav-link" href="{{ route('admin.settings') }}">
+                    <i class="bi bi-gear"></i> <span>Settings</span>
+                </a>
+
             </ul>
         </div>
 
