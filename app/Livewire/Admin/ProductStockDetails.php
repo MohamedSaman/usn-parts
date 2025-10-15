@@ -15,7 +15,7 @@ class ProductStockDetails extends Component
 {
     public function render()
     {
-        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->select(
                 'product_stocks.*',
@@ -34,7 +34,7 @@ class ProductStockDetails extends Component
     public function exportToCSV()
     {
         // Get data
-        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+        $ProductStocks = ProductDetail::join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->select(
                 'product_details.name',

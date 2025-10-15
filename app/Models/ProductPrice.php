@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProductPrice extends Model
 {
     use HasFactory;
-    
-    protected $fillable = ['supplier_price', 'selling_price', 'discount_price'];
-    
+
+    protected $fillable = [ 'product_id', 'supplier_price', 'selling_price', 'discount_price'];
+
     /**
      * Get the Product that owns this price information
      */

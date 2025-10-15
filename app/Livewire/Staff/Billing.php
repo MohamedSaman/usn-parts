@@ -261,7 +261,6 @@ class Billing extends Component
     {
         $this->ProductDetails = ProductDetail::leftJoin('product_stocks', 'product_stocks.product_id', '=', 'product_details.id')
             ->leftJoin('product_prices', 'product_prices.product_id', '=', 'product_details.id')
-            ->leftJoin('product_suppliers', 'product_suppliers.id', '=', 'product_details.supplier_id')
             ->select(
                 'product_details.*',
                 'product_prices.selling_price as selling_price',

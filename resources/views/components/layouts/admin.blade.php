@@ -21,9 +21,70 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        /* Theme tokens: change colors here to affect entire layout */
+        :root {
+            /* Backgrounds */
+            --page-bg: #f5f7fa;
+            /* body background */
+            --surface: #ffffff;
+            /* cards, sidebar surface */
+
+
+            /* Primary / Brand */
+            --primary: #0d6efd;
+            /* main blue (links, active) */
+            --primary-600: #0b5ed7;
+            /* hover background for links */
+            --primary-100: #e9f0ff;
+             /* main blue (links, active) */
+
+
+
+
+
+            /* Accent */
+            --accent: #198754;
+            /* green (amounts, success) */
+
+
+            /* Muted / borders / text */
+            --muted: #6c757d;
+            /* secondary text */
+            --muted-2: #495057;
+            /* nav link text */
+            --border: #e0e0e0;
+            /* general border color */
+            --muted-3: #dee2e6;
+            /* scrollbar / thumb */
+
+
+
+            /* Status colors */
+            --success-bg: #d1e7dd;
+            --success-text: #0f5132;
+            --warning-bg: #fff3cd;
+            --warning-text: #664d03;
+            --danger-bg: #f8d7da;
+            --danger-text: #842029;
+
+
+            /* Topbar / sidebar specifics */
+            --sidebar-bg: #ffffff;
+            --topbar-bg: #ffffff;
+
+
+            /* Text */
+            --text: #212529;
+
+
+            /* Avatars */
+            --avatar-bg: var(--primary);
+            --avatar-text: #ffffff;
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f7fa;
+            background-color: var(--page-bg);
             letter-spacing: -0.01em;
         }
 
@@ -31,8 +92,8 @@
         .sidebar {
             width: 250px;
             height: 100vh;
-            background-color: #ffffff;
-            border-right: 1px solid #e0e0e0;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
             padding: 20px 0;
             position: fixed;
             transition: all 0.3s ease;
@@ -49,11 +110,11 @@
         }
 
         .sidebar::-webkit-scrollbar-track {
-            background: #f8f9fa;
+            background: var(--page-bg);
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background-color: #dee2e6;
+            background-color: var(--muted-3);
             border-radius: 6px;
         }
 
@@ -93,7 +154,7 @@
         .sidebar-title {
             font-weight: 600;
             font-size: 1.2rem;
-            color: #212529;
+            color: var(--text);
             letter-spacing: -0.02em;
         }
 
@@ -104,18 +165,26 @@
         }
 
         .nav-link {
-            color: #495057;
+            color: var(--muted-2);
             padding: 8px 20px;
             /* Reduced top/bottom padding from 10px to 8px */
             border-radius: 6px;
             transition: all 0.2s;
         }
 
-        .nav-link:hover,
+
         .nav-link.active {
-            background-color: #e9f0ff;
-            color: #0d6efd;
+            background-color: var(--primary-100);
+            color: var(--primary);
             font-weight: 500;
+        }
+
+        .nav-link:focus,
+        .nav-link:hover,
+        .nav-link:focus-visible {
+            color: var(--primary);
+
+            outline: none;
         }
 
         .nav-link i {
@@ -168,8 +237,8 @@
         /* Top bar styles */
         .top-bar {
             height: 60px;
-            background-color: #ffffff;
-            border-bottom: 1px solid #e0e0e0;
+            background-color: var(--topbar-bg);
+            border-bottom: 1px solid var(--border);
             padding: 0 20px;
             position: fixed;
             top: 0;
@@ -196,7 +265,7 @@
         }
 
         .admin-info:hover {
-            background-color: #f8f9fa;
+            background-color: var(--page-bg);
         }
 
         .admin-avatar,
@@ -205,8 +274,8 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background-color: #0d6efd;
-            color: white;
+            background-color: var(--avatar-bg);
+            color: var(--avatar-text);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -229,7 +298,7 @@
 
         .dropdown-menu {
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 8px 0;
             margin-top: 10px;
@@ -243,7 +312,7 @@
         }
 
         .dropdown-item:hover {
-            background-color: #f0f7ff;
+            background-color: var(--primary-100);
         }
 
         .dropdown-item i {
@@ -268,7 +337,7 @@
         /* Card styles */
         .stat-card,
         .widget-container {
-            background: white;
+            background: var(--surface);
             border-radius: 10px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
             border: none;
@@ -284,26 +353,26 @@
         }
 
         .stat-label {
-            color: #6c757d;
+            color: var(--muted);
             font-size: 0.875rem;
             font-weight: 500;
             margin-bottom: 5px;
         }
 
         .stat-change {
-            color: #28a745;
+            color: var(--accent);
             font-size: 13px;
         }
 
         .stat-change-alert {
-            color: #842029;
+            color: var(--danger-text);
             font-size: 13px;
         }
 
         /* Tab navigation */
         .content-tabs {
             display: flex;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--border);
             margin-bottom: 20px;
         }
 
@@ -311,20 +380,20 @@
             padding: 10px 20px;
             cursor: pointer;
             font-weight: 500;
-            color: #495057;
+            color: var(--muted-2);
             border-bottom: 3px solid transparent;
             transition: all 0.2s;
         }
 
         .content-tab.active {
-            color: #0d6efd;
-            border-bottom-color: #0d6efd;
+            color: var(--primary);
+            border-bottom-color: var(--primary);
             font-weight: 600;
         }
 
         .content-tab:hover:not(.active) {
-            color: #0d6efd;
-            border-bottom-color: #dee2e6;
+            color: var(--primary);
+            border-bottom-color: var(--border);
         }
 
         .tab-content {
@@ -343,9 +412,9 @@
         }
 
         .chart-header {
-            background-color: #ffffff;
+            background-color: var(--surface);
             padding: 1.25rem;
-            border-bottom: 1px solid #dee2e6;
+            border-bottom: 1px solid var(--border);
             border-top-left-radius: 10px;
             border-top-right-radius: 10px;
         }
@@ -372,7 +441,7 @@
 
         .amount {
             font-weight: bold;
-            color: #198754;
+            color: var(--accent);
         }
 
         /* Widget components */
@@ -380,13 +449,13 @@
             font-size: 1.25rem;
             margin-bottom: 5px;
             font-weight: 600;
-            color: #212529;
+            color: var(--text);
             letter-spacing: -0.02em;
         }
 
         .widget-header p {
             font-size: 0.875rem;
-            color: #6c757d;
+            color: var(--muted-2);
             margin-bottom: 0;
         }
 
@@ -405,12 +474,12 @@
         .item-details h6 {
             font-size: 1rem;
             margin-bottom: 3px;
-            color: #212529;
+            color: var(--text);
         }
 
         .item-details p {
             font-size: 0.875rem;
-            color: #6c757d;
+            color: var(--muted);
             margin-bottom: 0;
         }
 
@@ -425,24 +494,24 @@
 
         .in-stock {
             background-color: #d1e7dd;
-            color: #0f5132;
+            color: var(--success-text);
         }
 
         .low-stock {
-            background-color: #fff3cd;
-            color: #664d03;
+            background-color: var(--warning-bg);
+            color: var(--warning-text);
         }
 
         .out-of-stock {
-            background-color: #f8d7da;
-            color: #842029;
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
         }
 
         /* Progress bars */
         .progress {
             height: 0.5rem;
             margin-top: 5px;
-            background-color: #e9ecef;
+            background-color: var(--muted-3);
             border-radius: 0.25rem;
             overflow: hidden;
         }
@@ -483,7 +552,7 @@
         .inventory-container::-webkit-scrollbar-thumb,
         .staff-sales-container::-webkit-scrollbar-thumb,
         .chart-scroll-container::-webkit-scrollbar-thumb {
-            background-color: #dee2e6;
+            background-color: var(--muted-3);
             border-radius: 10px;
         }
 
@@ -694,6 +763,28 @@
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.grn') }}">
                                     <i class="bi bi-box-seam"></i><span>GRN</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <!-- //add financing -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#FinancingSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="FinancingSubmenu">
+                        <i class="bi bi-cash-stack"></i> <span>Financing</span>
+                    </a>
+                    <div class="collapse" id="FinancingSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{route('admin.expenses')}}">
+                                    <i class="bi bi-wallet2"></i> <span>Expenses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{route('admin.income')}}">
+                                    <i class="bi bi-graph-up-arrow"></i> <span>Income</span>
+
                                 </a>
                             </li>
                         </ul>

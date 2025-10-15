@@ -88,11 +88,11 @@ class Products extends Component
 
         return $supplierId;
     }
+
     public function render()
     {
-        $Productes = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+        $Productes = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
@@ -104,8 +104,6 @@ class Products extends Component
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.supplier_id',
-                'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
@@ -139,9 +137,8 @@ class Products extends Component
     public function viewProduct($id)
     {
         // Find the Product with its related data
-        $this->ProductDetails = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+        $this->ProductDetails = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
@@ -153,8 +150,6 @@ class Products extends Component
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.supplier_id',
-                'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
@@ -203,27 +198,7 @@ class Products extends Component
                 $imagePath = 'images/ProductImages/' . $imageName;
             }
 
-            // Create price record first
-            $price = ProductPrice::create([
-                'supplier_price' => $this->supplierPrice ?? 0,
-                'selling_price' => $this->sellingPrice,
-                'discount_price' => $this->discountPrice
-            ]);
-
-            // Create stock record
-            $shopStock = (int) $this->shopStock;
-            $storeStock = (int) $this->storeStock;
-            $damageStock = (int) $this->damageStock;
-
-            $stock = ProductStock::create([
-                'available_stock' => $shopStock + $storeStock,
-                'damage_stock' => $damageStock,
-                'total_stock' => $shopStock + $storeStock + $damageStock,
-                'sold_count' => 0,
-                'restocked_quantity' => 0
-            ]);
-
-            // Create product with references to price and stock
+            // Create product first
             $Product = ProductDetail::create([
                 'code' => $this->code,
                 'name' => $this->name,
@@ -233,10 +208,29 @@ class Products extends Component
                 'barcode' => $this->barcode,
                 'status' => $this->status,
                 'brand_id' => $this->brand,
-                'category_id' => $this->category,
-                'stock_id' => $stock->id,
-                'price_id' => $price->id,
-                'supplier_id' => $this->supplier
+                'category_id' => $this->category
+            ]);
+
+            // Create price record with product_id reference
+            $price = ProductPrice::create([
+                'product_id' => $Product->id,
+                'supplier_price' => $this->supplierPrice ?? 0,
+                'selling_price' => $this->sellingPrice,
+                'discount_price' => $this->discountPrice
+            ]);
+
+            // Create stock record with product_id reference
+            $shopStock = (int) $this->shopStock;
+            $storeStock = (int) $this->storeStock;
+            $damageStock = (int) $this->damageStock;
+
+            $stock = ProductStock::create([
+                'product_id' => $Product->id,
+                'available_stock' => $shopStock + $storeStock,
+                'damage_stock' => $damageStock,
+                'total_stock' => $shopStock + $storeStock + $damageStock,
+                'sold_count' => 0,
+                'restocked_quantity' => 0
             ]);
 
             DB::commit();
@@ -296,9 +290,8 @@ class Products extends Component
     {
         $this->resetEditImage();
         // Find the Product with its related data
-        $Product = ProductDetail::join('product_suppliers', 'product_details.supplier_id', '=', 'product_suppliers.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+        $Product = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
@@ -310,8 +303,6 @@ class Products extends Component
                 'product_details.description',
                 'product_details.barcode',
                 'product_details.status',
-                'product_details.supplier_id',
-                'product_suppliers.name as supplier_name',
                 'product_prices.supplier_price',
                 'product_prices.selling_price',
                 'product_prices.discount_price',
@@ -338,9 +329,7 @@ class Products extends Component
         $this->editBarcode = $Product->barcode;
         $this->editDescription = $Product->description;
 
-        // Supplier Information - Store both ID and name
-        $this->editSupplier = $Product->supplier_id; // Store the ID for the update
-        $this->editSupplierName = $Product->supplier_name ?? $this->getDefaultSupplier(); // Store name for display
+        // Supplier Information - removed as supplier relationship no longer exists
         $this->editSupplierPrice = $Product->supplier_price ?? 0;
 
         // Pricing and Inventory
@@ -370,9 +359,6 @@ class Products extends Component
 
             $code = $this->editCode();
 
-            // Get the product to find its price_id and stock_id
-            $product = ProductDetail::find($id);
-
             // Update the main Product record
             ProductDetail::where('id', $id)->update([
                 'code' => $code,
@@ -383,21 +369,20 @@ class Products extends Component
                 'image' => $imagePath,
                 'status' => $this->editStatus,
                 'brand_id' => $this->editBrand,
-                'category_id' => $this->editCategory,
-                'supplier_id' => $this->editSupplier ?? $this->getDefaultSupplier(),
+                'category_id' => $this->editCategory
             ]);
 
-            // Update the price record using the price_id from product
-            ProductPrice::where('id', $product->price_id)->update([
+            // Update the price record using the product_id relationship
+            ProductPrice::where('product_id', $id)->update([
                 'supplier_price' => $this->editSupplierPrice ?? 0,
                 'selling_price' => $this->editSellingPrice,
                 'discount_price' => $this->editDiscountPrice,
             ]);
 
-            // Update stock record using the stock_id from product
+            // Update stock record using the product_id relationship
             $damageStock = (int) $this->editDamageStock;
 
-            ProductStock::where('id', $product->stock_id)->update([
+            ProductStock::where('product_id', $id)->update([
                 'damage_stock' => $damageStock,
                 'total_stock' => $damageStock, // Simplified for now
                 'available_stock' => 0 // Will be calculated separately
@@ -532,20 +517,15 @@ class Products extends Component
         try {
             DB::beginTransaction();
 
-            // Get the product to find its price_id and stock_id
-            $product = ProductDetail::find($this->deleteId);
-
             // First delete any related sale_items
             DB::table('sale_items')->where('product_id', $this->deleteId)->delete();
 
-            // Delete the Product first
-            ProductDetail::where('id', $this->deleteId)->delete();
+            // Delete the related price and stock records first
+            ProductStock::where('product_id', $this->deleteId)->delete();
+            ProductPrice::where('product_id', $this->deleteId)->delete();
 
-            // Then delete the related price and stock records
-            if ($product) {
-                ProductStock::where('id', $product->stock_id)->delete();
-                ProductPrice::where('id', $product->price_id)->delete();
-            }
+            // Then delete the Product
+            ProductDetail::where('id', $this->deleteId)->delete();
 
             DB::commit();
             return true;

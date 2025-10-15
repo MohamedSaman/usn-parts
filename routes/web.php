@@ -47,6 +47,8 @@ use App\Livewire\Admin\Quotation;
 use App\Livewire\Admin\SalesApproval;
 use App\Livewire\Admin\SupplierManage;
 use App\Livewire\Admin\Setting;
+use App\Livewire\Admin\Expenses;
+use App\Livewire\Admin\Income;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,6 +106,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
         Route::get('/quotation', Quotation::class)->name('quotation');
         Route::get('/goods-receive-note', GRN::class)->name('grn');
+        Route::get('/expenses', Expenses::class)->name('expenses');
+        Route::get('/income', Income::class)->name('income');
 
         Route::get('/settings', Setting::class)->name('settings');
 

@@ -209,7 +209,6 @@ class BillingPage extends Component
     {
         $this->ProductDetails = ProductDetail::join('product_prices', 'product_prices.product_id', '=', 'product_details.id')
             ->join('product_stocks', 'product_stocks.product_id', '=', 'product_details.id')
-            ->join('product_suppliers', 'product_suppliers.id', '=', 'product_details.supplier_id')
             ->select('product_details.*', 'product_prices.*', 'product_stocks.*', 'product_suppliers.*', 'product_suppliers.name as supplier_name')
             ->where('product_details.id', $ProductId)
             ->first();

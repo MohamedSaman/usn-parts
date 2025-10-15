@@ -20,20 +20,8 @@ class ProductDetail extends Model
         'barcode',
         'status',
         'brand_id',
-        'category_id',
-        'stock_id',
-        'price_id',
-        'supplier_id'
+        'category_id'
     ];
-
- 
-    /**
-     * Get the supplier of the Product
-     */
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(ProductSupplier::class);
-    }
 
     /**
      * Get the price information for the Product
