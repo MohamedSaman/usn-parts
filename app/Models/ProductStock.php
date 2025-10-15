@@ -9,9 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ProductStock extends Model
 {
     use HasFactory;
-    
-    protected $fillable = [ 'available_stock',  'damage_stock', 'total_stock','sold_count','restocked_quantity',];
-    
+
+    protected $fillable = [ 'product_id', 'available_stock',  'damage_stock', 'total_stock','sold_count','restocked_quantity',];
+
     /**
      * Get the Product that owns this stock information
      */

@@ -20,10 +20,7 @@ class ProductDetail extends Model
         'barcode',
         'status',
         'brand_id',
-        'category_id',
-        'stock_id',
-        'price_id',
-        'supplier_id'
+        'category_id'
     ];
 
  
