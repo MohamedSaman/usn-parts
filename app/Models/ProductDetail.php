@@ -23,15 +23,6 @@ class ProductDetail extends Model
         'category_id'
     ];
 
- 
-    /**
-     * Get the supplier of the Product
-     */
-    public function supplier(): BelongsTo
-    {
-        return $this->belongsTo(ProductSupplier::class);
-    }
-
     /**
      * Get the price information for the Product
      */
@@ -47,5 +38,4 @@ class ProductDetail extends Model
     {
         return $this->hasOne(ProductStock::class, 'product_id');
     }
-
 }

@@ -50,20 +50,18 @@
                             <td>{{ $order->order_code }}</td>
                             <td>{{ $order->supplier->name ?? 'N/A' }}</td>
                             <td>
-                                <span class="badge {{ $order->status == 'Completed' ? 'bg-success' : 'bg-warning' }}">
-                                    {{ $order->status }}
+                                <span class="badge {{ $order->status == 'complete' ? 'bg-success' : 'bg-warning' }}">
+                                    {{ ucfirst($order->status) }}
                                 </span>
                             </td>
                             <td class="d-flex gap-2">
-                                <!-- View Button -->
                                 <button class="btn btn-outline-primary btn-sm"
                                     wire:click="viewOrder({{ $order->id }})"
                                     data-bs-toggle="modal" data-bs-target="#viewOrderModal">
                                     <i class="bi bi-eye"></i>
                                 </button>
 
-                                <!-- Complete Button -->
-                                @if($order->status != 'Completed')
+                                @if($order->status != 'complete')
                                 <button class="btn btn-outline-success btn-sm"
                                     wire:click="confirmComplete({{ $order->id }})">
                                     <i class="bi bi-check2"></i>
@@ -74,12 +72,11 @@
                         @endforeach
                     </tbody>
                 </table>
-
             </div>
         </div>
     </div>
 
-    {{-- Modal --}}
+    {{-- Add Order Modal --}}
     <div wire:ignore.self class="modal fade" id="addPurchaseOrderModal" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
@@ -87,7 +84,6 @@
                     <h5>Create New Purchase Order</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -106,7 +102,8 @@
                             @if(!empty($products))
                             <ul class="list-group mt-1">
                                 @foreach($products as $product)
-                                <li class="list-group-item list-group-item-action" wire:click="selectProduct({{ $product->id }})">
+                                <li class="list-group-item list-group-item-action"
+                                    wire:click="selectProduct({{ $product->id }})">
                                     {{ $product->name }}
                                 </li>
                                 @endforeach
@@ -133,7 +130,6 @@
                     </div>
                     @endif
 
-                    {{-- Items Table --}}
                     <h5>Order Items</h5>
                     <table class="table table-bordered">
                         <thead class="table-light">
@@ -175,12 +171,15 @@
         </div>
     </div>
 
+    {{-- View Order Modal --}}
     <div wire:ignore.self class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="viewOrderModalLabel">Order Details - {{ $selectedOrder?->order_code }}</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title" id="viewOrderModalLabel">
+                        Order Details - {{ $selectedOrder?->order_code }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     @if($selectedOrder)
@@ -200,9 +199,9 @@
                         <tbody>
                             @foreach($selectedOrder->items as $item)
                             <tr>
-                                <td>{{ $item->product->product_name }}</td>
+                                <td>{{ $item->product->name ?? 'N/A' }}</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>{{ $item->price }}</td>
+                                <td>{{ $item->unit_price }}</td>
                             </tr>
                             @endforeach
                         </tbody>
@@ -214,32 +213,3 @@
     </div>
 
 </div>
-
-<script>
-    window.addEventListener('close-modal', () => {
-        var modal = bootstrap.Modal.getInstance(document.getElementById('addPurchaseOrderModal'));
-        modal.hide();
-    });
-
-    window.addEventListener('confirm-complete', event => {
-        Swal.fire({
-            title: 'Mark order as complete?',
-            text: "Are you sure you want to complete this order?",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#198754',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Yes, complete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Livewire.dispatch('completeOrder', {
-                    id: event.detail.id
-                });
-            }
-        });
-    });
-
-    window.addEventListener('alert', event => {
-        Swal.fire('Success', event.detail.message, 'success');
-    });
-</script>

@@ -9,8 +9,7 @@ class ProductsExportController extends Controller
 {
     public function export()
     {
-        $Productes = ProductDetail::join('Product_suppliers', 'Product_details.supplier_id', '=', 'Product_suppliers.id')
-            ->join('Product_prices', 'Product_details.id', '=', 'Product_prices.Product_id')
+        $Productes = ProductDetail::join('Product_prices', 'Product_details.id', '=', 'Product_prices.Product_id')
             ->join('Product_stocks', 'Product_details.id', '=', 'Product_stocks.Product_id')
             ->select(
                 'Product_details.id',

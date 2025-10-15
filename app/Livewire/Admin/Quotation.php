@@ -7,7 +7,6 @@ use App\Models\ProductSupplier;
 use App\Models\ProductDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
-use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -33,7 +32,13 @@ class Quotation extends Component
 
     public function updatedSearch()
     {
-        $this->products = ProductDetail::where('name', 'like', '%' . $this->search . '%')->limit(5)->get();
+        if ($this->search != '') {
+            $this->products = ProductDetail::where('name', 'like', '%' . $this->search . '%')
+                ->limit(5)
+                ->get();
+        } else {
+            $this->products = [];
+        }
     }
 
     public function selectProduct($id)
@@ -74,7 +79,7 @@ class Quotation extends Component
             'order_code' => $orderCode,
             'supplier_id' => $this->supplier_id,
             'order_date' => now(),
-            'status' => 'Pending',
+            'status' => 'pending',
         ]);
 
         foreach ($this->orderItems as $item) {
@@ -87,15 +92,17 @@ class Quotation extends Component
             ]);
         }
 
-        $this->reset(['supplier_id', 'search', 'selectedProduct', 'quantity', 'orderItems']);
+        // Refresh table
+        $this->loadOrders();
 
-        session()->flash('success', 'Purchase Order created successfully!');
-        $this->dispatch('close-modal'); // ✅ updated
+        $this->reset(['supplier_id', 'search', 'selectedProduct', 'quantity', 'orderItems']);
+        $this->js("bootstrap.Modal.getInstance(document.getElementById('addPurchaseOrderModal')).hide();");
+        $this->js("Swal.fire('Success', 'Purchase Order created successfully!', 'success');");
     }
 
     public function loadOrders()
     {
-        $this->orders = PurchaseOrder::with(['supplier', 'items.product'])->get();
+        $this->orders = PurchaseOrder::with(['supplier', 'items.product'])->latest()->get();
     }
 
     public function viewOrder($id)
@@ -105,26 +112,39 @@ class Quotation extends Component
 
     public function confirmComplete($id)
     {
-        $this->dispatch('confirm-complete', ['id' => $id]); // ✅ updated
+        $this->js("
+            Swal.fire({
+                title: 'Mark order as complete?',
+                text: 'Are you sure you want to complete this order?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, complete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    \$wire.completeOrderConfirmed($id);
+                }
+            });
+        ");
     }
 
-    public function completeOrder($id)
+    public function completeOrderConfirmed($id)
     {
         $order = PurchaseOrder::find($id);
         if ($order) {
-            $order->status = 'Completed';
+            $order->status = 'complete';
             $order->save();
             $this->loadOrders();
-            $this->dispatch('alert', ['message' => 'Order marked as completed!']); // ✅ updated
+            $this->js("Swal.fire('Success', 'Order marked as completed!', 'success');");
         }
     }
 
     public function render()
     {
-        $pendingCount = PurchaseOrder::where('status', 'Pending')->count();
-        $completedCount = PurchaseOrder::where('status', 'Completed')->count();
-        $orders = PurchaseOrder::with(['supplier'])->latest()->get();
+        $pendingCount = PurchaseOrder::where('status', 'pending')->count();
+        $completedCount = PurchaseOrder::where('status', 'complete')->count();
 
-        return view('livewire.admin.quotation', compact('pendingCount', 'completedCount', 'orders'));
+        return view('livewire.admin.quotation', compact('pendingCount', 'completedCount'));
     }
 }

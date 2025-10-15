@@ -151,8 +151,8 @@ class AdminDashboard extends Component
 
         // Calculate damaged inventory value
         $damagedValue = DB::table('product_details')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
             ->select(DB::raw('SUM(product_stocks.damage_stock * product_prices.supplier_price) as damaged_value'))
             ->first();
 
@@ -160,14 +160,14 @@ class AdminDashboard extends Component
 
         // Calculate total inventory value (all stocks)
         $totalInventoryValue = DB::table('product_details')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
             ->select(DB::raw('SUM(product_stocks.available_stock * product_prices.supplier_price) as total_value'))
             ->first();
 
         $totalAvailableInventory = DB::table('product_details')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
-            ->join('product_prices', 'product_details.price_id', '=', 'product_prices.id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
             ->select(DB::raw('SUM(product_stocks.available_stock * product_prices.supplier_price) as total_value'))
             ->first();
 
@@ -310,7 +310,7 @@ class AdminDashboard extends Component
     {
         // Join Productes and stock tables to get full inventory data
         $this->ProductInventory = DB::table('product_details')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->select(
                 'product_details.id',
@@ -481,7 +481,7 @@ class AdminDashboard extends Component
     public function getInventoryReport($start = null, $end = null)
     {
         $query = DB::table('product_details')
-            ->join('product_stocks', 'product_details.stock_id', '=', 'product_stocks.id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->select('product_details.name', 'product_details.model', 'brand_lists.brand_name as brand', 'product_stocks.*')
             ->orderBy('product_stocks.available_stock', 'desc');
