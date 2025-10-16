@@ -2,103 +2,51 @@
 
 namespace App\Livewire\Admin;
 
-use Exception;
-use Livewire\Attributes\On;
 use Livewire\Component;
-use App\Models\BrandList;
+use Livewire\WithPagination;
+use App\Models\ProductDetail;
 use App\Models\ProductPrice;
 use App\Models\ProductStock;
-use App\Models\ProductColors;
-use App\Models\ProductDetail;
-use App\Models\ProductMadeBy;
+use App\Models\BrandList;
 use App\Models\CategoryList;
-use App\Models\DialColorList;
-use App\Models\GlassTypeList;
 use App\Models\ProductSupplier;
-use App\Models\ProductTypeList;
-use App\Models\StrapColorList;
+use Livewire\WithFileUploads;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
-use App\Models\StrapMaterialList;
-use Illuminate\Support\Facades\DB;
-use Livewire\WithFileUploads;
-use Livewire\WithPagination;
 
-#[Title("Productes")]
+#[Title("Product List")]
 #[Layout('components.layouts.admin')]
 class Products extends Component
 {
-    use WithFileUploads, WithPagination;
+    use WithPagination, WithFileUploads;
 
-    public $code;
-    public $name;
-    public $brand;
-    public $model;
-    public $color;
-    public $madeBy;
-    public $category;
-    public $gender;
-    public $type;
-    public $movement;
-    public $dialColor;
-    public $strapColor;
-    public $strapMaterial;
-    public $caseDiameter;
-    public $caseThickness;
-    public $glassType;
-    public $waterResistance;
-    public $features;
-    public $image;
-    public $warranty;
-    public $description;
-    public $barcode;
-    public $supplier;
-    public $supplierPrice = 0;
-    public $sellingPrice;
-    public $discountPrice;
-    public $shopStock = 0;
-    public $storeStock = 0;
-    public $damageStock = 0;
-    public $status;
-    public $location;
     public $search = '';
 
-    public $imagePreview = null;
-    public $editImagePreview = null;
+    // Create form fields
+    public $code, $name, $model, $brand, $category, $image, $description, $barcode, $status, $supplier;
+    public $supplier_price, $selling_price, $discount_price, $available_stock, $damage_stock;
 
-    private function getDefaultSupplier()
-    {
-        // Cache the supplier ID to avoid repeated database queries
-        static $supplierId = null;
-
-        if ($supplierId === null) {
-            $defaultSupplier = ProductSupplier::latest('id')->first();
-
-            if (!$defaultSupplier) {
-                $defaultSupplier = ProductSupplier::create([
-                    'name' => 'Default Supplier',
-                    'email' => null,
-                    'contact' => null,
-                    'address' => null,
-                ]);
-            }
-
-            $supplierId = $defaultSupplier->id;
-        }
-
-        return $supplierId;
-    }
+    // Edit form fields
+    public $editId, $editCode, $editName, $editModel, $editBrand, $editCategory, $editImage, $existingImage,
+        $editDescription, $editBarcode, $editStatus, $editSupplierPrice, $editSellingPrice,
+        $editDiscountPrice, $editDamageStock;
 
     public function render()
     {
-        $Productes = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
+        $brands = BrandList::orderBy('brand_name')->get();
+        $categories = CategoryList::orderBy('category_name')->get();
+        $suppliers = ProductSupplier::orderBy('name')->get();
+
+        $products = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
             ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
             ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
             ->select(
                 'product_details.id',
                 'product_details.code',
-                'product_details.name as Product_name',
+                'product_details.name as product_name',
                 'product_details.model',
                 'product_details.image',
                 'product_details.description',
@@ -113,644 +61,293 @@ class Products extends Component
                 'brand_lists.brand_name as brand',
                 'category_lists.category_name as category'
             )
-            ->where('product_details.name', 'like', '%' . $this->search . '%')
-            ->orWhere('product_details.code', 'like', '%' . $this->search . '%')
-            ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
-            ->orWhere('brand_lists.brand_name', 'like', '%' . $this->search . '%')
-            ->orWhere('product_details.status', 'like', '%' . $this->search . '%')
-            ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%')
+            ->where(function ($query) {
+                $query->where('product_details.name', 'like', '%' . $this->search . '%')
+                    ->orWhere('product_details.code', 'like', '%' . $this->search . '%')
+                    ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
+                    ->orWhere('brand_lists.brand_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('product_details.status', 'like', '%' . $this->search . '%')
+                    ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('product_details.created_at', 'desc')
             ->paginate(10);
 
-        $ProductBarnds = BrandList::orderBy('id', 'asc')->get();
-        $ProductCategories = CategoryList::orderBy('id', 'asc')->get();
-        $ProductSuppliers = ProductSupplier::orderBy('id', 'asc')->get();
-        return view('livewire.admin.Productes', [
-            'Productes' => $Productes,
-            'ProductCategories' => $ProductCategories,
-            'ProductBarnds' => $ProductBarnds,
-            'ProductSuppliers' => $ProductSuppliers,
+        return view('livewire.admin.productes', [
+            'products' => $products,
+            'brands' => $brands,
+            'categories' => $categories,
+            'suppliers' => $suppliers,
         ]);
     }
 
-    public $ProductDetails;
-    public function viewProduct($id)
+    // 🔹 Open Create Modal
+    public function openCreateModal()
     {
-        // Find the Product with its related data
-        $this->ProductDetails = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
-            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
-            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
-            ->select(
-                'product_details.id',
-                'product_details.code',
-                'product_details.name as Product_name',
-                'product_details.model',
-                'product_details.image',
-                'product_details.description',
-                'product_details.barcode',
-                'product_details.status',
-                'product_prices.supplier_price',
-                'product_prices.selling_price',
-                'product_prices.discount_price',
-                'product_stocks.available_stock',
-                'product_stocks.damage_stock',
-                'product_stocks.total_stock',
-                'brand_lists.brand_name as brand',
-                'category_lists.category_name as category'
-            )
-            ->where('product_details.id', $id)
-            ->first();
-        // dd($this->ProductDetails);        
-        $this->js("$('#viewProductModal').modal('show')");
+        $this->resetForm();
+        $this->js("$('#createProductModal').modal('show')");
     }
 
+    // 🔹 Validate Create Form
+    private function validateCreateProduct()
+    {
+        return $this->validate([
+            'name' => 'required|string|max:255',
+            'model' => 'nullable|string|max:255',
+            'brand' => 'required|exists:brand_lists,id',
+            'category' => 'required|exists:category_lists,id',
+            'supplier' => 'nullable|exists:product_suppliers,id',
+            'image' => 'nullable|image|max:2048',
+            'description' => 'nullable|string',
+            'barcode' => 'nullable|string|max:255',
+            'supplier_price' => 'required|numeric|min:0',
+            'selling_price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0',
+            'available_stock' => 'nullable|integer|min:0',
+        ]);
+    }
+
+    // 🔹 Create Product
     public function createProduct()
     {
-        $this->resetForm();
+        $this->validateCreateProduct();
 
-        // Set default supplier
-        $this->supplier = $this->getDefaultSupplier();
-        $this->supplierPrice = 0;
+        $imagePath = $this->image ? $this->image->store('product_images', 'public') : null;
 
-        $this->js("
-            setTimeout(() => {
-                const modal = new bootstrap.Modal(document.getElementById('createProductModal'));
-                modal.show();
-            }, 500);
-        ");
-    }
-
-    public function saveProduct()
-    {
-        $this->validateCretaeProduct();
-
-        $this->code = $this->generateCode();
-        $this->supplier = $this->getDefaultSupplier();
-
-        DB::beginTransaction();
-
-        try {
-            $imagePath = null;
-            if ($this->image) {
-                $imageName = time() . '-' . $this->code . '.' . $this->image->getClientOriginalExtension();
-                $this->image->storeAs('public/images/ProductImages', $imageName);
-                $imagePath = 'images/ProductImages/' . $imageName;
-            }
-
-            // Create product first
-            $Product = ProductDetail::create([
-                'code' => $this->code,
-                'name' => $this->name,
-                'model' => $this->model,
-                'image' => $imagePath,
-                'description' => $this->description,
-                'barcode' => $this->barcode,
-                'status' => $this->status,
-                'brand_id' => $this->brand,
-                'category_id' => $this->category
-            ]);
-
-            // Create price record with product_id reference
-            $price = ProductPrice::create([
-                'product_id' => $Product->id,
-                'supplier_price' => $this->supplierPrice ?? 0,
-                'selling_price' => $this->sellingPrice,
-                'discount_price' => $this->discountPrice
-            ]);
-
-            // Create stock record with product_id reference
-            $shopStock = (int) $this->shopStock;
-            $storeStock = (int) $this->storeStock;
-            $damageStock = (int) $this->damageStock;
-
-            $stock = ProductStock::create([
-                'product_id' => $Product->id,
-                'available_stock' => $shopStock + $storeStock,
-                'damage_stock' => $damageStock,
-                'total_stock' => $shopStock + $storeStock + $damageStock,
-                'sold_count' => 0,
-                'restocked_quantity' => 0
-            ]);
-
-            DB::commit();
-
-            $this->js('$("#createProductModal").modal("hide")');
-            $this->resetForm();
-            $this->dispatch('Product-created');
-            $this->js("Swal.fire('Success!', 'Product created successfully', 'success')");
-            return redirect()->route('admin.Productes');
-        } catch (Exception $e) {
-            DB::rollBack();
-            logger('Error creating Product: ' . $e->getMessage());
-            $this->js("Swal.fire({
-                icon: 'error',
-                title: 'Product Creation Failed',
-                text: '" . $e->getMessage() . "',
-            })");
-        }
-    }
-
-    public $editId;
-    public $editCode;
-    public $editName;
-    public $editModel;
-    public $editBrand;
-    public $editColor;
-    public $editMadeBy;
-    public $editCategory;
-    public $editType;
-    public $editGender;
-    public $editMovement;
-    public $editDialColor;
-    public $editStrapColor;
-    public $editStrapMaterial;
-    public $editCaseDiameter;
-    public $editCaseThickness;
-    public $editGlassType;
-    public $editWaterResistance;
-    public $editFeatures;
-    public $editWarranty;
-    public $editDescription;
-    public $editStatus;
-    public $editLocation;
-    public $editSupplier;
-    public $editSupplierName; // Add this to store the supplier name for display
-    public $editSupplierPrice = 0;
-    public $editSellingPrice;
-    public $editDiscountPrice;
-    public $editShopStock;
-    public $editStoreStock;
-    public $editDamageStock;
-    public $editBarcode;
-    public $editImage;
-    public $existingImage;
-    public $isLoading = false;
-    public function editProduct($id)
-    {
-        $this->resetEditImage();
-        // Find the Product with its related data
-        $Product = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
-            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
-            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
-            ->select(
-                'product_details.id',
-                'product_details.code',
-                'product_details.name as Product_name',
-                'product_details.model',
-                'product_details.image',
-                'product_details.description',
-                'product_details.barcode',
-                'product_details.status',
-                'product_prices.supplier_price',
-                'product_prices.selling_price',
-                'product_prices.discount_price',
-                'product_stocks.available_stock',
-                'product_stocks.damage_stock',
-                'brand_lists.brand_name as brand',
-                'category_lists.category_name as category'
-            )
-            ->where('product_details.id', $id)
-            ->first();
-
-        // Basic information
-        $this->editId = $id;
-        $this->editCode = $Product->code;
-        $this->editName = $Product->Product_name;
-        $this->editModel = $Product->model;
-        $this->editBrand = $Product->brand;
-
-        // Classification
-        $this->editCategory = $Product->category;
-
-        // Product Information
-        $this->existingImage = $Product->image;
-        $this->editBarcode = $Product->barcode;
-        $this->editDescription = $Product->description;
-
-        // Supplier Information - removed as supplier relationship no longer exists
-        $this->editSupplierPrice = $Product->supplier_price ?? 0;
-
-        // Pricing and Inventory
-        $this->editSellingPrice = $Product->selling_price;
-        $this->editDiscountPrice = $Product->discount_price;
-        $this->editDamageStock = $Product->damage_stock;
-        $this->editStatus = $Product->status;
-
-        $this->dispatch('open-edit-modal');
-    }
-
-    public function updateProduct($id)
-    {
-        $this->validateEditProduct();
-
-        // Use database transaction to ensure all records are updated together
-        DB::beginTransaction();
-
-        try {
-            // Handle image upload if file exists
-            $imagePath = $this->existingImage;
-            if ($this->editImage) {
-                $imageName = time() . '-' . $this->editCode . '.' . $this->editImage->getClientOriginalExtension();
-                $this->editImage->storeAs('public/images/ProductImages', $imageName);
-                $imagePath = 'images/ProductImages/' . $imageName;
-            }
-
-            $code = $this->editCode();
-
-            // Update the main Product record
-            ProductDetail::where('id', $id)->update([
-                'code' => $code,
-                'name' => $this->editName,
-                'model' => $this->editModel,
-                'barcode' => $this->editBarcode,
-                'description' => $this->editDescription,
-                'image' => $imagePath,
-                'status' => $this->editStatus,
-                'brand_id' => $this->editBrand,
-                'category_id' => $this->editCategory
-            ]);
-
-            // Update the price record using the product_id relationship
-            ProductPrice::where('product_id', $id)->update([
-                'supplier_price' => $this->editSupplierPrice ?? 0,
-                'selling_price' => $this->editSellingPrice,
-                'discount_price' => $this->editDiscountPrice,
-            ]);
-
-            // Update stock record using the product_id relationship
-            $damageStock = (int) $this->editDamageStock;
-
-            ProductStock::where('product_id', $id)->update([
-                'damage_stock' => $damageStock,
-                'total_stock' => $damageStock, // Simplified for now
-                'available_stock' => 0 // Will be calculated separately
-            ]);
-
-            DB::commit();
-            $this->resetEditImage();
-
-            // Close the modal
-            $this->js("$('#editProductModal').modal('hide')");
-            $this->js("Swal.fire('Success!', 'Product updated successfully!', 'success')");
-        } catch (Exception $e) {
-            DB::rollBack();
-            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
-        }
-    }
-
-    public function duplicateProduct()
-    {
-        $this->validateEditProduct();
-
-        // Generate a new code for the duplicated Product
-        $this->code = $this->generateDuplicateCode();
-        $this->supplier = $this->editSupplier ?? $this->getDefaultSupplier();
-
-        DB::beginTransaction();
-
-        try {
-            // Handle image - use the existing image or the newly uploaded one
-            $imagePath = $this->existingImage;
-            if ($this->editImage) {
-                $imageName = time() . '-' . $this->code . '.' . $this->editImage->getClientOriginalExtension();
-                $this->editImage->storeAs('public/images/ProductImages', $imageName);
-                $imagePath = 'images/ProductImages/' . $imageName;
-            }
-
-            // Create a new Product record with the edited values
-            $Product = ProductDetail::create([
-                'code' => $this->code,
-                'name' => $this->editName,  // Add (Copy) to indicate it's a duplicate
-                'model' => $this->editModel,
-                'color' => $this->editColor,
-                'made_by' => $this->editMadeBy,
-                'gender' => $this->editGender,
-                'type' => $this->editType,
-                'movement' => $this->editMovement,
-                'dial_color' => $this->editDialColor,
-                'strap_color' => $this->editStrapColor,
-                'strap_material' => $this->editStrapMaterial,
-                'case_diameter_mm' => $this->editCaseDiameter,
-                'case_thickness_mm' => $this->editCaseThickness,
-                'glass_type' => $this->editGlassType,
-                'water_resistance' => $this->editWaterResistance,
-                'features' => $this->editFeatures,
-                'image' => $imagePath,
-                'warranty' => $this->editWarranty,
-                'description' => $this->editDescription,
-                'barcode' => $this->editBarcode,  // Modify barcode to avoid duplicates
-                'status' => $this->editStatus,
-                'location' => $this->editLocation,
-                'brand' => $this->editBrand,
-                'category' => $this->editCategory,
-                'supplier_id' => $this->supplier
-            ]);
-
-            // Create pricing record
-            ProductPrice::create([
-                'supplier_price' => $this->editSupplierPrice ?? 0,
-                'selling_price' => $this->editSellingPrice,
-                'discount_price' => $this->editDiscountPrice,
-                'product_id' => $Product->id
-            ]);
-
-            // Create stock record
-            $shopStock = (int) $this->editShopStock;
-            $storeStock = (int) $this->editStoreStock;
-            $damageStock = (int) $this->editDamageStock;
-
-            ProductStock::create([
-                'shop_stock' => $shopStock,
-                'store_stock' => $storeStock,
-                'damage_stock' => $damageStock,
-                'total_stock' => $shopStock + $storeStock + $damageStock,
-                'available_stock' => $shopStock + $storeStock,
-                'product_id' => $Product->id
-            ]);
-
-            DB::commit();
-            $this->resetEditImage();
-
-            // Close the modal and show success message
-            $this->js('$("#editProductModal").modal("hide")');
-            $this->resetForm();
-            $this->js("Swal.fire('Success!', 'Product duplicated successfully', 'success')");
-        } catch (Exception $e) {
-            DB::rollBack();
-            logger('Error duplicating Product: ' . $e->getMessage());
-            $this->js("Swal.fire({
-                icon: 'error',
-                title: 'Product Duplication Failed',
-                text: '" . $e->getMessage() . "',
-            })");
-        }
-    }
-
-    private function generateDuplicateCode()
-    {
-        $lastProduct = ProductDetail::latest('id')->first();
-        $numericId = $lastProduct ? $lastProduct->id + 1 : 1;
-
-        $components = [
-            'brand' => strtoupper(substr($this->editBrand ?? '', 0, 3)),
-            'color' => strtoupper(substr($this->editColor ?? '', 0, 1)),
-            'strap' => strtoupper(substr($this->editStrapMaterial ?? '', 0, 1)),
-            'gender' => strtoupper(substr($this->editGender ?? '', 0, 1)),
-        ];
-
-        $prefix = implode('', $components);
-
-        return $prefix . $numericId;
-    }
-
-    public $deleteId;
-    public function confirmDelete($id)
-    {
-        $this->deleteId = $id;
-        $this->dispatch("confirm-delete");
-    }
-    #[On('confirmDelete')]
-    public function deleteProduct()
-    {
-        try {
-            DB::beginTransaction();
-
-            // First delete any related sale_items
-            DB::table('sale_items')->where('product_id', $this->deleteId)->delete();
-
-            // Delete the related price and stock records first
-            ProductStock::where('product_id', $this->deleteId)->delete();
-            ProductPrice::where('product_id', $this->deleteId)->delete();
-
-            // Then delete the Product
-            ProductDetail::where('id', $this->deleteId)->delete();
-
-            DB::commit();
-            return true;
-        } catch (Exception $e) {
-            DB::rollBack();
-            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
-            return false;
-        }
-    }
-
-    public function exportToCsv()
-    {
-        return redirect()->route('Productes.export');
-    }
-
-    private function validateCretaeProduct()
-    {
-        $this->validate([
-            'name' => 'required',
-            'model' => 'required',
-            // 'barcode' => 'required',
-            'description' => 'required',
-            'image' => 'required|image|max:2048',
-            'brand' => 'required',
-            'category' => 'required',
-            'gender' => 'required',
-            'type' => 'required',
-            'color' => 'required',
-            'madeBy' => 'required',
-            // 'movement' => 'required',
-            // 'dialColor' => 'required',
-            // 'strapColor' => 'required',
-            'strapMaterial' => 'required',
-            // 'caseDiameter' => 'required|numeric',
-            // 'caseThickness' => 'required|numeric',
-            // 'glassType' => 'required',
-            // 'waterResistance' => 'required',
-            'features' => 'required',
-            // 'warranty' => 'required',
-            // 'supplier' => 'required',
-            'status' => 'required',
-            // 'location' => 'required',
-            // 'supplierPrice' => 'required|numeric|min:0',
-            'sellingPrice' => 'required|numeric|min:0',
-            'discountPrice' => 'required|numeric|min:0',
-            'shopStock' => 'required|numeric|min:0',
-            'storeStock' => 'required|numeric|min:0',
-            'damageStock' => 'required|numeric|min:0',
+        $product = ProductDetail::create([
+            'code' => $this->generateProductCode(),
+            'name' => $this->name,
+            'model' => $this->model,
+            'image' => $imagePath,
+            'description' => $this->description,
+            'barcode' => $this->barcode,
+            'status' => 'active',
+            'brand_id' => $this->brand,
+            'category_id' => $this->category,
         ]);
-    }
 
-    private function validateEditProduct()
-    {
-        $this->validate([
-            'editName' => 'required',
-            'editModel' => 'required',
-            // 'editBarcode' => 'required',
-            'editDescription' => 'required',
-            'editImage' => $this->existingImage ? 'nullable|image|max:2048' : 'required|image|max:2048',
-            'editBrand' => 'required',
-            'editCategory' => 'required',
-            'editGender' => 'required',
-            'editType' => 'required',
-            'editColor' => 'required',
-            'editMadeBy' => 'required',
-            // 'editMovement' => 'required',
-            // 'editDialColor' => 'required',
-            // 'editStrapColor' => 'required',
-            'editStrapMaterial' => 'required',
-            // 'editCaseDiameter' => 'required|numeric',
-            // 'editCaseThickness' => 'required|numeric',
-            // 'editGlassType' => 'required',
-            // 'editWaterResistance' => 'required',
-            'editFeatures' => 'required',
-            // 'editWarranty' => 'required',
-            // 'editSupplier' => 'required',
-            'editStatus' => 'required',
-            // 'editLocation' => 'required',
-            // 'editSupplierPrice' => 'required|numeric|min:0',
-            'editSellingPrice' => 'required|numeric|min:0',
-            'editDiscountPrice' => 'required|numeric|min:0',
-            'editShopStock' => 'required|numeric|min:0',
-            // 'editStoreStock' => 'required|numeric|min:0',
-            'editDamageStock' => 'required|numeric|min:0',
+        ProductPrice::create([
+            'product_id' => $product->id,
+            'supplier_price' => $this->supplier_price,
+            'selling_price' => $this->selling_price,
+            'discount_price' => $this->discount_price,
         ]);
-    }
 
-    private function generateCode()
-    {
-        $lastProduct = ProductDetail::latest('id')->first();
-        $numericId = $lastProduct ? $lastProduct->id + 1 : 1;
+        ProductStock::create([
+            'product_id' => $product->id,
+            'available_stock' => $this->available_stock ?? 0,
+            'damage_stock' => $this->damage_stock ?? 0,
+            'total_stock' => ($this->available_stock ?? 0) + ($this->damage_stock ?? 0),
+            'sold_count' => 0,
+            'restocked_quantity' => 0,
+        ]);
 
-        $components = [
-            'brand' => strtoupper(substr($this->brand ?? '', 0, 3)),
-            'color' => strtoupper(substr($this->color ?? '', 0, 1)),
-            'strap' => strtoupper(substr($this->strapMaterial ?? '', 0, 1)),
-            'gender' => strtoupper(substr($this->gender ?? '', 0, 1)),
-        ];
-
-        $prefix = implode('', $components);
-
-        return $prefix . $numericId;
-    }
-
-    private function editCode()
-    {
-        $numericId = $this->editId;
-
-        $components = [
-            'brand' => strtoupper(substr($this->editBrand ?? '', 0, 3)),
-            'color' => strtoupper(substr($this->editColor ?? '', 0, 1)),
-            'strap' => strtoupper(substr($this->editStrapMaterial ?? '', 0, 1)),
-            'gender' => strtoupper(substr($this->editGender ?? '', 0, 1)),
-        ];
-
-        $prefix = implode('', $components);
-
-        return $prefix . $numericId;
-    }
-
-    #[On('reset-create-form')]
-    public function resetCreateForm()
-    {
         $this->resetForm();
+        $this->js("$('#createProductModal').modal('hide')");
+        $this->js("Swal.fire('Success!', 'Product created successfully!', 'success')");
     }
 
-    public function resetForm()
+    // 🔹 Reset form fields
+    private function resetForm()
     {
-        // Enhanced reset that clears all relevant properties
         $this->reset([
             'code',
             'name',
             'model',
-            'color',
-            'madeBy',
+            'brand',
             'category',
-            'gender',
-            'type',
-            'movement',
-            'dialColor',
-            'strapColor',
-            'strapMaterial',
-            'caseDiameter',
-            'caseThickness',
-            'glassType',
-            'waterResistance',
-            'features',
-            'warranty',
+            'image',
             'description',
             'barcode',
             'status',
-            'location',
-            'sellingPrice',
-            'discountPrice',
-            'shopStock',
-            'storeStock',
-            'damageStock',
-            'image',
             'supplier',
-            'supplierPrice'
+            'supplier_price',
+            'selling_price',
+            'discount_price',
+            'available_stock',
+            'damage_stock'
+        ]);
+        $this->resetValidation();
+    }
+
+    // 🔹 Edit Product
+    public function editProduct($id)
+    {
+        $product = ProductDetail::with(['price', 'stock'])->findOrFail($id);
+
+        $this->editId = $product->id;
+        $this->editCode = $product->code;
+        $this->editName = $product->name;
+        $this->editModel = $product->model;
+        $this->editBrand = $product->brand_id;
+        $this->editCategory = $product->category_id;
+        $this->existingImage = $product->image;
+        $this->editDescription = $product->description;
+        $this->editBarcode = $product->barcode;
+        $this->editStatus = $product->status;
+        $this->editSupplierPrice = $product->price->supplier_price ?? 0;
+        $this->editSellingPrice = $product->price->selling_price ?? 0;
+        $this->editDiscountPrice = $product->price->discount_price ?? 0;
+        $this->editDamageStock = $product->stock->damage_stock ?? 0;
+
+        // Use proper modal opening with small delay to ensure data is loaded
+        $this->js("
+            setTimeout(() => {
+                const modal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                modal.show();
+            }, 100);
+        ");
+    }
+
+    // 🔹 Update Product
+    public function updateProduct()
+    {
+        $this->validate([
+            'editName' => 'required|string|max:255',
+            'editModel' => 'nullable|string|max:255',
+            'editBrand' => 'required|exists:brand_lists,id',
+            'editCategory' => 'required|exists:category_lists,id',
+            'editDescription' => 'nullable|string',
+            'editBarcode' => 'nullable|string|max:255',
+            'editStatus' => 'required|string|max:50',
         ]);
 
-        // Reset validation errors
-        $this->resetValidation();
-        $this->resetErrorBag();
+        $product = ProductDetail::findOrFail($this->editId);
+
+        $imagePath = $this->editImage
+            ? $this->editImage->store('product_images', 'public')
+            : $this->existingImage;
+
+        $product->update([
+            'code' => $this->editCode,
+            'name' => $this->editName,
+            'model' => $this->editModel,
+            'brand_id' => $this->editBrand,
+            'category_id' => $this->editCategory,
+            'image' => $imagePath,
+            'description' => $this->editDescription,
+            'barcode' => $this->editBarcode,
+            'status' => $this->editStatus,
+        ]);
+
+        $product->price()->updateOrCreate([], [
+            'supplier_price' => $this->editSupplierPrice,
+            'selling_price' => $this->editSellingPrice,
+            'discount_price' => $this->editDiscountPrice,
+        ]);
+
+        $product->stock()->updateOrCreate([], [
+            'damage_stock' => $this->editDamageStock,
+        ]);
+
+        $this->js("$('#editProductModal').modal('hide')");
+        $this->js("Swal.fire('Success!', 'Product updated successfully!', 'success')");
     }
 
-    /**
-     * Get file preview information with fallbacks for invalid temporary URLs
-     * 
-     * @param mixed $file The uploaded file object
-     * @return array File information including type, preview URL, and icon
-     */
-    private function getFilePreview($file)
+    // 🔹 Confirm Delete Product
+    public function confirmDeleteProduct($id)
     {
-        if (!$file || !is_object($file)) {
-            return [
-                'type' => null,
-                'url' => null,
-                'icon' => null
-            ];
-        }
-
-        $extension = strtolower($file->getClientOriginalExtension());
-        $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif']);
-        $isPdf = $extension === 'pdf';
-
-        $result = [
-            'type' => $isImage ? 'image' : ($isPdf ? 'pdf' : 'other'),
-            'name' => $file->getClientOriginalName(),
-            'url' => null,
-            'icon' => $isImage ? 'bi-file-image' : ($isPdf ? 'bi-file-earmark-pdf' : 'bi-file'),
-            'icon_color' => $isImage ? 'text-primary' : ($isPdf ? 'text-danger' : 'text-secondary')
-        ];
-
-        // Only try to get temporary URL for images
-        if ($isImage) {
-            try {
-                $result['url'] = $file->temporaryUrl();
-            } catch (\Exception $e) {
-                // Temporary URL failed, we'll use the icon instead
-                $result['url'] = null;
-            }
-        }
-
-        return $result;
+        $this->js("
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'You won\\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    \$wire.deleteProduct($id);
+                }
+            });
+        ");
     }
 
-    public function updatedImage()
+    // 🔹 Delete Product
+    public function deleteProduct($id)
     {
-        if ($this->image) {
-            $this->imagePreview = $this->getFilePreview($this->image);
+        $product = ProductDetail::findOrFail($id);
+
+        // Delete related records first
+        ProductPrice::where('product_id', $id)->delete();
+        ProductStock::where('product_id', $id)->delete();
+
+        // Delete image if exists
+        if ($product->image) {
+            Storage::disk('public')->delete($product->image);
         }
+
+        // Delete the product
+        $product->delete();
+
+        $this->js("Swal.fire('Success!', 'Product deleted successfully!', 'success')");
     }
 
-    public function updatedEditImage()
+    // 🔹 View Product Details
+    public $viewProduct;
+
+    public function viewProductDetails($id)
     {
-        if ($this->editImage) {
-            $this->editImagePreview = $this->getFilePreview($this->editImage);
-        }
+        $this->viewProduct = ProductDetail::with(['price', 'stock'])
+            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
+            ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
+            ->select(
+                'product_details.*',
+                'brand_lists.brand_name as brand',
+                'category_lists.category_name as category'
+            )
+            ->where('product_details.id', $id)
+            ->first();
+
+        $this->js("$('#viewProductModal').modal('show')");
     }
 
-    public function resetEditImage()
+    // 🔹 Duplicate Product
+    public function duplicateProduct($id)
     {
-        $this->editImage = null;
-        $this->editImagePreview = null;
+        $product = ProductDetail::with(['price', 'stock'])->findOrFail($id);
+
+        $newProduct = ProductDetail::create([
+            'code' => $this->generateProductCode(),
+            'name' => $product->name . ' Copy',
+            'model' => $product->model,
+            'image' => $product->image,
+            'description' => $product->description,
+            'barcode' => $product->barcode,
+            'status' => 'inactive',
+            'brand_id' => $product->brand_id,
+            'category_id' => $product->category_id,
+        ]);
+
+        if ($product->price) {
+            ProductPrice::create([
+                'product_id' => $newProduct->id,
+                'supplier_price' => $product->price->supplier_price,
+                'selling_price' => $product->price->selling_price,
+                'discount_price' => $product->price->discount_price,
+            ]);
+        }
+
+        if ($product->stock) {
+            ProductStock::create([
+                'product_id' => $newProduct->id,
+                'available_stock' => 0,
+                'damage_stock' => 0,
+                'total_stock' => 0,
+                'sold_count' => 0,
+                'restocked_quantity' => 0,
+            ]);
+        }
+
+        $this->js("$('#editProductModal').modal('hide')");
+        $this->js("Swal.fire('Success!', 'Product duplicated successfully!', 'success')");
+    }
+
+    // 🔹 Generate Product Code
+    private function generateProductCode()
+    {
+        $lastProduct = ProductDetail::latest('id')->first();
+        $nextId = $lastProduct ? $lastProduct->id + 1 : 1;
+        return 'PRD-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
     }
 }
