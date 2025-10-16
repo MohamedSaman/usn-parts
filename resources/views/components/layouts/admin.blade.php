@@ -798,7 +798,7 @@
 
                 </li>
               
-                <a class="nav-link" href="{{ route('admin.settings') }}">
+                <a class="nav-link" href="{{ route('admin.systemsetting') }}">
                     <i class="bi bi-gear"></i> <span>Settings</span>
                 </a>
 
