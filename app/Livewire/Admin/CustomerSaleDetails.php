@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
@@ -14,14 +15,14 @@ use App\Models\Customer;
 class CustomerSaleDetails extends Component
 {
     use WithPagination;
-    
+
     public $modalData = null;
-    
+
     public function viewSaleDetails($customerId)
     {
         // Get customer details
         $customer = Customer::findOrFail($customerId);
-        
+
         // Get customer sales summary
         $salesSummary = DB::table('sales')
             ->where('customer_id', $customerId)
@@ -31,39 +32,40 @@ class CustomerSaleDetails extends Component
                 DB::raw('SUM(total_amount) - SUM(due_amount) as total_paid')
             )
             ->first();
-            
+
         // Get individual invoices
         $invoices = Sale::where('customer_id', $customerId)
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         // Get product-wise sales with Product details
         $productSales = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('product_details', 'sale_items.product_id', '=', 'product_details.id')
+            ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
             ->where('sales.customer_id', $customerId)
             ->select(
                 'sale_items.*',
                 'sales.invoice_number',
                 'sales.created_at as sale_date',
                 'product_details.name as Product_name',
-                'product_details.brand as Product_brand',
+                'brand_lists.name as Product_brand',
                 'product_details.model as Product_model',
                 'product_details.image as Product_image'
             )
             ->orderBy('sales.created_at', 'desc')
             ->get();
-            
+
         $this->modalData = [
             'customer' => $customer,
             'salesSummary' => $salesSummary,
             'invoices' => $invoices,
             'productSales' => $productSales
         ];
-        
+
         $this->dispatch('open-customer-sale-details-modal');
     }
-    
+
     // For print functionality (main table)
     public function printData()
     {
@@ -90,22 +92,22 @@ class CustomerSaleDetails extends Component
             ->groupBy('customers.id', 'customers.name', 'customers.email', 'customers.business_name', 'customers.type')
             ->orderBy('total_sales', 'desc')
             ->get();
-        
+
         $headers = [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="customer_sales_' . date('Y-m-d') . '.csv"',
         ];
-        
-        $callback = function() use ($customerSales) {
+
+        $callback = function () use ($customerSales) {
             $file = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($file, ['#', 'Customer Name', 'Email', 'Business Name', 'Type', 'Invoices', 'Total Sales', 'Total Paid', 'Total Due', 'Collection %']);
-            
+
             // Add data rows
             foreach ($customerSales as $index => $customer) {
                 $percentage = $customer->total_sales > 0 ? round(($customer->total_paid / $customer->total_sales) * 100) : 100;
-                
+
                 fputcsv($file, [
                     $index + 1,
                     $customer->name,
@@ -119,13 +121,13 @@ class CustomerSaleDetails extends Component
                     $percentage . '%'
                 ]);
             }
-            
+
             fclose($file);
         };
-        
+
         return response()->stream($callback, 200, $headers);
     }
-    
+
     public function render()
     {
         $customerSales = DB::table('sales')

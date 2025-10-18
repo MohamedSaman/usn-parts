@@ -96,17 +96,22 @@ class Billing extends Component
             // Search all products from product_details table and join with stock information
             $this->searchResults = ProductDetail::leftJoin('product_stocks', 'product_stocks.product_id', '=', 'product_details.id')
                 ->leftJoin('product_prices', 'product_prices.product_id', '=', 'product_details.id')
+                ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
+                ->leftJoin('category_lists', 'category_lists.id', '=', 'product_details.category_id')
                 ->select(
                     'product_details.*',
                     'product_prices.selling_price as selling_price',
                     'product_prices.discount_price as discount_price',
-                    DB::raw('COALESCE(product_stocks.available_stock, 0) as available_stock')
+                    DB::raw('COALESCE(product_stocks.available_stock, 0) as available_stock'),
+                    'brand_lists.name as brand_name',
+                    'category_lists.name as category_name'
                 )
                 ->where(function ($query) {
                     $query->where('product_details.code', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%')
-                        ->orWhere('product_details.brand', 'like', '%' . $this->search . '%')
+                        ->orWhere('brand_lists.name', 'like', '%' . $this->search . '%')
+                        ->orWhere('category_lists.name', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.name', 'like', '%' . $this->search . '%');
                 })
                 ->orderBy('product_details.name')
@@ -491,7 +496,7 @@ class Billing extends Component
                     'product_id' => $productId,
                     'product_code' => $item['code'],
                     'product_name' => $item['name'],
-                    
+
                     'quantity' => $this->quantities[$productId],
                     'unit_price' => $item['price'],
                     'discount' => $this->discounts[$productId],
@@ -507,7 +512,7 @@ class Billing extends Component
 
             // Reset customer selection
             $this->customerId = null;
-            
+
             // Clear cart and payment info
             $this->clearCart();
             $this->resetPaymentInfo();

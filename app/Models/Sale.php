@@ -64,4 +64,9 @@ class Sale extends Model
 
         return $prefix . $date . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
+
+    public function returns()
+    {
+        return $this->hasMany(ReturnsProduct::class, 'sale_id');
+    }   
 }

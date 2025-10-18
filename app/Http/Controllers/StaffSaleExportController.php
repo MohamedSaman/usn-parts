@@ -80,11 +80,12 @@ class StaffSaleExportController extends Controller
         $staffName = $staffDetails ? $staffDetails->name : 'Unknown';
 
         $products = StaffProduct::join('product_details', 'staff_products.product_id', '=', 'product_details.id')
+            ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
             ->where('staff_products.staff_id', $staffId)
             ->select(
                 'staff_products.*',
                 'product_details.name as product_name',
-                'product_details.brand as product_brand',
+                'brand_lists.name as product_brand',
                 'product_details.model as product_model',
                 'product_details.code as product_code'
             )

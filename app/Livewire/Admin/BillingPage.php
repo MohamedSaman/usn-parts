@@ -105,14 +105,24 @@ class BillingPage extends Component
         if (strlen($this->search) >= 2) {
             $this->searchResults = ProductDetail::join('product_prices', 'product_prices.product_id', '=', 'product_details.id')
                 ->join('product_stocks', 'product_stocks.product_id', '=', 'product_details.id')
-                ->select('product_details.*', 'product_prices.selling_price', 'product_prices.discount_price', 'product_stocks.available_stock')
+                ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
+                ->leftJoin('category_lists', 'category_lists.id', '=', 'product_details.category_id')
+                ->select(
+                    'product_details.*',
+                    'product_prices.selling_price',
+                    'product_prices.discount_price',
+                    'product_stocks.available_stock',
+                    'brand_lists.brand_name as brand_name',
+                    'category_lists.category_name as category_name'
+                )
                 ->where('product_details.status', '=', 'active')
                 ->where('product_stocks.available_stock', '>', 0) // Only show products with stock > 0
-                ->where(function($query) {
+                ->where(function ($query) {
                     $query->where('product_details.code', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%')
-                        ->orWhere('product_details.brand', 'like', '%' . $this->search . '%')
+                        ->orWhere('brand_lists.brand_name', 'like', '%' . $this->search . '%')
+                        ->orWhere('category_lists.category_name', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.name', 'like', '%' . $this->search . '%');
                 })
                 ->take(50)
@@ -127,8 +137,12 @@ class BillingPage extends Component
         $Product = ProductDetail::join('product_prices', 'product_prices.product_id', '=', 'product_details.id')
             ->join('product_stocks', 'product_stocks.product_id', '=', 'product_details.id')
             ->where('product_details.id', $ProductId)
-            ->select('product_details.*', 'product_prices.selling_price', 'product_prices.discount_price', 
-                     'product_stocks.available_stock')
+            ->select(
+                'product_details.*',
+                'product_prices.selling_price',
+                'product_prices.discount_price',
+                'product_stocks.available_stock'
+            )
             ->first();
 
         if (!$Product || $Product->available_stock <= 0) {
@@ -175,7 +189,7 @@ class BillingPage extends Component
         }
 
         $maxAvailable = $this->cart[$ProductId]['inStock'];
-        
+
         // Ensure quantity is valid
         $quantity = (int)$quantity;
         if ($quantity < 1) {
@@ -184,7 +198,7 @@ class BillingPage extends Component
             $quantity = $maxAvailable;
             $this->js('swal.fire("Warning", "Quantity limited to maximum available (' . $maxAvailable . ')", "warning")');
         }
-        
+
         $this->quantities[$ProductId] = $quantity;
         $this->updateTotals();
     }
@@ -197,12 +211,11 @@ class BillingPage extends Component
 
     public function removeFromCart($ProductId)
     {
-        
+
         unset($this->cart[$ProductId]);
         unset($this->quantities[$ProductId]);
         unset($this->discounts[$ProductId]);
         $this->updateTotals();
-        
     }
 
     public function showDetail($ProductId)
@@ -244,25 +257,25 @@ class BillingPage extends Component
             $this->js('swal.fire("Error", "Please add items to the cart.", "error")');
             return;
         }
-        
+
         // Add stock validation
         $invalidItems = [];
         foreach ($this->cart as $id => $item) {
             // Get the latest stock directly from database
             $currentStock = ProductStock::where('product_id', $id)->value('available_stock');
-            
+
             if ($currentStock < $this->quantities[$id]) {
                 $invalidItems[] = $item['name'] . " (Requested: {$this->quantities[$id]}, Available: {$currentStock})";
             }
         }
-        
+
         if (!empty($invalidItems)) {
             $errorMessage = "Cannot complete sale due to insufficient stock:<br><ul>";
             foreach ($invalidItems as $item) {
                 $errorMessage .= "<li>{$item}</li>";
             }
             $errorMessage .= "</ul>";
-            
+
             $this->js('swal.fire({
                 title: "Stock Error",
                 html: "' . $errorMessage . '",
@@ -270,14 +283,14 @@ class BillingPage extends Component
             })');
             return;
         }
-        
+
         // Validate staff selection
         $this->validate();
-        
+
         try {
             // Start a database transaction
             DB::beginTransaction();
-            
+
             // Create a new StaffSale record
             $staffSale = new StaffSale();
             $staffSale->staff_id = $this->selectedStaffId;
@@ -288,13 +301,13 @@ class BillingPage extends Component
             $staffSale->sold_value = 0; // Initially 0 as products are just being assigned
             $staffSale->status = 'assigned';
             $staffSale->save();
-            
+
             // Create records for each product assigned
             foreach ($this->cart as $ProductId => $item) {
                 $unitPrice = $item['discountPrice'] ?: $item['price'];
                 $totalDiscount = $this->discounts[$ProductId] * $this->quantities[$ProductId];
                 $totalValue = ($unitPrice * $this->quantities[$ProductId]) - $totalDiscount;
-                
+
                 $staffProduct = new StaffProduct();
                 $staffProduct->staff_sale_id = $staffSale->id;
                 $staffProduct->product_id = $ProductId;
@@ -308,7 +321,7 @@ class BillingPage extends Component
                 $staffProduct->sold_value = 0; // Initially 0
                 $staffProduct->status = 'assigned';
                 $staffProduct->save();
-                
+
                 // Update Product stock
                 $ProductStock = ProductStock::where('product_id', $ProductId)->first();
                 if ($ProductStock) {
@@ -317,20 +330,19 @@ class BillingPage extends Component
                     $ProductStock->save();
                 }
             }
-            
+
             DB::commit();
-            
+
             // Show success message
             $this->js('swal.fire("Success", "Products successfully assigned to staff.", "success")');
-            
+
             // Reset the form
             $this->clearCart();
             $this->selectedStaffId = null;
-            
         } catch (Exception $e) {
             DB::rollBack();
             Log::error('Error assigning products to staff: ' . $e->getMessage());
-            $this->js('swal.fire("Error", "'.$e->getMessage().'", "error")');
+            $this->js('swal.fire("Error", "' . $e->getMessage() . '", "error")');
         }
     }
 

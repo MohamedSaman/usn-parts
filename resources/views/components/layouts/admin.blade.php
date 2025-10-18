@@ -669,6 +669,11 @@
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
+                                    <i class="bi bi-collection"></i> <span>Return Product</span>
+                                </a>
+                            </li
                         </ul>
                     </div>
                 </li>

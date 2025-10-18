@@ -20,7 +20,7 @@ use Livewire\Attributes\Layout;
 #[Layout('components.layouts.admin')]
 class Products extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     public $search = '';
 
@@ -96,7 +96,7 @@ class Products extends Component
             'brand' => 'required|exists:brand_lists,id',
             'category' => 'required|exists:category_lists,id',
             'supplier' => 'nullable|exists:product_suppliers,id',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable',
             'description' => 'nullable|string',
             'barcode' => 'nullable|string|max:255',
             'supplier_price' => 'required|numeric|min:0',
@@ -111,13 +111,13 @@ class Products extends Component
     {
         $this->validateCreateProduct();
 
-        $imagePath = $this->image ? $this->image->store('product_images', 'public') : null;
+        
 
         $product = ProductDetail::create([
-            'code' => $this->generateProductCode(),
+            'code' => $this->code,
             'name' => $this->name,
             'model' => $this->model,
-            'image' => $imagePath,
+            'image' => $this->image,
             'description' => $this->description,
             'barcode' => $this->barcode,
             'status' => 'active',
@@ -209,13 +209,10 @@ class Products extends Component
             'editDescription' => 'nullable|string',
             'editBarcode' => 'nullable|string|max:255',
             'editStatus' => 'required|string|max:50',
+            'editImage' => 'nullable',
         ]);
 
         $product = ProductDetail::findOrFail($this->editId);
-
-        $imagePath = $this->editImage
-            ? $this->editImage->store('product_images', 'public')
-            : $this->existingImage;
 
         $product->update([
             'code' => $this->editCode,
@@ -223,7 +220,7 @@ class Products extends Component
             'model' => $this->editModel,
             'brand_id' => $this->editBrand,
             'category_id' => $this->editCategory,
-            'image' => $imagePath,
+            'image' => $this->editImage,
             'description' => $this->editDescription,
             'barcode' => $this->editBarcode,
             'status' => $this->editStatus,
@@ -308,7 +305,7 @@ class Products extends Component
         $product = ProductDetail::with(['price', 'stock'])->findOrFail($id);
 
         $newProduct = ProductDetail::create([
-            'code' => $this->generateProductCode(),
+            'code' => $product->code.'copy',
             'name' => $product->name . ' Copy',
             'model' => $product->model,
             'image' => $product->image,
@@ -343,11 +340,5 @@ class Products extends Component
         $this->js("Swal.fire('Success!', 'Product duplicated successfully!', 'success')");
     }
 
-    // 🔹 Generate Product Code
-    private function generateProductCode()
-    {
-        $lastProduct = ProductDetail::latest('id')->first();
-        $nextId = $lastProduct ? $lastProduct->id + 1 : 1;
-        return 'PRD-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
-    }
+    
 }

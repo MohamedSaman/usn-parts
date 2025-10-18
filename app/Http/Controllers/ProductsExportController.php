@@ -9,14 +9,17 @@ class ProductsExportController extends Controller
 {
     public function export()
     {
-        $Productes = ProductDetail::join('Product_prices', 'Product_details.id', '=', 'Product_prices.Product_id')
-            ->join('Product_stocks', 'Product_details.id', '=', 'Product_stocks.Product_id')
+        $products = ProductDetail::join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
+            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
+            ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
+            ->leftJoin('category_lists', 'category_lists.id', '=', 'product_details.category_id')
             ->select(
-                'Product_details.id',
-                'Product_details.code',
-                'Product_details.name as Product_name',
-                'Product_details.model',
-                'Product_details.brand',
+                'product_details.id',
+                'product_details.code',
+                'product_details.name as product_name',
+                'product_details.model',
+                'brand_lists.name as brand_name',
+                'category_lists.name as category_name',
                 'Product_details.color',
                 'Product_details.made_by',
                 'Product_details.category',
@@ -52,17 +55,39 @@ class ProductsExportController extends Controller
             'Content-Disposition' => "attachment; filename=\"$filename\"",
         ];
 
-        $callback = function() use ($Productes) {
+        $callback = function () use ($Productes) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, [
-                'ID', 'Code', 'Name', 'Model', 'Brand', 'Color', 'Made By',
-                'Category', 'Gender', 'Type', 'Movement', 'Dial Color',
-                'Strap Color', 'Strap Material', 'Case Diameter (mm)',
-                'Case Thickness (mm)', 'Glass Type', 'Water Resistance',
-                'Warranty', 'Barcode', 'Status', 'Supplier Price',
-                'Selling Price', 'Discount Price', 'Shop Stock',
-                'Store Stock', 'Damage Stock', 'Total Stock',
-                'Available Stock', 'Supplier'
+                'ID',
+                'Code',
+                'Name',
+                'Model',
+                'Brand',
+                'Color',
+                'Made By',
+                'Category',
+                'Gender',
+                'Type',
+                'Movement',
+                'Dial Color',
+                'Strap Color',
+                'Strap Material',
+                'Case Diameter (mm)',
+                'Case Thickness (mm)',
+                'Glass Type',
+                'Water Resistance',
+                'Warranty',
+                'Barcode',
+                'Status',
+                'Supplier Price',
+                'Selling Price',
+                'Discount Price',
+                'Shop Stock',
+                'Store Stock',
+                'Damage Stock',
+                'Total Stock',
+                'Available Stock',
+                'Supplier'
             ]);
             foreach ($Productes as $Product) {
                 fputcsv($handle, [

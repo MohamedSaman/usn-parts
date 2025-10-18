@@ -59,8 +59,7 @@
                                                 </div>
                                                 <div class="text-muted small mt-1">
                                                     <span class="me-2">Code: {{ $result->code }}</span> |
-                                                    <span class="mx-2">Model: {{ $result->model }}</span> |
-                                                    <span class="ms-2">Brand: {{ $result->brand }}</span>
+                                                    <span class="mx-2">Model: {{ $result->model }}</span>
                                                 </div>
                                             </div>
 
@@ -127,8 +126,7 @@
                                                 </div>
                                                 <div class="d-flex flex-column justify-content-center">
                                                     <h6 class="mb-0 text-sm">{{ $item['name'] }}</h6>
-                                                    <p class="text-xs text-secondary mb-0">{{ $item['code'] }} |
-                                                        {{ $item['brand'] }}
+                                                    <p class="text-xs text-secondary mb-0">{{ $item['code'] }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -247,7 +245,7 @@
                                         </div>
 
                                         <!-- Payment Method Selection -->
-                                        <div class="mb-3">
+                                        <!-- <div class="mb-3">
                                             <label class="form-label fw-bold">Payment Type</label>
                                             <div class="d-flex">
                                                 <div class="form-check me-4">
@@ -273,7 +271,7 @@
                                                     </label>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </div> -->
 
                                         @if ($paymentType == 'full')
                                         <!-- Full Payment - Single Payment Method -->
