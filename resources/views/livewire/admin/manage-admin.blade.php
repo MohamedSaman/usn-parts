@@ -7,6 +7,11 @@
             </h3>
             <p class="text-muted mb-0">Manage all admin accounts efficiently</p>
         </div>
+        <div>
+                <button class="btn btn-primary" wire:click="createAdmin">
+                    <i class="bi bi-plus-lg me-2"></i> Create Admin
+                </button>
+            </div>
     </div>
 
     @if (session()->has('error'))
@@ -31,11 +36,7 @@
                     <i class="bi bi-journal-text text-primary me-2"></i> Admin List
                 </h5>
             </div>
-            <div class="card-tools">
-                <button class="btn btn-primary btn-sm" wire:click="createAdmin">
-                    <i class="bi bi-plus-lg me-1"></i> Create Admin
-                </button>
-            </div>
+            
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
