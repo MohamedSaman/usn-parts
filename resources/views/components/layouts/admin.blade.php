@@ -646,7 +646,7 @@
                             </li>
                             <!-- Disabled: Manage Staff -->
                             <li class="nav-item">
-                                <a class="nav-link py-2 disabled" href="#">
+                                <a class="nav-link py-2 " href="{{ route('admin.manage-staff') }}">
                                     <i class="bi bi-person-lines-fill"></i> <span>Manage Staff</span>
                                 </a>
                             </li>
