@@ -842,9 +842,9 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
 
-            <!-- Centered Company Name -->
-            <div class="flex-grow-1 d-flex justify-content-center">
-                <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
+            <!-- Centered Company Name (hidden on small screens) -->
+            <div class="flex-grow-1 d-none d-md-flex justify-content-center">
+                <h2 class="mb-0"><b>USN Auto Parts</b></h2>
             </div>
             @php
             use App\Models\CashInHand as CashModel;
