@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use App\Models\User;
 use Livewire\Component;
-use Livewire\Attributes\On;
-use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Hash;
@@ -14,6 +13,24 @@ use Illuminate\Support\Facades\Hash;
 #[Title('Manage Admin')]
 class ManageAdmin extends Component
 {
+    public $name;
+    public $contactNumber;
+    public $email;
+    public $password;
+    public $confirmPassword;
+
+    public $editAdminId;
+    public $editName;
+    public $editContactNumber;
+    public $editEmail;
+    public $editPassword;
+    public $editConfirmPassword;
+
+    public $deleteId;
+    public $showEditModal = false;
+    public $showCreateModal = false;
+    public $showDeleteModal = false;
+
     public function render()
     {
         $admins = User::where('role', 'admin')->get();
@@ -22,17 +39,33 @@ class ManageAdmin extends Component
         ]);
     }
 
+    /** ----------------------------
+     * Create Admin
+     * ---------------------------- */
     public function createAdmin()
     {
-        $this->reset();
-        $this->js("$('#createAdminModal').modal('show')");
+        $this->resetForm();
+        $this->showCreateModal = true;
     }
-    public $name;
-    public $contactNumber;
-    public $email;
-    public $password;
-    public $confirmPassword;
- 
+
+    public function resetForm()
+    {
+        $this->reset([
+            'name', 'contactNumber', 'email', 'password', 'confirmPassword',
+            'editAdminId', 'editName', 'editContactNumber', 'editEmail', 
+            'editPassword', 'editConfirmPassword'
+        ]);
+        $this->resetErrorBag();
+    }
+
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->resetForm();
+    }
+
     public function saveAdmin()
     {
         $this->validate([
@@ -46,42 +79,39 @@ class ManageAdmin extends Component
         try {
             User::create([
                 'name' => $this->name,
-                'contact'=> $this->contactNumber,
+                'contact' => $this->contactNumber,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
                 'role' => 'admin',
             ]);
-            $this->js("Swal.fire('Success!', 'Admin Created Successfully', 'success')");
-        } catch (Exception $e) {
-            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
-        }
 
-        $this->js('$("#createAdminModal").modal("hide")');
+            $this->js("Swal.fire('Success!', 'Admin Created Successfully', 'success')");
+            $this->closeModal();
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
+        }
     }
 
-    public $editName;
-    public $editContactNumber;
-    public $editEmail;
-    
-    public $editAdminId;
-    public $editPassword;
-    public $editConfirmPassword;
+    /** ----------------------------
+     * Edit Admin
+     * ---------------------------- */
     public function editAdmin($id)
     {
         $user = User::find($id);
-        if(! $user) {
-            $this->js("Swal.fire('Error!', 'Admin Not Found', 'error')");
+
+        if (!$user) {
+            $this->js("Swal.fire('Error!', 'Admin not found.', 'error')");
             return;
         }
+
+        $this->editAdminId = $user->id;
         $this->editName = $user->name;
         $this->editContactNumber = $user->contact;
         $this->editEmail = $user->email;
-        $this->editAdminId = $user->id;
-        // Don't set password fields - leave them blank
         $this->editPassword = '';
         $this->editConfirmPassword = '';
 
-        $this->dispatch('edit-admin-modal');
+        $this->showEditModal = true;
     }
 
     public function updateAdmin()
@@ -114,31 +144,38 @@ class ManageAdmin extends Component
                 
                 $user->save();
                 $this->js("Swal.fire('Success!', 'Admin Updated Successfully', 'success')");
+                $this->closeModal();
             } else {
                 $this->js("Swal.fire('Error!', 'Admin Not Found', 'error')");
             }
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
-
-        $this->js('$("#editAdminModal").modal("hide")');
     }
-    public $deleteId;
+
+    /** ----------------------------
+     * Delete Admin
+     * ---------------------------- */
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
-        $this->dispatch('confirm-delete');
+        $this->showDeleteModal = true;
     }
-    #[On('confirmDelete')]
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteId = null;
+    }
+
     public function deleteAdmin()
     {
-        $user = User::find($this->deleteId);
-        if ($user) {
-            $user->delete();
-            // $this->js("Swal.fire('Success!', 'Admin Deleted Successfully', 'success')");
-        } else {
-            $this->js("Swal.fire('Error!', 'Admin Not Found', 'error')");
+        try {
+            User::where('id', $this->deleteId)->delete();
+            $this->js("Swal.fire('Success!', 'Admin deleted successfully.', 'success')");
+            $this->cancelDelete();
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
         }
     }
-    
 }
