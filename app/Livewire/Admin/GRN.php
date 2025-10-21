@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\ProductDetail;
+use App\Models\ProductStock;
 use Illuminate\Support\Str;
 
 use Livewire\Attributes\Layout;
@@ -20,7 +21,7 @@ class GRN extends Component
     public $grnItems = [];
     public $searchProduct = '';
     public $searchResults = [];
-    public $newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'pending'];
+    public $newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'received'];
 
     protected $listeners = ['deleteGRNItem'];
 
@@ -32,15 +33,21 @@ class GRN extends Component
 
     public function loadPurchaseOrders()
     {
-        $this->purchaseOrders = PurchaseOrder::where('status', 'complete')
+        $this->purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
             ->with(['supplier', 'items.product'])
             ->latest()
             ->get();
     }
 
-    public function openGRN($orderId)
+    public function viewGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
+        
+        if (!$this->selectedPO) {
+            $this->dispatch('alert', ['message' => 'Order not found!', 'type' => 'error']);
+            return;
+        }
+        
         $this->grnItems = [];
         $this->searchResults = ['unplanned' => []];
 
@@ -53,9 +60,41 @@ class GRN extends Component
                 'received_qty' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount,
-                'status' => $item->status ?? 'pending',
+                'status' => $item->status ?? 'received',
             ];
         }
+        
+        // Dispatch event to open modal after data is loaded
+        $this->dispatch('open-view-grn-modal');
+    }
+
+    public function openGRN($orderId)
+    {
+        $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
+        
+        if (!$this->selectedPO) {
+            $this->dispatch('alert', ['message' => 'Order not found!', 'type' => 'error']);
+            return;
+        }
+        
+        $this->grnItems = [];
+        $this->searchResults = ['unplanned' => []];
+
+        foreach ($this->selectedPO->items as $item) {
+            $this->grnItems[] = [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'name' => $item->product->name,
+                'ordered_qty' => $item->quantity,
+                'received_qty' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'discount' => $item->discount,
+                'status' => $item->status ,
+            ];
+        }
+        
+        // Dispatch event to open modal after data is loaded
+        $this->dispatch('open-grn-modal');
     }
 
     public function updated($propertyName)
@@ -65,7 +104,8 @@ class GRN extends Component
             $searchTerm = $this->grnItems[$index]['name'];
             if (strlen($searchTerm) > 1) {
                 $this->searchResults[$index] = ProductDetail::where('name', 'like', "%{$searchTerm}%")
-                    ->with('price')
+                    ->orWhere('code', 'like', "%{$searchTerm}%")
+                    ->with(['price', 'stock'])
                     ->limit(5)
                     ->get();
             } else {
@@ -74,7 +114,8 @@ class GRN extends Component
         } elseif ($propertyName === 'searchProduct') {
             if (strlen($this->searchProduct) > 1) {
                 $this->searchResults['unplanned'] = ProductDetail::where('name', 'like', "%{$this->searchProduct}%")
-                    ->with('price')
+                    ->orWhere('code', 'like', "%{$this->searchProduct}%")
+                    ->with(['price', 'stock'])
                     ->limit(5)
                     ->get();
             } else {
@@ -94,14 +135,14 @@ class GRN extends Component
                 $this->newItem['product_id'] = $product->id;
                 $this->newItem['name'] = $product->name;
                 $this->newItem['unit_price'] = $unitPrice;
-                $this->newItem['status'] = 'pending';
+                $this->newItem['status'] = 'received';
                 $this->searchProduct = $product->name;
                 $this->searchResults['unplanned'] = [];
             } else {
                 $this->grnItems[$index]['product_id'] = $product->id;
                 $this->grnItems[$index]['name'] = $product->name;
                 $this->grnItems[$index]['unit_price'] = $unitPrice;
-                $this->grnItems[$index]['status'] = 'pending';
+                $this->grnItems[$index]['status'] = 'received';
                 $this->searchResults[$index] = [];
             }
         }
@@ -118,10 +159,10 @@ class GRN extends Component
             'received_qty' => $this->newItem['qty'],
             'unit_price' => $this->newItem['unit_price'],
             'discount' => $this->newItem['discount'],
-            'status' => 'pending',
+            'status' => 'received',
         ];
 
-        $this->newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'pending'];
+        $this->newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'received'];
         $this->searchProduct = '';
         $this->searchResults['unplanned'] = [];
     }
@@ -135,8 +176,12 @@ class GRN extends Component
             'received_qty' => 1,
             'unit_price' => 0,
             'discount' => 0,
-            'status' => 'pending',
+            'status' => 'received',
         ];
+        
+        // Initialize search results for the new row
+        $newIndex = count($this->grnItems) - 1;
+        $this->searchResults[$newIndex] = [];
     }
 
     public function deleteGRNItem($index)
@@ -154,17 +199,17 @@ class GRN extends Component
 
     public function correctGRNItem($index)
     {
-        if (isset($this->grnItems[$index]['id'])) {
-            $orderItem = PurchaseOrderItem::find($this->grnItems[$index]['id']);
-            if ($orderItem) {
-                $orderItem->status = 'received';
-                $orderItem->quantity = $this->grnItems[$index]['received_qty'];
-                $orderItem->unit_price = $this->grnItems[$index]['unit_price'];
-                $orderItem->discount = $this->grnItems[$index]['discount'];
-                $orderItem->save();
-            }
-        }
+        $item = $this->grnItems[$index];
+        $productId = $item['product_id'];
+        $receivedQty = $item['received_qty'] ?? 0;
+
+        // Mark the item as received in the UI
         $this->grnItems[$index]['status'] = 'received';
+        
+        // Update stock immediately if we have a valid product and quantity
+        if ($productId && $receivedQty > 0) {
+            $this->updateProductStock($productId, $receivedQty);
+        }
     }
 
     public function saveGRN()
@@ -172,26 +217,49 @@ class GRN extends Component
         if (!$this->selectedPO || empty($this->grnItems)) return;
 
         foreach ($this->grnItems as $item) {
+            // Skip items that are marked as not received
+            if (strtolower($item['status'] ?? '') === 'notreceived') {
+                continue;
+            }
+
+            $productId = $item['product_id'];
+            $receivedQty = $item['received_qty'] ?? 0;
+
+            // Skip items without a valid product_id (empty rows)
+            if (!$productId) {
+                continue;
+            }
+
             if (isset($item['id'])) {
                 // Update existing order item
                 $orderItem = PurchaseOrderItem::find($item['id']);
                 if ($orderItem) {
-                    $orderItem->quantity = $item['received_qty'];
+                    $orderItem->quantity = $receivedQty;
                     $orderItem->unit_price = $item['unit_price'];
                     $orderItem->discount = $item['discount'];
                     $orderItem->status = $item['status'];
                     $orderItem->save();
+
+                    // Update stock if status is received
+                    if (strtolower($item['status'] ?? '') === 'received' && $receivedQty > 0) {
+                        $this->updateProductStock($productId, $receivedQty);
+                    }
                 }
             } else {
-                // Create new item
-                PurchaseOrderItem::create([
+                // Create new item for this purchase order (only if product is selected)
+                $newOrderItem = PurchaseOrderItem::create([
                     'order_id' => $this->selectedPO->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['received_qty'],
-                    'unit_price' => $item['unit_price'],
-                    'discount' => $item['discount'],
+                    'product_id' => $productId,
+                    'quantity' => $receivedQty,
+                    'unit_price' => $item['unit_price'] ?? 0,
+                    'discount' => $item['discount'] ?? 0,
                     'status' => $item['status'],
                 ]);
+
+                // Update stock if status is received
+                if (strtolower($item['status'] ?? '') === 'received' && $receivedQty > 0) {
+                    $this->updateProductStock($productId, $receivedQty);
+                }
             }
         }
 
@@ -200,11 +268,34 @@ class GRN extends Component
         $this->selectedPO->status = 'received';
         $this->selectedPO->save();
 
-        $this->dispatch('alert', ['message' => 'GRN processed successfully!']);
+        $this->dispatch('alert', ['message' => 'GRN processed successfully! Stock updated.']);
         $this->selectedPO = null;
         $this->grnItems = [];
         $this->searchResults = ['unplanned' => []];
         $this->loadPurchaseOrders();
+    }
+
+    private function updateProductStock($productId, $quantity)
+    {
+        $stock = ProductStock::where('product_id', $productId)->first();
+
+        if ($stock) {
+            // Update existing stock
+            $stock->available_stock += $quantity;
+            $stock->total_stock += $quantity;
+            $stock->restocked_quantity += $quantity;
+            $stock->save();
+        } else {
+            // Create new stock record
+            ProductStock::create([
+                'product_id' => $productId,
+                'available_stock' => $quantity,
+                'damage_stock' => 0,
+                'total_stock' => $quantity,
+                'sold_count' => 0,
+                'restocked_quantity' => $quantity,
+            ]);
+        }
     }
 
     public function render()

@@ -1,77 +1,107 @@
 <div>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            <h3 class="fw-bold text-dark mb-2">
+                <i class="bi bi-cart-check-fill text-primary me-2"></i> Purchase Order Management
+            </h3>
+            <p class="text-muted mb-0">Create and manage purchase orders from suppliers</p>
+        </div>
+        <div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPurchaseOrderModal">
+                <i class="bi bi-plus-circle me-2"></i> New Purchase Order
+            </button>
+        </div>
+    </div>
+
     <div class="container-fluid p-4">
-        {{-- Stats --}}
-        <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <div class="card shadow-sm border-primary">
-                    <div class="card-body d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted text-uppercase">Pending Orders</h6>
-                            <h2>{{ $pendingCount }}</h2>
+        {{-- Summary Cards --}}
+        <div class="row mb-2">
+            <div class="col-xl-6 col-md-6 mb-4">
+                <div class="card summary-card pending h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container bg-warning bg-opacity-10 me-3">
+                                <i class="bi bi-hourglass-split text-warning fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1">Pending Orders</p>
+                                <h4 class="fw-bold mb-0">{{ $pendingCount }}</h4>
+                            </div>
                         </div>
-                        <div class="fs-1 text-primary opacity-50"><i class="bi bi-hourglass-split"></i></div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card shadow-sm border-success">
-                    <div class="card-body d-flex justify-content-between">
-                        <div>
-                            <h6 class="text-muted text-uppercase">Completed Orders</h6>
-                            <h2>{{ $completedCount }}</h2>
+
+            <div class="col-xl-6 col-md-6 mb-4">
+                <div class="card summary-card completed h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-container bg-success bg-opacity-10 me-3">
+                                <i class="bi bi-patch-check-fill text-success fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <p class="text-muted mb-1">Completed Orders</p>
+                                <h4 class="fw-bold mb-0">{{ $completedCount }}</h4>
+                            </div>
                         </div>
-                        <div class="fs-1 text-success opacity-50"><i class="bi bi-patch-check-fill"></i></div>
                     </div>
                 </div>
             </div>
         </div>
 
         {{-- Table --}}
-        <div class="card shadow-sm">
-            <div class="card-header bg-light p-3 d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Purchase Orders</h4>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPurchaseOrderModal">
-                    <i class="bi bi-plus-lg me-1"></i> New Purchase Order
-                </button>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-list-check text-primary me-2"></i> Purchase Orders
+                    </h5>
+                    <p class="text-muted small mb-0">View and manage all purchase orders</p>
+                </div>
             </div>
-            <div class="card-body">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Order Code</th>
-                            <th>Supplier</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($orders as $order)
-                        <tr>
-                            <td>{{ $order->order_code }}</td>
-                            <td>{{ $order->supplier->name ?? 'N/A' }}</td>
-                            <td>
-                                <span class="badge {{ $order->status == 'complete' ? 'bg-success' : 'bg-warning' }}">
-                                    {{ ucfirst($order->status) }}
-                                </span>
-                            </td>
-                            <td class="d-flex gap-2">
-                                <button class="btn btn-outline-primary btn-sm"
-                                    wire:click="viewOrder({{ $order->id }})"
-                                    data-bs-toggle="modal" data-bs-target="#viewOrderModal">
-                                    <i class="bi bi-eye"></i>
-                                </button>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Order Code</th>
+                                <th>Supplier</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orders as $order)
+                            <tr>
+                                <td class="ps-4">
+                                    <span class="fw-medium text-dark">{{ $order->order_code }}</span>
+                                </td>
+                                <td>{{ $order->supplier->name ?? 'N/A' }}</td>
+                                <td>
+                                    <span class="badge {{ $order->status == 'complete' ? 'bg-success' : 'bg-warning' }}">
+                                        {{ ucfirst($order->status) }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-link text-primary p-0 me-2"
+                                        wire:click="viewOrder({{ $order->id }})"
+                                        title="View Order Details">
+                                        <i class="bi bi-eye fs-6"></i>
+                                    </button>
 
-                                @if($order->status != 'complete')
-                                <button class="btn btn-outline-success btn-sm"
-                                    wire:click="confirmComplete({{ $order->id }})">
-                                    <i class="bi bi-check2"></i>
-                                </button>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    @if($order->status != 'complete')
+                                    <button class="btn btn-link text-success p-0"
+                                        wire:click="confirmComplete({{ $order->id }})">
+                                        <i class="bi bi-check-circle fs-6"></i>
+                                    </button>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -81,13 +111,15 @@
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5>Create New Purchase Order</h5>
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-plus-circle text-primary me-2"></i> Create New Purchase Order
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Select Supplier</label>
+                            <label class="form-label fw-semibold">Select Supplier</label>
                             <select class="form-select" wire:model="supplier_id">
                                 <option value="">Choose supplier...</option>
                                 @foreach($suppliers as $supplier)
@@ -96,15 +128,30 @@
                             </select>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Search Product</label>
-                            <input type="text" class="form-control" wire:model.live="search" placeholder="Type product name...">
-                            @if(!empty($products))
-                            <ul class="list-group mt-1">
+                        <div class="col-md-6 position-relative">
+                            <label class="form-label fw-semibold">Search Product</label>
+                            <input type="text" class="form-control" wire:model.live="search" placeholder="Search by name or code...">
+                            @if(!empty($products) && count($products) > 0)
+                            <ul class="list-group mt-1 position-absolute w-100 me-4 z-3 shadow-lg">
                                 @foreach($products as $product)
-                                <li class="list-group-item list-group-item-action"
-                                    wire:click="selectProduct({{ $product->id }})">
-                                    {{ $product->name }}
+                                <li class="list-group-item list-group-item-action p-2" 
+                                    wire:click="selectProduct({{ $product->id }})"
+                                    style="cursor: pointer;">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ $product->image }}" 
+                                             alt="{{ $product->name }}" 
+                                             class="me-2"
+                                             style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">
+                                        <div class="flex-grow-1">
+                                            <div class="fw-semibold text-dark">{{ $product->name }}</div>
+                                            <small class="text-muted">
+                                                Code: <span class="badge bg-secondary">{{ $product->code }}</span>
+                                                | Stock: <span class="badge {{ ($product->stock->total_stock ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $product->stock->total_stock ?? 0 }} units
+                                                </span>
+                                            </small>
+                                        </div>
+                                    </div>
                                 </li>
                                 @endforeach
                             </ul>
@@ -115,16 +162,16 @@
                     @if($selectedProduct)
                     <div class="row align-items-end bg-light p-3 rounded border mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Selected Product</label>
+                            <label class="form-label fw-semibold">Selected Product</label>
                             <input type="text" class="form-control" value="{{ $selectedProduct->name }}" readonly>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label">Quantity</label>
+                            <label class="form-label fw-semibold">Quantity</label>
                             <input type="number" class="form-control" wire:model="quantity" min="1">
                         </div>
                         <div class="col-md-3">
                             <button class="btn btn-success w-100" wire:click="addItem">
-                                <i class="bi bi-plus-circle me-1"></i> Add to PO
+                                <i class="bi bi-plus-circle me-1"></i> Add
                             </button>
                         </div>
                     </div>
@@ -134,7 +181,7 @@
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
-                                <th>#</th>
+                                <th>No</th>
                                 <th>Product</th>
                                 <th>Quantity</th>
                                 <th>Action</th>
@@ -175,9 +222,9 @@
     <div wire:ignore.self class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title" id="viewOrderModalLabel">
-                        Order Details - {{ $selectedOrder?->order_code }}
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye text-primary me-2"></i> Order Details - {{ $selectedOrder?->order_code }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -213,3 +260,148 @@
     </div>
 
 </div>
+
+@push('styles')
+<style>
+    .summary-card {
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .summary-card.pending {
+        border-left-color: #ffc107;
+    }
+    
+    .summary-card.completed {
+        border-left-color: #28a745;
+    }
+    
+    .icon-container {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+    
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .table td {
+        vertical-align: middle;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn-link {
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-link:hover {
+        transform: scale(1.1);
+    }
+    
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        border-color: #4361ee;
+    }
+    
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.50rem 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3f37c9;
+        border-color: #3f37c9;
+        transform: translateY(-2px);
+    }
+
+    /* Product Search Dropdown Styling */
+    .list-group {
+        border-radius: 8px;
+        overflow: hidden;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .list-group-item {
+        border: 1px solid #e2e8f0;
+        transition: all 0.2s ease;
+    }
+
+    .list-group-item:hover {
+        background-color: #e3f2fd;
+        transform: translateX(5px);
+    }
+
+    .list-group-item-action:hover {
+        background-color: #f0f7ff;
+        cursor: pointer;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    // Open View Order modal after data is loaded
+    Livewire.on('open-view-order-modal', () => {
+        var modalEl = document.getElementById('viewOrderModal');
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    });
+</script>
+@endpush

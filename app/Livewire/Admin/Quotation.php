@@ -34,6 +34,8 @@ class Quotation extends Component
     {
         if ($this->search != '') {
             $this->products = ProductDetail::where('name', 'like', '%' . $this->search . '%')
+                ->orWhere('code', 'like', '%' . $this->search . '%')
+                ->with(['stock'])
                 ->limit(5)
                 ->get();
         } else {
@@ -43,9 +45,9 @@ class Quotation extends Component
 
     public function selectProduct($id)
     {
-        $this->selectedProduct = ProductDetail::find($id);
+        $this->selectedProduct = ProductDetail::with(['stock'])->find($id);
         $this->products = [];
-        $this->search = $this->selectedProduct->name;
+        $this->search = ''; // Clear search after selection
     }
 
     public function addItem()
@@ -102,9 +104,9 @@ class Quotation extends Component
 
     public function loadOrders()
     {
-        $this->orders = PurchaseOrder::with(['supplier', 'items.product'])
+        $this->orders = PurchaseOrder::whereIn('status', ['pending', 'complete'])
+            ->with(['supplier', 'items.product'])
             ->latest()
-            ->where('status', ['pending', 'complete'])
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -112,6 +114,14 @@ class Quotation extends Component
     public function viewOrder($id)
     {
         $this->selectedOrder = PurchaseOrder::with(['supplier', 'items.product'])->find($id);
+        
+        if (!$this->selectedOrder) {
+            $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+            return;
+        }
+        
+        // Dispatch event to open modal after data is loaded
+        $this->dispatch('open-view-order-modal');
     }
 
     public function confirmComplete($id)

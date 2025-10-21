@@ -597,7 +597,7 @@
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-center">
                 <div class="sidebar-title">
-                    <img src="{{ asset('public/images/logo.png') }}" alt="Logo" width="150">
+                    <img src="{{ asset('images/USN.png') }}" alt="Logo" width="150">
                 </div>
             </div>
             <ul class="nav flex-column">
@@ -669,6 +669,11 @@
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
+                                    <i class="bi bi-collection"></i> <span>Return Product</span>
+                                </a>
+                            </li
                         </ul>
                     </div>
                 </li>

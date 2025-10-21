@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use App\Models\StaffProduct;
 use Exception;
 use Livewire\Component;
@@ -21,25 +22,26 @@ class StaffStockDetails extends Component
     public function viewStockDetails($id)
     {
         try {
-            $this->stockDetails = StaffProduct::join('users','staff_products.staff_id','=','users.id')
-                ->join('product_details','staff_products.product_id','=','product_details.id')
+            $this->stockDetails = StaffProduct::join('users', 'staff_products.staff_id', '=', 'users.id')
+                ->join('product_details', 'staff_products.product_id', '=', 'product_details.id')
+                ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
                 ->where('staff_products.staff_id', $id)
                 ->select(
-                    
+
                     'staff_products.*',
                     'users.name as staff_name',
                     'users.email as staff_email',
                     'product_details.name as Product_name',
-                    'product_details.brand as Product_brand',
+                    'brand_lists.name as Product_brand',
                     'product_details.model as Product_model',
                     'product_details.code as Product_code',
                     'product_details.image as Product_image'
                 )
                 ->get();
-                // dd($this->stockDetails);
-                $this->dispatch('open-stock-details-modal');
+            // dd($this->stockDetails);
+            $this->dispatch('open-stock-details-modal');
         } catch (Exception $e) {
-            $this->js('swal.fire("Error", "Unable to fetch stock details: '. $e->getMessage().'", "error")');
+            $this->js('swal.fire("Error", "Unable to fetch stock details: ' . $e->getMessage() . '", "error")');
             return;
         }
     }
@@ -47,12 +49,12 @@ class StaffStockDetails extends Component
     // Add export function
     public function exportToCSV()
     {
-        return response()->streamDownload(function() {
+        return response()->streamDownload(function () {
             $output = fopen('php://output', 'w');
-            
+
             // Add headers
             fputcsv($output, ['Staff Name', 'Email', 'Contact', 'Total Quantity', 'Sold Quantity', 'Available Quantity']);
-            
+
             // Get data
             $staffStocks = DB::table('staff_sales')
                 ->join('users', 'staff_sales.staff_id', '=', 'users.id')
@@ -66,7 +68,7 @@ class StaffStockDetails extends Component
                 )
                 ->groupBy('users.id', 'users.name', 'users.email', 'users.contact')
                 ->get();
-            
+
             foreach ($staffStocks as $stock) {
                 fputcsv($output, [
                     $stock->name,
@@ -77,11 +79,11 @@ class StaffStockDetails extends Component
                     $stock->available_quantity,
                 ]);
             }
-            
+
             fclose($output);
         }, 'staff_stock_details_' . date('Y-m-d_His') . '.csv');
     }
-    
+
     public function render()
     {
         // Get aggregated staff stock data using StaffProduct model

@@ -48,4 +48,8 @@ class ProductDetail extends Model
     {
         return $this->belongsTo(ProductSupplier::class, 'supplier_id');
     }
+    public function returns()
+    {
+        return $this->hasMany(ReturnsProduct::class, 'product_id');
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\ProductSupplier;
@@ -14,7 +15,7 @@ class SupplierManage extends Component
 {
     use WithPagination;
 
-    public $supplierId ;
+    public $supplierId;
     public $name;
     public $businessname;
     public $contact;
@@ -23,6 +24,9 @@ class SupplierManage extends Component
     public $phone;
     public $status = 'active';
     public $notes;
+    
+    public $showCreateModal = false;
+    public $showEditModal = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -31,6 +35,7 @@ class SupplierManage extends Component
         'address' => 'nullable|string|max:255',
         'email' => 'nullable|email|max:255',
         'phone' => 'nullable|string|max:20',
+        'status' => 'required|in:active,inactive',
         'notes' => 'nullable|string|max:500',
     ];
 
@@ -38,7 +43,7 @@ class SupplierManage extends Component
     public function createSupplier()
     {
         $this->resetForm();
-        $this->dispatch('open-modal', modal: 'createSupplierModal');
+        $this->showCreateModal = true;
     }
 
     // -------------------- CREATE --------------------
@@ -58,16 +63,16 @@ class SupplierManage extends Component
         ]);
 
         $this->resetForm();
+        $this->showCreateModal = false;
 
-        $this->dispatch('close-modal', modal: 'createSupplierModal');
-        $this->dispatch('swal', title: 'Success!', text: 'Supplier added successfully.', icon: 'success');
+        $this->dispatch('show-toast', 'success', 'Supplier created successfully!');
     }
 
     // -------------------- EDIT --------------------
     public function edit($id)
     {
         $supplier = ProductSupplier::findOrFail($id);
-        // dd($supplier->name);
+
         $this->supplierId = $supplier->id;
         $this->name = $supplier->name;
         $this->businessname = $supplier->businessname;
@@ -77,17 +82,9 @@ class SupplierManage extends Component
         $this->phone = $supplier->phone;
         $this->status = $supplier->status;
         $this->notes = $supplier->notes;
-        // dd($this->supplierId);
-        // Force Livewire to update the DOM and then open modal
-        $this->js('
-            setTimeout(() => {
-                const modal = new bootstrap.Modal(document.getElementById("editSupplierModal"));
-                modal.show();
-            }, 100);
-        ');
+
+        $this->showEditModal = true;
     }
-
-
 
     // -------------------- UPDATE --------------------
     public function updateSupplier()
@@ -95,7 +92,7 @@ class SupplierManage extends Component
         $this->validate();
 
         if (!$this->supplierId) {
-            $this->dispatch('swal', title: 'Error', text: 'No supplier selected.', icon: 'error');
+            $this->dispatch('show-toast', 'error', 'No supplier selected.');
             return;
         }
 
@@ -113,33 +110,50 @@ class SupplierManage extends Component
         ]);
 
         $this->resetForm();
-        $this->dispatch('close-modal', modal: 'editSupplierModal');
-        $this->dispatch('swal', title: 'Updated!', text: 'Supplier updated successfully.', icon: 'success');
+        $this->showEditModal = false;
+
+        $this->dispatch('show-toast', 'success', 'Supplier updated successfully!');
     }
 
     // -------------------- CONFIRM DELETE --------------------
     public function confirmDelete($id)
     {
-        $this->dispatch('swal-delete', id: $id);
+        $this->supplierId = $id;
+        
+        $this->dispatch('swal:confirm', [
+            'title' => 'Are you sure?',
+            'text' => 'You won\'t be able to revert this!',
+            'icon' => 'warning',
+            'id' => $id,
+        ]);
     }
 
     // -------------------- DELETE --------------------
-    public function delete($id)
+    #[On('delete-supplier')]
+    public function deleteSupplier($id)
     {
         $supplier = ProductSupplier::find($id);
 
         if ($supplier) {
             $supplier->delete();
-            $this->dispatch('swal', title: 'Deleted!', text: 'Supplier has been deleted.', icon: 'success');
+            $this->dispatch('show-toast', 'success', 'Supplier has been deleted.');
         } else {
-            $this->dispatch('swal', title: 'Error', text: 'Supplier not found.', icon: 'error');
+            $this->dispatch('show-toast', 'error', 'Supplier not found.');
         }
+    }
+
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->resetForm();
     }
 
     public function resetForm()
     {
         $this->reset(['supplierId', 'name', 'businessname', 'contact', 'address', 'email', 'phone', 'status', 'notes']);
         $this->status = 'active';
+        $this->resetValidation();
     }
 
     public function render()

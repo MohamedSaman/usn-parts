@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use Livewire\Component;
 use App\Models\StaffSale;
@@ -15,25 +16,25 @@ use Illuminate\Support\Facades\DB;
 class StaffSaleDetails extends Component
 {
     use WithPagination;
-    
+
     public $isViewModalOpen = false;
     public $staffId;
     public $staffName;
     public $staffDetails;
     public $productDetails;
     public $summaryStats;
-    
+
     public function viewSaleDetails($userId)
     {
         $this->staffId = $userId;
-        
+
         // Get staff details
         $this->staffDetails = DB::table('users')
             ->where('id', $userId)
             ->first();
-        
+
         $this->staffName = $this->staffDetails->name;
-        
+
         // Get summary statistics using StaffProduct model
         $this->summaryStats = StaffProduct::where('staff_id', $userId)
             ->select([
@@ -45,23 +46,23 @@ class StaffSaleDetails extends Component
                 DB::raw('SUM(total_value) - SUM(sold_value) as available_value')
             ])
             ->first();
-            
+
         // Get product-wise details
         $this->productDetails = StaffProduct::join('product_details', 'staff_products.product_id', '=', 'product_details.id')
+            ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
             ->where('staff_products.staff_id', $userId)
             ->select(
                 'staff_products.*',
                 'product_details.name as Product_name',
-                'product_details.brand as Product_brand',
+                'brand_lists.name as Product_brand',
                 'product_details.model as Product_model',
                 'product_details.code as Product_code',
                 'product_details.image as Product_image'
             )
             ->get();
-        
+
         //    $this->js("$('#salesDetails').modal('show');");
         $this->dispatch('open-sales-modal');
-        
     }
 
     public function getSummaryStats($staffId)
@@ -83,40 +84,41 @@ class StaffSaleDetails extends Component
         }
         return $summaryStats;
     }
-    
+
     public function exportToCsv()
     {
         return redirect()->route('staff-sales.export');
     }
-    
+
     public function printStaffDetails($staffId = null)
     {
         // If no staffId provided, use the currently selected staff
         $staffId = $staffId ?? $this->staffId;
-        
+
         if (!$staffId) {
             return redirect()->back()->with('error', 'No staff selected for printing');
         }
-        
+
         // Get all the necessary data for printing
         $staffDetails = DB::table('users')->where('id', $staffId)->first();
         $summaryStats = $this->getSummaryStats($staffId);
         $productDetails = StaffProduct::join('product_details', 'staff_products.product_id', '=', 'product_details.id')
+            ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
             ->where('staff_products.staff_id', $staffId)
             ->select(
                 'staff_products.*',
                 'product_details.name as Product_name',
-                'product_details.brand as Product_brand',
+                'brand_lists.name as Product_brand',
                 'product_details.model as Product_model',
                 'product_details.code as Product_code',
                 'product_details.image as Product_image'
             )
             ->get();
-        
+
         // Return a view optimized for printing
         return view('admin.print.staff-details', compact('staffDetails', 'summaryStats', 'productDetails'));
     }
-    
+
     public function render()
     {
 
