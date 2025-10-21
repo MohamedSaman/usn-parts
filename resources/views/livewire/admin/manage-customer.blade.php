@@ -186,10 +186,10 @@
                         @enderror
                     </div>
                     <div class="col-12 col-md-6">
-                        <label for="editBussinessName" class="form-label">Bussiness Name</label>
-                        <input type="text" class="form-control" id="editBussinessName"
-                            wire:model="editBussinessName">
-                        @error('editBussinessName')
+                        <label for="editBusinessName" class="form-label">Bussiness Name</label>
+                        <input type="text" class="form-control" id="editBusinessName"
+                            wire:model="editBusinessName">
+                        @error('editBusinessName')
                         <span class="text-danger">* {{ $message }}</span>
                         @enderror
                     </div>
