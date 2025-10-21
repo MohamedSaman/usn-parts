@@ -63,7 +63,7 @@ class Income extends Component
         $this->calculateDeposits();
         $this->calculateTodayDeposits();
 
-        
+
 
         $this->depositDate = $today;
     }
@@ -143,14 +143,27 @@ class Income extends Component
         ]);
 
         $record = CashInHand::where('key', 'cash in hand')->first();
+
         if ($record) {
             $record->update(['value' => $this->newCashInHand]);
             $this->cashInHand = $this->newCashInHand;
+        } else {
+            // Create new record if missing
+            CashInHand::create([
+                'key' => 'cash in hand',
+                'value' => $this->newCashInHand,
+            ]);
+            $this->cashInHand = $this->newCashInHand;
         }
 
+        // ✅ SweetAlert confirmation
         $this->js("Swal.fire('Success!', 'Cash in Hand updated successfully.', 'success')");
+
+        // ✅ Close the correct modal (the one in your top bar)
         $this->dispatch('close-modal', modalId: 'addCashInHandModal');
+        $this->dispatch('close-modal', modalId: 'editCashModal');
     }
+
 
     public function render()
     {

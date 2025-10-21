@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CashController;
 use Illuminate\Http\Request;
 use App\Livewire\CustomLogin;
 use App\Livewire\Admin\Products;
@@ -50,6 +51,7 @@ use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Expenses;
 use App\Livewire\Admin\Income;
 use App\Livewire\Admin\ReturnProduct;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -112,8 +114,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
 
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
+        
 
     });
+    Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])
+    ->name('admin.updateCashInHand')
+    ->middleware(['auth', 'role:admin']);
 
     //!! Staff routes
     Route::middleware('role:staff')->prefix('staff')->name('staff.')->group(function () {
