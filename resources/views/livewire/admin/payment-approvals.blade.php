@@ -1,799 +1,828 @@
-<div>
-    <div class="container-fluid py-4">
-        <!-- Stats Bar -->
-        <div class="row mb-4">
-            <!-- Pending Approvals Card -->
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card border-0 overflow-hidden shadow-sm hover-lift">
-                    <div class="card-body p-0">
-                        <div class="d-flex">
-                            <div class="p-4 flex-grow-1">
-                                <h6 class="text-sm text-uppercase fw-bold text-muted mb-1">Pending Approvals</h6>
-                                <div class="d-flex align-items-center">
-                                    <h2 class="font-weight-bolder mb-0">
-                                        {{ \App\Models\Payment::where('status', 'pending')->count() }}
-                                    </h2>
-                                    <span class="badge bg-primary-subtle text-primary ms-2 py-1 px-2">Awaiting Review
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="bg-gradient-primary p-4 d-flex align-items-center">
-                                <div class="icon-shape icon-lg bg-white bg-opacity-25 shadow-sm rounded-3 text-center">
-                                    <i class="bi bi-hourglass-split text-white fs-4" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Progress bar indicator -->
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-primary" style="width: 65%"></div>
-                    </div>
-                </div>
-            </div>
+<div class="container-fluid py-3">
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h3 class="fw-bold text-dark mb-2">
+                <i class="bi bi-shield-check text-primary me-2"></i> Payment Approvals
+            </h3>
+            <p class="text-muted mb-0">Manage and approve customer payment requests</p>
+        </div>
+    </div>
 
-            <!-- Approved Card -->
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card border-0 overflow-hidden shadow-sm hover-lift">
-                    <div class="card-body p-0">
-                        <div class="d-flex">
-                            <div class="p-4 flex-grow-1">
-                                <h6 class="text-sm text-uppercase fw-bold text-muted mb-1">Total Approved</h6>
-                                <div class="d-flex align-items-center">
-                                    <h2 class="font-weight-bolder mb-0">
-                                        {{ \App\Models\Payment::where('status', 'approved')->count() }}
-                                    </h2>
-                                    <span class="badge bg-success-subtle text-success ms-2 py-1 px-2">Completed</span>
-                                </div>
-                            </div>
-                            <div class="bg-gradient-success p-4 d-flex align-items-center">
-                                <div class="icon-shape icon-lg bg-white bg-opacity-25 shadow-sm rounded-3 text-center">
-                                    <i class="bi bi-check-circle text-white fs-4" aria-hidden="true"></i>
-                                </div>
-                            </div>
+    {{-- Stats Cards --}}
+    <div class="row mb-5">
+        <!-- Pending Approvals Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card summary-card pending h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-warning bg-opacity-10 me-3">
+                            <i class="bi bi-hourglass-split text-warning fs-4"></i>
                         </div>
-                    </div>
-                    <!-- Progress bar indicator -->
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-success" style="width: 80%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Rejected Card -->
-            <div class="col-xl-3 col-sm-6 mb-xl-0 mb-4">
-                <div class="card border-0 overflow-hidden shadow-sm hover-lift">
-                    <div class="card-body p-0">
-                        <div class="d-flex">
-                            <div class="p-4 flex-grow-1">
-                                <h6 class="text-sm text-uppercase fw-bold text-muted mb-1">Rejected</h6>
-                                <div class="d-flex align-items-center">
-                                    <h2 class="font-weight-bolder mb-0">
-                                        {{ \App\Models\Payment::where('status', 'rejected')->count() }}
-                                    </h2>
-                                    <span class="badge bg-danger-subtle text-danger ms-2 py-1 px-2">Declined</span>
-                                </div>
-                            </div>
-                            <div class="bg-gradient-danger p-4 d-flex align-items-center">
-                                <div class="icon-shape icon-lg bg-white bg-opacity-25 shadow-sm rounded-3 text-center">
-                                    <i class="bi bi-x-circle text-white fs-4" aria-hidden="true"></i>
-                                </div>
-                            </div>
+                        <div class="flex-grow-1">
+                            <p class="text-muted mb-1">Pending Approvals</p>
+                            <h4 class="fw-bold mb-0">{{ \App\Models\Payment::where('status', 'pending')->count() }}</h4>
+                            <span class="badge bg-warning bg-opacity-10 text-warning">Awaiting Review</span>
                         </div>
-                    </div>
-                    <!-- Progress bar indicator -->
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-danger" style="width: 35%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Today's Approvals Card -->
-            <div class="col-xl-3 col-sm-6">
-                <div class="card border-0 overflow-hidden shadow-sm hover-lift">
-                    <div class="card-body p-0">
-                        <div class="d-flex">
-                            <div class="p-4 flex-grow-1">
-                                <h6 class="text-sm text-uppercase fw-bold text-muted mb-1">Today's Approvals</h6>
-                                <div class="d-flex align-items-center">
-                                    <h2 class="font-weight-bolder mb-0">
-                                        {{ \App\Models\Payment::where('status', 'approved')->whereDate('updated_at', today())->count() }}
-                                    </h2>
-                                    <span class="badge bg-info-subtle text-info ms-2 py-1 px-2">Today</span>
-                                </div>
-                            </div>
-                            <div class="bg-gradient-info p-4 d-flex align-items-center">
-                                <div class="icon-shape icon-lg bg-white bg-opacity-25 shadow-sm rounded-3 text-center">
-                                    <i class="bi bi-calendar-check text-white fs-4" aria-hidden="true"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Progress bar indicator -->
-                    <div class="progress" style="height: 4px;">
-                        <div class="progress-bar bg-info" style="width: 50%"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card mb-4 p-3">
-                    <div class="card-header pb-2 bg-light">
-                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                            <div>
-                                <h5 class="mb-0">Payment Approvals</h5>
-                                {{-- <p class="text-sm mb-0 text-muted">Manage customer payment requests</p> --}}
-                            </div>
-                            <div class="d-flex flex-column flex-sm-row align-items-stretch align-items-sm-center gap-2 w-100 w-md-auto">
-                                <!-- Search bar - responsive width -->
-                                <div class="input-group input-group-merge border rounded-pill bg-white shadow-sm flex-grow-1 flex-md-grow-0"
-                                    style="min-width: 200px; max-width: 100%;">
-                                    <span class="input-group-text bg-transparent border-0">
-                                        <i class="bi bi-search text-primary"></i>
-                                    </span>
-                                    <input type="text" class="form-control border-0 py-2"
-                                        placeholder="Search invoices or customers..."
-                                        wire:model.live.debounce.300ms="search">
-                                </div>
-
-                                <!-- Filter dropdown - takes full width on xs screens -->
-                                <div class="dropdown w-100 w-sm-auto">
-                                    <button class="btn btn-outline-primary dropdown-toggle shadow-sm rounded-pill w-100"
-                                        type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                                        aria-expanded="false">
-                                        <i class="bi bi-funnel me-1"></i> Filters
-                                        @if ($filters['status'] || $filters['dateRange'])
-                                            <span class="badge bg-primary ms-1">!</span>
-                                        @endif
-                                    </button>
-                                    <div class="dropdown-menu p-3 shadow-lg dropdown-menu-end" style="width: 300px;"
-                                        aria-labelledby="filterDropdown">
-                                        <h6 class="dropdown-header bg-light rounded-3 py-2 mb-3 text-center">Filter
-                                            Options</h6>
-
-                                        <div class="mb-3">
-                                            <label class="form-label small fw-bold">Payment Status</label>
-                                            <select class="form-select form-select-sm rounded-pill"
-                                                wire:model.live="filters.status">
-                                                <option value="pending">Pending Approval</option>
-                                                <option value="approved">Approved</option>
-                                                <option value="rejected">Rejected</option>
-                                                <option value="">All Statuses</option>
-                                            </select>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label class="form-label small fw-bold">Date Range</label>
-                                            <input type="text" class="form-control form-control-sm rounded-pill"
-                                                placeholder="Select date range" wire:model.live="filters.dateRange">
-                                        </div>
-
-                                        <div class="d-grid">
-                                            <button class="btn btn-sm btn-secondary rounded-pill"
-                                                wire:click="resetFilters">
-                                                <i class="bi bi-arrow-repeat me-1"></i> Reset Filters
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+        <!-- Approved Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card summary-card approved h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-success bg-opacity-10 me-3">
+                            <i class="bi bi-check-circle text-success fs-4"></i>
                         </div>
-                    </div>
-
-                    <div class="card-body px-0 pt-0 pb-2">
-                        <div class="table-responsive p-0">
-                            <table class="table align-items-center mb-0">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                                            Invoice</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Customer</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Staff</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Amount</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Payment Method</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Status</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">
-                                            Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($payments as $payment)
-                                        <tr>
-                                            <td>
-                                                <div class="d-flex px-2 py-1">
-                                                    <div
-                                                        class="icon-shape bg-gradient-primary text-white icon-sm me-3 shadow rounded-circle d-flex align-items-center justify-content-center">
-                                                        <i class="bi bi-receipt"></i>
-                                                    </div>
-                                                    <div class="d-flex flex-column justify-content-center">
-                                                        <h6 class="mb-0 text-sm">{{ $payment->sale->invoice_number }}
-                                                        </h6>
-                                                        <p class="text-xs text-secondary mb-0">
-                                                            {{ $payment->created_at->format('d M Y H:i') }}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div
-                                                        class="avatar avatar-sm rounded-circle bg-gradient-dark text-white me-2 d-flex align-items-center justify-content-center">
-                                                        <span>{{ substr($payment->sale->customer->name, 0, 1) }}</span>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-xs font-weight-bold mb-0">
-                                                            {{ $payment->sale->customer->name }}</p>
-                                                        <p class="text-xs text-secondary mb-0">
-                                                            {{ $payment->sale->customer->phone }}</p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div
-                                                        class="avatar avatar-sm rounded-circle bg-light text-dark me-2 d-flex align-items-center justify-content-center">
-                                                        <span>{{ substr($payment->sale->user->name, 0, 1) }}</span>
-                                                    </div>
-                                                    <p class="text-xs font-weight-bold mb-0">
-                                                        {{ $payment->sale->user->name }}</p>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div
-                                                        class="icon-shape icon-xs bg-success-subtle text-success rounded-circle me-2 d-flex align-items-center justify-content-center">
-                                                       <i class="bi bi text-success">Rs.</i>
-                                                    </div>
-                                                    <span class="text-sm font-weight-bold">
-                                                        {{ number_format($payment->amount, 2) }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-success text-white rounded-pill px-3 py-2">
-                                                    {{ ucfirst(str_replace('_', ' ', $payment->due_payment_method ?: $payment->payment_method)) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {!! $payment->status_badge !!}
-                                            </td>
-                                            <td class="text-center">
-                                                <button class="btn btn-sm btn-primary rounded-pill shadow-sm"
-                                                    wire:click="getPaymentDetails({{ $payment->id }})">
-                                                    <i class="bi bi-eye me-1"></i> Review
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="text-center py-5 text-secondary">
-                                                <div
-                                                    class="icon-shape icon-xl bg-light text-secondary rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                                                    <i class="bi bi-inbox-fill fs-1"></i>
-                                                </div>
-                                                <h5>No payments found</h5>
-                                                <p class="text-muted">No payments matching your criteria were found</p>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="px-4 pt-4">
-                            {{ $payments->links() }}
+                        <div class="flex-grow-1">
+                            <p class="text-muted mb-1">Total Approved</p>
+                            <h4 class="fw-bold mb-0">{{ \App\Models\Payment::where('status', 'approved')->count() }}</h4>
+                            <span class="badge bg-success bg-opacity-10 text-success">Completed</span>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Rejected Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card summary-card rejected h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-danger bg-opacity-10 me-3">
+                            <i class="bi bi-x-circle text-danger fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="text-muted mb-1">Rejected</p>
+                            <h4 class="fw-bold mb-0">{{ \App\Models\Payment::where('status', 'rejected')->count() }}</h4>
+                            <span class="badge bg-danger bg-opacity-10 text-danger">Declined</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Actions Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card summary-card today h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-info bg-opacity-10 me-3">
+                            <i class="bi bi-calendar-check text-info fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="text-muted mb-1">Today's Approvals</p>
+                            <h4 class="fw-bold mb-0">{{ \App\Models\Payment::where('status', 'approved')->whereDate('updated_at', today())->count() }}</h4>
+                            <span class="badge bg-info bg-opacity-10 text-info">Today</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Payments Table --}}
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-credit-card text-primary me-2"></i> Payment Submissions
+                </h5>
+                <p class="text-muted small mb-0">Review and manage customer payment requests</p>
+            </div>
+        </div>
+        <div class="card-body">
+            {{-- Search and Filters --}}
+            <div class="row g-3 mb-4">
+                <!-- Search Bar -->
+                <div class="col-12 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" 
+                               placeholder="Search invoice, customer..."
+                               wire:model.live.debounce.300ms="search">
+                    </div>
+                </div>
+
+                <!-- Filter Dropdown -->
+                <div class="col-12 col-md-6">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" 
+                                id="filterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-funnel me-2"></i> Filters
+                            @if ($filters['status'] || $filters['dateRange'])
+                                <span class="badge bg-primary ms-1">{{ ($filters['status'] ? 1 : 0) + ($filters['dateRange'] ? 1 : 0) }}</span>
+                            @endif
+                        </button>
+                        <div class="dropdown-menu p-3 dropdown-menu-end" style="width: 300px;" 
+                             aria-labelledby="filterDropdown">
+                            <h6 class="fw-bold text-dark mb-3">Filter Options</h6>
+                            
+                            <!-- Status Filter -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Payment Status</label>
+                                <select class="form-select" wire:model.live="filters.status">
+                                    <option value="">All Status</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="approved">Approved</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Date Filter -->
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Date Range</label>
+                                <input type="text" class="form-control" 
+                                       placeholder="Select date range" 
+                                       wire:model.live="filters.dateRange">
+                            </div>
+                            
+                            <!-- Clear Filters -->
+                            @if ($filters['status'] || $filters['dateRange'])
+                            <div class="d-grid">
+                                <button class="btn btn-secondary" 
+                                        wire:click="resetFilters">
+                                    <i class="bi bi-arrow-repeat me-1"></i> Clear Filters
+                                </button>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Payments Table --}}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Invoice</th>
+                            <th>Customer</th>
+                            <th>Staff</th>
+                            <th class="text-center">Amount</th>
+                            <th class="text-center">Payment Method</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Date</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($payments as $payment)
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container bg-primary bg-opacity-10 me-3">
+                                            <i class="bi bi-receipt text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-medium text-dark">{{ $payment->sale->invoice_number }}</span>
+                                            <div class="text-muted small">{{ $payment->created_at->format('M d, Y') }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container bg-dark bg-opacity-10 me-3">
+                                            <i class="bi bi-person text-dark"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-medium text-dark">{{ $payment->sale->customer->name ?? 'Walk-in Customer' }}</span>
+                                            @if($payment->sale->customer && $payment->sale->customer->phone)
+                                            <div class="text-muted small">{{ $payment->sale->customer->phone }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="icon-container bg-secondary bg-opacity-10 me-3">
+                                            <i class="bi bi-person-badge text-secondary"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-medium text-dark">{{ $payment->sale->user->name ?? 'Unknown' }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-dark">Rs.{{ number_format($payment->amount, 2) }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info bg-opacity-10 text-info">
+                                        {{ ucfirst(str_replace('_', ' ', $payment->due_payment_method ?: $payment->payment_method)) }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {!! $payment->status_badge !!}
+                                </td>
+                                <td class="text-center">
+                                    <div>
+                                        <span class="fw-medium text-dark">{{ $payment->created_at->format('M d, Y') }}</span>
+                                        <div class="text-muted small">{{ $payment->created_at->format('h:i A') }}</div>
+                                    </div>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button class="btn btn-link text-info p-0" 
+                                                wire:click="getPaymentDetails({{ $payment->id }})" 
+                                                wire:loading.attr="disabled"
+                                                title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox display-4 d-block mb-2"></i>
+                                    No payments found
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            
+            {{-- Pagination --}}
+            <div class="mt-4">
+                {{ $payments->links() }}
             </div>
         </div>
     </div>
 
     <!-- Payment Approval Modal -->
-    <div wire:ignore.self class="modal fade" id="payment-approval-modal" tabindex="-1" role="dialog"
-        aria-labelledby="payment-approval-modal-label" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-gradient-primary text-white">
-                    <h5 class="modal-title" id="payment-approval-modal-label">
-                        <i class="bi bi-shield-check me-2"></i> Payment Review
+    <div wire:ignore.self class="modal fade" id="payment-approval-modal" tabindex="-1" aria-labelledby="payment-approval-modal-label" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-shield-check text-primary me-2"></i> Payment Review
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
+                <div class="modal-body">
                     @if ($selectedPayment)
-                        <div class="row g-0">
-                            <!-- Left column - Details -->
-                            <div class="col-md-8 p-4">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card border-0 shadow-sm mb-4 overflow-hidden">
-                                            <div class="card-header bg-light py-3">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-shape bg-primary text-white rounded-circle me-2">
-                                                        <i class="bi bi-file-text"></i>
-                                                    </div>
-                                                    <h6 class="mb-0 fw-bold">Invoice Details</h6>
+                        <div class="row g-4">
+                            <!-- Payment Information -->
+                            <div class="col-12 col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-info-circle text-primary me-2"></i> Payment Information
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold text-muted small">Invoice Number</label>
+                                                <p class="fw-bold text-dark mb-0">{{ $selectedPayment->sale->invoice_number }}</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold text-muted small">Payment Date</label>
+                                                <p class="fw-bold text-dark mb-0">{{ $selectedPayment->created_at->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold text-muted small">Status</label>
+                                                <div>
+                                                    {!! $selectedPayment->status_badge !!}
                                                 </div>
                                             </div>
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted">Invoice Number:</span>
-                                                    <span
-                                                        class="badge bg-primary-subtle text-primary">{{ $selectedPayment->sale->invoice_number }}</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted">Sale Date:</span>
-                                                    <span>{{ $selectedPayment->sale->created_at->format('d/m/Y') }}</span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted">Due Date:</span>
-                                                    <span
-                                                        class="{{ now()->gt($selectedPayment->due_date) ? 'text-danger fw-bold' : '' }}">
-                                                        {{ $selectedPayment->due_date ? $selectedPayment->due_date->format('d/m/Y') : 'N/A' }}
-                                                    </span>
-                                                </div>
-                                                <div class="d-flex justify-content-between align-items-center mb-0">
-                                                    <span class="text-muted">Due Amount:</span>
-                                                    <span
-                                                        class="fs-5 fw-bold text-primary">Rs.{{ number_format($selectedPayment->amount, 2) }}</span>
-                                                </div>
+                                            <div class="col-6">
+                                                <label class="form-label fw-semibold text-muted small">Due Date</label>
+                                                <p class="fw-bold text-dark mb-0 {{ now()->gt($selectedPayment->due_date) ? 'text-danger' : '' }}">
+                                                    {{ $selectedPayment->due_date ? $selectedPayment->due_date->format('M d, Y') : 'N/A' }}
+                                                </p>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                        <!-- Customer & Staff -->
-                                        <div class="card border-0 shadow-sm mb-4">
-                                            <div class="card-header bg-light py-3">
+                            <!-- Customer & Staff Details -->
+                            <div class="col-12 col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-people text-primary me-2"></i> Customer & Staff
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold text-muted small">Customer</label>
                                                 <div class="d-flex align-items-center">
-                                                    <div class="icon-shape bg-info text-white rounded-circle me-2">
-                                                        <i class="bi bi-people"></i>
+                                                    <div class="icon-container bg-dark bg-opacity-10 me-3">
+                                                        <i class="bi bi-person text-dark"></i>
                                                     </div>
-                                                    <h6 class="mb-0 fw-bold">Customer & Staff</h6>
+                                                    <div>
+                                                        <p class="fw-bold text-dark mb-0">{{ $selectedPayment->sale->customer->name ?? 'Walk-in Customer' }}</p>
+                                                        @if($selectedPayment->sale->customer && $selectedPayment->sale->customer->phone)
+                                                        <div class="text-muted small">{{ $selectedPayment->sale->customer->phone }}</div>
+                                                        @endif
+                                                        <span class="badge bg-light text-dark mt-1">{{ ucfirst($selectedPayment->sale->customer_type) }} Customer</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div class="card-body">
-                                                <div class="d-flex mb-3">
-                                                    <div
-                                                        class="avatar avatar-md rounded-circle bg-gradient-dark text-white me-3 d-flex align-items-center justify-content-center">
-                                                        <span
-                                                            class="fs-5">{{ substr($selectedPayment->sale->customer->name, 0, 1) }}</span>
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold text-muted small">Staff Member</label>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="icon-container bg-secondary bg-opacity-10 me-3">
+                                                        <i class="bi bi-person-badge text-secondary"></i>
                                                     </div>
                                                     <div>
-                                                        <h6 class="mb-1">
-                                                            {{ $selectedPayment->sale->customer->name }}</h6>
-                                                        <p class="text-muted mb-0">
-                                                            {{ $selectedPayment->sale->customer->phone }}</p>
-                                                        <span
-                                                            class="badge bg-light text-dark mt-1">{{ ucfirst($selectedPayment->sale->customer_type) }}
-                                                            Customer</span>
-                                                    </div>
-                                                </div>
-
-                                                <hr>
-
-                                                <div class="d-flex">
-                                                    <div
-                                                        class="avatar avatar-md rounded-circle bg-light text-dark me-3 d-flex align-items-center justify-content-center">
-                                                        <span
-                                                            class="fs-5">{{ substr($selectedPayment->sale->user->name, 0, 1) }}</span>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="mb-1">{{ $selectedPayment->sale->user->name }}
-                                                        </h6>
-                                                        <p class="text-muted mb-0">Sales Staff</p>
+                                                        <p class="fw-bold text-dark mb-0">{{ $selectedPayment->sale->user->name ?? 'Unknown' }}</p>
+                                                        <div class="text-muted small">Sales Staff</div>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div class="col-md-6">
-                                        <!-- Payment Method -->
-                                        <div class="card border-0 shadow-sm mb-4">
-                                            <div class="card-header bg-light py-3">
-                                                <div class="d-flex align-items-center">
-                                                    <div class="icon-shape bg-success text-white rounded-circle me-2">
-                                                        <i class="bi bi-credit-card"></i>
-                                                    </div>
-                                                    <h6 class="mb-0 fw-bold">Payment Method</h6>
+                            <!-- Payment Summary -->
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-cash-stack text-primary me-2"></i> Payment Summary
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-12 col-md-3">
+                                                <div class="text-center">
+                                                    <label class="form-label fw-semibold text-muted small">Amount</label>
+                                                    <p class="fw-bold text-primary h5 mb-0">Rs.{{ number_format($selectedPayment->amount, 2) }}</p>
                                                 </div>
                                             </div>
-                                            <div class="card-body">
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted">Method:</span>
-                                                    <span class="badge bg-info-subtle text-info px-3 py-2">
+                                            <div class="col-12 col-md-3">
+                                                <div class="text-center">
+                                                    <label class="form-label fw-semibold text-muted small">Payment Method</label>
+                                                    <p class="fw-bold text-info h5 mb-0">
                                                         {{ ucfirst(str_replace('_', ' ', $selectedPayment->due_payment_method ?: $selectedPayment->payment_method)) }}
-                                                    </span>
+                                                    </p>
                                                 </div>
-
-                                                @if ($selectedPayment->bank_name)
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center mb-3">
-                                                        <span class="text-muted">Bank:</span>
-                                                        <span>{{ $selectedPayment->bank_name }}</span>
-                                                    </div>
-                                                @endif
-
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted">Status:</span>
-                                                    <div>{!! $selectedPayment->status_badge !!}</div>
-                                                </div>
-
-                                                @if ($selectedPayment->payment_date)
-                                                    <div
-                                                        class="d-flex justify-content-between align-items-center mb-0">
-                                                        <span class="text-muted">Payment Date:</span>
-                                                        <span>{{ $selectedPayment->payment_date->format('d M Y, h:i A') }}</span>
-                                                    </div>
-                                                @endif
                                             </div>
+                                            @if($selectedPayment->bank_name)
+                                            <div class="col-12 col-md-3">
+                                                <div class="text-center">
+                                                    <label class="form-label fw-semibold text-muted small">Bank</label>
+                                                    <p class="fw-bold text-dark h5 mb-0">{{ $selectedPayment->bank_name }}</p>
+                                                </div>
+                                            </div>
+                                            @endif
+                                            @if($selectedPayment->payment_date)
+                                            <div class="col-12 col-md-3">
+                                                <div class="text-center">
+                                                    <label class="form-label fw-semibold text-muted small">Payment Date</label>
+                                                    <p class="fw-bold text-dark h5 mb-0">{{ $selectedPayment->payment_date->format('M d, Y') }}</p>
+                                                </div>
+                                            </div>
+                                            @endif
                                         </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                        <!-- Notes -->
-                                        @if ($selectedPayment->sale->notes)
-                                            <div class="card border-0 shadow-sm mb-4">
-                                                <div class="card-header bg-light py-3">
-                                                    <div class="d-flex align-items-center">
-                                                        <div
-                                                            class="icon-shape bg-warning text-white rounded-circle me-2">
-                                                            <i class="bi bi-sticky"></i>
-                                                        </div>
-                                                        <h6 class="mb-0 fw-bold">Notes</h6>
+                            <!-- Document Preview & Purchase Details -->
+                            <div class="col-12 col-md-8">
+                                <!-- Document Preview -->
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-file-earmark-text text-primary me-2"></i> Payment Document
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        @if ($selectedPayment->due_payment_attachment)
+                                            @php
+                                                $extension = pathinfo($selectedPayment->due_payment_attachment, PATHINFO_EXTENSION);
+                                                $isPdf = strtolower($extension) === 'pdf';
+                                                $fileUrl = asset('storage/' . str_replace('public/', '', $selectedPayment->due_payment_attachment));
+                                            @endphp
+                                            
+                                            @if ($isPdf)
+                                                <div class="text-center py-4">
+                                                    <div class="icon-shape icon-xl bg-danger bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                                        <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                                                    </div>
+                                                    <h5 class="mb-3">PDF Document</h5>
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <a href="{{ $fileUrl }}" target="_blank" class="btn btn-primary">
+                                                            <i class="bi bi-eye me-1"></i> View PDF
+                                                        </a>
+                                                        <a href="{{ $fileUrl }}" download class="btn btn-outline-secondary">
+                                                            <i class="bi bi-download me-1"></i> Download
+                                                        </a>
                                                     </div>
                                                 </div>
-                                                <div class="card-body">
-                                                    <div class="alert alert-light mb-0 p-3">
-                                                        {{ $selectedPayment->sale->notes }}
+                                            @else
+                                                <div class="document-preview text-center">
+                                                    <img src="{{ $fileUrl }}" class="img-fluid rounded border" style="max-height: 400px;">
+                                                    <div class="mt-3">
+                                                        <a href="{{ $fileUrl }}" download class="btn btn-outline-primary">
+                                                            <i class="bi bi-download me-1"></i> Download Image
+                                                        </a>
+                                                        <button type="button" class="btn btn-outline-info" onclick="openFullImage('{{ $fileUrl }}')">
+                                                            <i class="bi bi-fullscreen me-1"></i> Full Screen
+                                                        </button>
                                                     </div>
                                                 </div>
+                                            @endif
+                                        @else
+                                            <div class="text-center py-4">
+                                                <div class="icon-shape icon-xl bg-secondary bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-file-earmark-x fs-1 text-secondary"></i>
+                                                </div>
+                                                <h5 class="text-muted">No Document Attached</h5>
+                                                <p class="text-muted mb-0">No payment proof was provided</p>
                                             </div>
                                         @endif
                                     </div>
                                 </div>
 
-                                <!-- Action buttons for pending payments -->
-                                @if ($selectedPayment->status === 'pending')
-                                    <div class="card border-0 shadow-sm">
-                                        <div class="card-body">
-                                            <h6 class="fw-bold mb-3">Payment Review Actions</h6>
-
-                                            <div class="d-flex justify-content-between">
-                                                <button type="button" class="btn btn-success px-4"
-                                                    wire:click="approvePayment">
-                                                    <i class="bi bi-check-circle-fill me-2"></i> Approve Payment
-                                                </button>
-
-                                                <button type="button" class="btn btn-outline-danger"
-                                                    data-bs-toggle="collapse" href="#rejectPaymentForm"
-                                                    role="button" aria-expanded="false">
-                                                    <i class="bi bi-x-circle me-2"></i> Reject Payment
-                                                </button>
-                                            </div>
-
-                                            <div class="collapse mt-3" id="rejectPaymentForm">
-                                                <div class="card border border-danger">
-                                                    <div class="card-body">
-                                                        <h6 class="card-title text-danger d-flex align-items-center">
-                                                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                                                            Reject Payment
-                                                        </h6>
-
-                                                        <div class="alert alert-info mb-3">
-                                                            <i class="bi bi-info-circle-fill me-2"></i>
-                                                            Rejecting this payment will automatically extend the due date by 3 days from
-                                                            <strong>{{ $selectedPayment->due_date ? $selectedPayment->due_date->format('d M Y') : 'N/A' }}</strong> to
-                                                            <strong>{{ $selectedPayment->due_date ? $selectedPayment->due_date->copy()->addDays(3)->format('d M Y') : 'N/A' }}</strong>
-                                                        </div>
-
-                                                        <div class="mb-3">
-                                                            <label for="rejectionReason" class="form-label">Rejection Reason</label>
-                                                            <textarea class="form-control @error('rejectionReason') is-invalid @enderror" id="rejectionReason" rows="3"
-                                                                wire:model="rejectionReason" placeholder="Please provide a detailed reason for rejecting this payment"></textarea>
-                                                            @error('rejectionReason')
-                                                                <div class="invalid-feedback">{{ $message }}</div>
-                                                            @enderror
-                                                        </div>
-                                                        <button type="button" class="btn btn-danger"
-                                                            wire:click="rejectPayment">Confirm Rejection & Extend Due Date</button>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                <!-- Purchase Details -->
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-cart-check text-primary me-2"></i> Purchase Details
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-4">Item</th>
+                                                        <th class="text-center">Qty</th>
+                                                        <th class="text-end pe-4">Price</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach ($selectedPayment->sale->items as $item)
+                                                    <tr>
+                                                        <td class="ps-4">
+                                                            <div>
+                                                                @if ($item->Product)
+                                                                    <span class="fw-medium text-dark">
+                                                                        {{ $item->Product->brand ?? 'Unknown Brand' }} {{ $item->Product->model ?? 'Unknown Model' }}
+                                                                    </span>
+                                                                    <div class="text-muted small">{{ $item->Product->code ?? 'N/A' }}</div>
+                                                                @else
+                                                                    <span class="fw-medium text-dark">{{ $item->Product_name ?? 'Product Details Unavailable' }}</span>
+                                                                    <div class="text-danger small">Item record may have been deleted</div>
+                                                                @endif
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="fw-medium text-dark">{{ $item->quantity }}</span>
+                                                        </td>
+                                                        <td class="text-end pe-4">
+                                                            <span class="fw-medium text-dark">Rs.{{ number_format($item->unit_price, 2) }}</span>
+                                                        </td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                                <tfoot class="table-light">
+                                                    <tr>
+                                                        <td colspan="2" class="text-end fw-bold ps-4">Total:</td>
+                                                        <td class="text-end pe-4 fw-bold text-primary">
+                                                            Rs.{{ number_format($selectedPayment->sale->total_amount, 2) }}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
                                         </div>
                                     </div>
-                                @else
-                                    <div
-                                        class="alert alert-{{ $selectedPayment->status === 'approved' ? 'success' : 'warning' }} d-flex align-items-center">
-                                        <i
-                                            class="bi bi-{{ $selectedPayment->status === 'approved' ? 'check-circle' : 'info-circle' }}-fill me-2 fs-4"></i>
-                                        <div>
-                                            @if ($selectedPayment->status === 'approved')
-                                                This payment was approved on
-                                                {{ $selectedPayment->payment_date->format('d M Y, h:i A') }}.
-                                            @elseif($selectedPayment->status === 'rejected')
-                                                This payment was rejected. The staff member has been notified.
-                                            @else
-                                                This payment is awaiting staff action.
-                                            @endif
-                                        </div>
+                                </div>
+
+                                @if($selectedPayment->sale->notes)
+                                <div class="card mt-4">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-sticky text-primary me-2"></i> Notes
+                                        </h6>
                                     </div>
+                                    <div class="card-body">
+                                        <p class="mb-0">{{ $selectedPayment->sale->notes }}</p>
+                                    </div>
+                                </div>
                                 @endif
                             </div>
 
-                            <!-- Right column - Document -->
-                           <div class="col-md-4 bg-light p-4 border-start">
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-gradient-dark text-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-white">Payment Document</h6>
-                @if ($selectedPayment->due_payment_attachment)
-                    @php
-                        $extension = pathinfo($selectedPayment->due_payment_attachment, PATHINFO_EXTENSION);
-                        $isPdf = strtolower($extension) === 'pdf';
-                        $fileUrl = asset('storage/' . str_replace('public/', '', $selectedPayment->due_payment_attachment));
-                    @endphp
-                    @if (!$isPdf)
-                        <button type="button" class="btn btn-sm btn-light" onclick="openFullImage('{{ $fileUrl }}')">
-                            <i class="bi bi-fullscreen"></i>
-                        </button>
-                    @endif
-                @endif
-            </div>
-        </div>
-        <div class="card-body p-0">
-            @if ($selectedPayment->due_payment_attachment)
-                @if ($isPdf)
-                    <div class="text-center py-5 bg-light">
-                        <div class="icon-shape icon-xl bg-danger bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                            <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
-                        </div>
-                        <h5 class="mb-3">PDF Document</h5>
-                        <div class="d-flex justify-content-center gap-2 mb-3">
-                            <a href="{{ $fileUrl }}" target="_blank" class="btn btn-primary">
-                                <i class="bi bi-eye me-1"></i> View PDF
-                            </a>
-                            <a href="{{ $fileUrl }}" download class="btn btn-outline-secondary">
-                                <i class="bi bi-download me-1"></i> Download
-                            </a>
-                        </div>
-                        <div class="alert alert-light mb-0">
-                            <i class="bi bi-info-circle me-2"></i> PDF will open in a new tab
-                        </div>
-                    </div>
-                @else
-                    <div class="document-preview">
-                        <img src="{{ $fileUrl }}" class="img-fluid w-100" style="max-height: 500px; object-fit: contain;">
-                    </div>
-                    <div class="bg-white p-3 border-top">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="badge bg-primary">Image Document</span>
-                            <div>
-                                <a href="{{ $fileUrl }}" download class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-download me-1"></i> Download
-                                </a>
+                            <!-- Actions -->
+                            <div class="col-12 col-md-4">
+                                @if ($selectedPayment->status === 'pending')
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="bi bi-gear text-primary me-2"></i> Actions
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-grid gap-3">
+                                            <button class="btn btn-success" wire:click="approvePayment">
+                                                <i class="bi bi-check-circle me-2"></i>Approve Payment
+                                            </button>
+                                            <button class="btn btn-danger" 
+                                                    onclick="document.getElementById('rejectionSection').classList.toggle('d-none')">
+                                                <i class="bi bi-x-circle me-2"></i>Reject Payment
+                                            </button>
+                                        </div>
+
+                                        <!-- Rejection Reason Section -->
+                                        <div id="rejectionSection" class="d-none mt-4">
+                                            <div class="alert alert-info">
+                                                <div class="d-flex">
+                                                    <i class="bi bi-info-circle-fill text-info me-2"></i>
+                                                    <div>
+                                                        <p class="mb-1 fw-semibold">Due Date Extension</p>
+                                                        <p class="mb-0 small">Rejecting this payment will automatically extend the due date by 3 days.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label fw-semibold">Rejection Reason</label>
+                                                <textarea class="form-control" rows="3"
+                                                          wire:model="rejectionReason"
+                                                          placeholder="Please provide a reason for rejecting this payment..."></textarea>
+                                                @error('rejectionReason')
+                                                <span class="text-danger small">{{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-danger flex-grow-1" wire:click="rejectPayment">
+                                                    <i class="bi bi-x-circle me-2"></i>Confirm Rejection
+                                                </button>
+                                                <button class="btn btn-secondary"
+                                                        onclick="document.getElementById('rejectionSection').classList.add('d-none')">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @else
+                                <div class="alert alert-{{ $selectedPayment->status === 'approved' ? 'success' : 'warning' }}">
+                                    <div class="d-flex">
+                                        <i class="bi bi-{{ $selectedPayment->status === 'approved' ? 'check-circle' : 'info-circle' }}-fill me-3"></i>
+                                        <div>
+                                            <p class="mb-0 fw-semibold">
+                                                This payment has already been {{ $selectedPayment->status === 'approved' ? 'approved' : 'rejected' }}.
+                                            </p>
+                                            @if($selectedPayment->status === 'approved' && $selectedPayment->payment_date)
+                                            <p class="mb-0 small">Approved on: {{ $selectedPayment->payment_date->format('M d, Y h:i A') }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                @endif
                             </div>
-                        </div>
-                    </div>
-                @endif
-            @else
-                <div class="text-center py-5">
-                    <div class="icon-shape icon-xl bg-secondary bg-opacity-10 rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center">
-                        <i class="bi bi-file-earmark-x fs-1 text-secondary"></i>
-                    </div>
-                    <h5 class="text-muted">No Document Attached</h5>
-                    <p class="text-muted mb-0">No payment proof was provided</p>
-                </div>
-            @endif
-        </div>
-    </div>
-
-    <!-- Purchase Information -->
-    <div class="card border-0 shadow-sm mt-4">
-        <div class="card-header bg-gradient-info text-white py-3">
-            <h6 class="mb-0 fw-bold text-white">Purchase Details</h6>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="text-xs text-uppercase text-muted fw-normal ps-3">Item</th>
-                            <th class="text-xs text-uppercase text-muted fw-normal">Qty</th>
-                            <th class="text-xs text-uppercase text-muted fw-normal text-end pe-3">Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($selectedPayment->sale->items as $item)
-                            <tr>
-                                <td class="ps-3">
-                                    @if ($item->Product)
-                                        <p class="text-sm mb-0">
-                                            {{ $item->Product->brand ?? 'Unknown Brand' }}
-                                            {{ $item->Product->model ?? 'Unknown Model' }}
-                                        </p>
-                                        <span class="text-xs text-muted">{{ $item->Product->code ?? 'N/A' }}</span>
-                                    @else
-                                        <p class="text-sm mb-0">
-                                            {{ $item->Product_name ?? 'Product Details Unavailable' }}
-                                        </p>
-                                        <span class="text-xs text-danger">Item record may have been deleted</span>
-                                    @endif
-                                </td>
-                                <td class="text-sm">{{ $item->quantity }}</td>
-                                <td class="text-sm text-end pe-3">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                    <tfoot class="bg-light">
-                        <tr>
-                            <td colspan="2" class="text-end fw-bold text-sm">Total:</td>
-                            <td class="text-end pe-3 fw-bold text-primary text-sm">
-                                Rs.{{ number_format($selectedPayment->sale->total_amount, 2) }}
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
                         </div>
                     @else
                         <div class="text-center py-5">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <p class="mt-2">Loading payment details...</p>
+                            <p class="mt-2 text-muted">Loading payment details...</p>
                         </div>
                     @endif
                 </div>
             </div>
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            /* Add these styles if not already present */
-            .hover-lift {
-                transition: all 0.3s ease;
-            }
-
-            .hover-lift:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1)!important;
-            }
-
-            .icon-shape {
-                width: 48px;
-                height: 48px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .bg-opacity-25 {
-                opacity: 0.25;
-            }
-
-            .bg-primary-subtle {
-                background-color: rgba(var(--bs-primary-rgb), 0.1);
-            }
-
-            .bg-success-subtle {
-                background-color: rgba(var(--bs-success-rgb), 0.1);
-            }
-
-            .bg-danger-subtle {
-                background-color: rgba(var(--bs-danger-rgb), 0.1);
-            }
-
-            .bg-info-subtle {
-                background-color: rgba(var(--bs-info-rgb), 0.1);
-            }
-
-            /* Gradient backgrounds */
-            .bg-gradient-primary {
-                background: linear-gradient(45deg, #4e73df, #224abe);
-            }
-
-            .bg-gradient-success {
-                background: linear-gradient(45deg, #1cc88a, #13855c);
-            }
-
-            .bg-gradient-danger {
-                background: linear-gradient(45deg, #e74a3b, #a62c1f);
-            }
-
-            .bg-gradient-info {
-                background: linear-gradient(45deg, #36b9cc, #258391);
-            }
-        </style>
-    @endpush
-
-    @push('scripts')
-        <script>
-            document.addEventListener('livewire:initialized', () => {
-                // Helper function to handle modal operations safely
-                const handleModal = (modalId, action) => {
-                    const modalElement = document.getElementById(modalId);
-                    
-                    // First, check if a modal instance already exists and dispose it
-                    const existingModal = bootstrap.Modal.getInstance(modalElement);
-                    if (existingModal) {
-                        existingModal.dispose();
-                    }
-                    
-                    if (action === 'show') {
-                        // Create a fresh modal instance and show it
-                        const modal = new bootstrap.Modal(modalElement);
-                        modal.show();
-                        
-                        // Add event listener for when modal is hidden (manually closed)
-                        modalElement.addEventListener('hidden.bs.modal', function() {
-                            // Clean up the modal instance when it's closed
-                            const modalToDispose = bootstrap.Modal.getInstance(modalElement);
-                            if (modalToDispose) {
-                                modalToDispose.dispose();
-                            }
-                        }, { once: true }); // Use once:true so we don't accumulate listeners
-                    }
-                };
-
-                @this.on('openModal', (modalId) => {
-                    handleModal(modalId, 'show');
-                });
-
-                @this.on('closeModal', (modalId) => {
-                    const modalElement = document.getElementById(modalId);
-                    const modal = bootstrap.Modal.getInstance(modalElement);
-                    if (modal) {
-                        modal.hide();
-                    }
-                });
-
-                @this.on('showToast', ({
-                    type,
-                    message
-                }) => {
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: type,
-                        title: message,
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
-                });
-            });
-
-            function openFullImage(imageUrl) {
-                console.log('Opening image:', imageUrl); 
-                Swal.fire({
-                    imageUrl: imageUrl,
-                    imageAlt: 'Payment Receipt',
-                    width: '90%',
-                    showCloseButton: true,
-                    showConfirmButton: false
-                });
-            }
-        </script>
-    @endpush
 </div>
+
+@push('styles')
+<style>
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+    }
+
+    .summary-card {
+        border-left: 4px solid;
+        transition: all 0.3s ease;
+    }
+
+    .summary-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .summary-card.pending {
+        border-left-color: #ffc107;
+    }
+
+    .summary-card.approved {
+        border-left-color: #198754;
+    }
+
+    .summary-card.rejected {
+        border-left-color: #dc3545;
+    }
+
+    .summary-card.today {
+        border-left-color: #0dcaf0;
+    }
+
+    .icon-container {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+
+    .btn-link {
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-link:hover {
+        transform: scale(1.1);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        border-color: #4361ee;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .btn-primary:hover {
+        background-color: #3f37c9;
+        border-color: #3f37c9;
+        transform: translateY(-2px);
+    }
+
+    .btn-success {
+        background-color: #2a9d8f;
+        border-color: #2a9d8f;
+    }
+
+    .btn-success:hover {
+        background-color: #248277;
+        border-color: #248277;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background-color: #e63946;
+        border-color: #e63946;
+    }
+
+    .btn-danger:hover {
+        background-color: #d00000;
+        border-color: #d00000;
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border-color: #6c757d;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
+    }
+
+    .input-group-text {
+        border-radius: 8px 0 0 8px;
+    }
+
+    .dropdown-menu {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .icon-shape {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-xl {
+        width: 80px;
+        height: 80px;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('livewire:initialized', () => {
+        on('openModal', (modalId) => {
+            let modal = new bootstrap.Modal(document.getElementById(modalId));
+            modal.show();
+        });
+
+        on('closeModal', (modalId) => {
+            let modalElement = document.getElementById(modalId);
+            let modal = bootstrap.Modal.getInstance(modalElement);
+            modal.hide();
+        });
+
+        on('showToast', ({ type, message }) => {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: type,
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+        });
+    });
+
+    function openFullImage(imageUrl) {
+        Swal.fire({
+            imageUrl: imageUrl,
+            imageAlt: 'Payment Receipt',
+            width: '90%',
+            showCloseButton: true,
+            showConfirmButton: false
+        });
+    }
+</script>
+@endpush>

@@ -1,12 +1,12 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Livewire\Component;
 use App\Models\Payment;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Illuminate\Support\Facades\Storage;
 
 #[Layout('components.layouts.admin')]
 #[Title('View Payments')]
@@ -33,7 +33,9 @@ class ViewPayments extends Component
                 'sale.items.product'
             ])->findOrFail($paymentId);
             
-            $this->dispatch('openModal', 'payment-receipt-modal');
+            // Dispatch event to open modal
+            $this->dispatch('open-payment-modal');
+            
         } catch (\Exception $e) {
             $this->dispatch('showToast', [
                 'type' => 'error',
@@ -70,13 +72,17 @@ class ViewPayments extends Component
         $payments = $query->orderBy('created_at', 'desc')->paginate(15);
         
         // Get summary stats
-        $totalPayments = Payment::where('is_completed', 1)->sum('amount');
-        $pendingPayments = Payment::where('is_completed', 0)->sum('amount');
+        $totalPayments = Payment::sum('amount');
+        $pendingPayments = Payment::where('status', 'pending')->sum('amount');
+        $approvedPayments = Payment::where('status', 'approved')->sum('amount');
+        $completedPayments = Payment::where('status', 'paid')->sum('amount');
         
         return view('livewire.admin.view-payments', [
             'payments' => $payments,
             'totalPayments' => $totalPayments,
             'pendingPayments' => $pendingPayments,
+            'approvedPayments' => $approvedPayments,
+            'completedPayments' => $completedPayments,
         ]);
     }
 }
