@@ -72,7 +72,7 @@ class Products extends Component
             ->orderBy('product_details.created_at', 'desc')
             ->paginate(10);
 
-        return view('livewire.admin.productes', [
+        return view('livewire.admin.Productes', [
             'products' => $products,
             'brands' => $brands,
             'categories' => $categories,
