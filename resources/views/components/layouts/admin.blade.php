@@ -36,7 +36,7 @@
             --primary-600: #0b5ed7;
             /* hover background for links */
             --primary-100: #e9f0ff;
-             /* main blue (links, active) */
+            /* main blue (links, active) */
 
 
 
@@ -556,6 +556,14 @@
             border-radius: 10px;
         }
 
+        .modal-backdrop.show {
+            z-index: 1040 !important;
+        }
+
+        .modal.show {
+            z-index: 1050 !important;
+        }
+
         /* Responsive styles */
         @media (max-width: 767.98px) {
             .sidebar {
@@ -592,12 +600,13 @@
 </head>
 
 <body>
+
     <div class="d-flex">
         <!-- Sidebar -->
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-center">
                 <div class="sidebar-title">
-                    <img src="{{ asset('public/images/logo.png') }}" alt="Logo" width="150">
+                    <img src="{{ asset('images/USN.png') }}" alt="Logo" width="150">
                 </div>
             </div>
             <ul class="nav flex-column">
@@ -658,7 +667,7 @@
                                     <i class="bi bi-box-seam"></i> <span>Product Details</span>
                                 </a>
                             </li>
-                            
+
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
                                     <i class="bi bi-tag-fill"></i> <span>Product Brand</span>
@@ -674,7 +683,7 @@
                                     <i class="bi bi-collection"></i> <span>Return Product</span>
                                 </a>
                             </li
-                        </ul>
+                                </ul>
                     </div>
                 </li>
                 <li class="nav-item">
@@ -802,13 +811,14 @@
                 </li>
 
                 </li>
-              
+
                 <a class="nav-link" href="{{ route('admin.settings') }}">
                     <i class="bi bi-gear"></i> <span>Settings</span>
                 </a>
 
             </ul>
         </div>
+
 
         <!-- Top Navigation Bar -->
         <nav class="top-bar d-flex justify-content-between align-items-center">
@@ -821,6 +831,25 @@
             <div class="flex-grow-1 d-flex justify-content-center">
                 <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
             </div>
+            @php
+            use App\Models\CashInHand as CashModel;
+            $cashInHand = CashModel::where('key', 'cash in hand')->value('value') ?? 0;
+            @endphp
+
+            <!-- Editable Cash in Hand Display -->
+            <div class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill shadow-sm border border-success border-opacity-25 d-flex align-items-center gap-2">
+                <i class="bi bi-wallet2"></i>
+                <span class="fw-semibold">Cash in Hand:</span>
+                <span class="fw-bold">Rs. {{ number_format($cashInHand, 2) }}</span>
+
+                <!-- Edit button -->
+                <button class="btn btn-sm btn-outline-success border-0 ms-2 p-0" data-bs-toggle="modal" data-bs-target="#editCashAdminModal">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+
+            </div>
+
+
 
             <!-- Admin dropdown -->
             <div class="dropdown ms-auto">
@@ -854,6 +883,57 @@
                 </ul>
             </div>
         </nav>
+        <!-- Modal for Updating Cash-in-Hand -->
+        <div class="modal fade" id="editCashAdminModal" tabindex="-1" aria-labelledby="editCashAdminModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-wallet2 text-warning me-2"></i> Update Cash-in-Hand
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form action="{{ route('admin.updateCashInHand') }}" method="POST" id="cashInHandForm">
+                        @csrf
+                        <div class="modal-body">
+
+                            <!-- Amount Input -->
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">New Cash Amount (Rs.)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light">Rs.</span>
+                                    <input type="number" step="0.01" class="form-control" name="newCashInHand"
+                                        placeholder="Enter new cash amount" required>
+                                </div>
+                            </div>
+
+                            <!-- Current Total Preview -->
+                            <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
+                                <h6 class="fw-bold text-dark mb-2">
+                                    <i class="bi bi-calculator text-success me-2"></i> Current Cash in Hand
+                                </h6>
+                                <div class="d-flex justify-content-between small">
+                                    <span class="text-muted">Current:</span>
+                                    <span class="fw-semibold text-success">Rs. {{ number_format($cashInHand, 2) }}</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer border-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-warning text-white">
+                                <i class="bi bi-check2-circle me-1"></i> Update Cash-in-Hand
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+       
+
         <!-- Main Content -->
         <main class="main-content">
             {{ $slot }}
@@ -1171,6 +1251,13 @@
             // Run on load and resize
             adjustSidebarHeight();
             window.addEventListener('resize', adjustSidebarHeight);
+        });
+
+        //cash in hand popup model 
+        window.addEventListener('close-modal', event => {
+            const modalId = event.detail.modalId;
+            const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+            if (modal) modal.hide();
         });
     </script>
     @stack('scripts')
