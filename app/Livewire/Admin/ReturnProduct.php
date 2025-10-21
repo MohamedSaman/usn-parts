@@ -9,6 +9,7 @@ use App\Models\Sale;
 use App\Models\ProductStock;
 use App\Models\ReturnsProduct;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -37,7 +38,7 @@ class ReturnProduct extends Component
     public $invoiceProductsForSearch = []; // Products from selected invoice for search
     public $selectedProducts = []; // Products selected for return
 
-    /** 🔍 Search Customer */
+    /** 🔍 Search Customer or Invoice */
     public function updatedSearchCustomer()
     {
         if (strlen($this->searchCustomer) > 2) {
@@ -47,8 +48,15 @@ class ReturnProduct extends Component
                 ->orWhere('email', 'like', '%' . $this->searchCustomer . '%')
                 ->limit(10)
                 ->get();
+
+            // Search invoices by invoice number
+            $this->customerInvoices = Sale::where('invoice_number', 'like', '%' . $this->searchCustomer . '%')
+                ->latest()
+                ->limit(10)
+                ->get();
         } else {
             $this->customers = [];
+            $this->customerInvoices = [];
         }
     }
 
@@ -104,6 +112,18 @@ class ReturnProduct extends Component
                     'unit_price' => $item->unit_price,
                 ];
             })->toArray();
+
+            // Build returnItems array with all required keys
+            $this->returnItems = [];
+            foreach ($this->selectedInvoice->items as $item) {
+                $this->returnItems[] = [
+                    'product_id' => $item->product->id,
+                    'name' => $item->product->name,
+                    'unit_price' => $item->unit_price,
+                    'max_qty' => $item->quantity,
+                    'return_qty' => 0,
+                ];
+            }
         }
 
         // Also update the selected invoices for the new search functionality
@@ -128,15 +148,34 @@ class ReturnProduct extends Component
         $this->invoiceProductsForSearch = [];
         $this->totalReturnValue = 0;
 
-        // Set new selection
-        $this->selectedInvoice = Sale::with(['items.product'])->find($invoiceId);
+        // Set new selection with customer relationship
+        $this->selectedInvoice = Sale::with(['items.product', 'customer'])->find($invoiceId);
         $this->selectedInvoices = [$invoiceId];
         $this->showReturnSection = true;
+
+        // Set the selected customer from the invoice
+        if ($this->selectedInvoice && $this->selectedInvoice->customer) {
+            $this->selectedCustomer = $this->selectedInvoice->customer;
+        }
+
+        // Build returnItems array with all required keys
+        if ($this->selectedInvoice) {
+            foreach ($this->selectedInvoice->items as $item) {
+                $this->returnItems[] = [
+                    'product_id' => $item->product->id,
+                    'name' => $item->product->name,
+                    'unit_price' => $item->unit_price,
+                    'max_qty' => $item->quantity,
+                    'return_qty' => 0,
+                ];
+            }
+        }
 
         // Load products for search
         $this->loadInvoiceProductsForSearch();
 
-        $this->dispatch('alert', ['message' => 'Invoice selected! You can now search for products to return.']);
+        // Clear search field
+        $this->searchCustomer = '';
     }
 
     /** 👁️ View Invoice Details in Modal */
@@ -235,7 +274,6 @@ class ReturnProduct extends Component
             $currentQty = $this->returnItems[$existingIndex]['return_qty'];
             if ($currentQty < $product['max_qty']) {
                 $this->returnItems[$existingIndex]['return_qty'] = $currentQty + 1;
-                
             } else {
                 $this->dispatch('alert', ['message' => 'Maximum quantity reached for ' . $product['name']]);
             }
@@ -248,7 +286,6 @@ class ReturnProduct extends Component
                 'max_qty' => $product['max_qty'],
                 'return_qty' => 1,
             ];
-            $this->dispatch('alert', ['message' => $product['name'] . ' added to return cart!']);
         }
 
         // Clear search and recalculate
@@ -299,16 +336,29 @@ class ReturnProduct extends Component
     /** ✅ Validate before showing confirmation */
     public function processReturn()
     {
-        if (empty($this->returnItems) || !$this->selectedCustomer || !$this->selectedInvoice) {
+        // Force recalculation
+        $this->calculateTotalReturnValue();
+
+        if (empty($this->returnItems) || !$this->selectedInvoice) {
             $this->dispatch('alert', ['message' => 'Please select items for return.']);
             return;
         }
 
+        // Check if at least one item has a return quantity > 0
+        $hasReturnItems = false;
         foreach ($this->returnItems as $item) {
-            if ($item['return_qty'] < 1 || $item['return_qty'] > $item['max_qty']) {
-                $this->dispatch('alert', ['message' => 'Invalid return quantity for ' . $item['name']]);
-                return;
+            if (isset($item['return_qty']) && $item['return_qty'] > 0) {
+                if ($item['return_qty'] > $item['max_qty']) {
+                    $this->dispatch('alert', ['message' => 'Invalid return quantity for ' . $item['name']]);
+                    return;
+                }
+                $hasReturnItems = true;
             }
+        }
+
+        if (!$hasReturnItems) {
+            $this->dispatch('alert', ['message' => 'Please enter at least one return quantity.']);
+            return;
         }
 
         $this->dispatch('show-return-modal');
@@ -317,11 +367,26 @@ class ReturnProduct extends Component
     /** 💾 Confirm Return & Save to Database */
     public function confirmReturn()
     {
+        // Force recalculation and syncing
+        $this->calculateTotalReturnValue();
+
         if (empty($this->returnItems) || !$this->selectedCustomer || !$this->selectedInvoice) return;
 
-        DB::transaction(function () {
-            foreach ($this->returnItems as $item) {
-                // ✅ Create Return Record
+        // Filter only items with return_qty > 0
+        $itemsToReturn = array_filter($this->returnItems, function ($item) {
+            return isset($item['return_qty']) && $item['return_qty'] > 0;
+        });
+
+        if (empty($itemsToReturn)) {
+            $this->dispatch('alert', ['message' => 'No valid return quantities entered.']);
+            return;
+        }
+
+        // Debug log for troubleshooting
+        Log::info('ReturnProduct: Saving items', $itemsToReturn);
+
+        DB::transaction(function () use ($itemsToReturn) {
+            foreach ($itemsToReturn as $item) {
                 ReturnsProduct::create([
                     'sale_id' => $this->selectedInvoice->id,
                     'product_id' => $item['product_id'],
@@ -338,6 +403,8 @@ class ReturnProduct extends Component
 
         $this->clearReturnCart();
         $this->dispatch('alert', ['message' => 'Return processed successfully!']);
+        $this->dispatch('close-return-modal');
+        $this->dispatch('reload-page');
     }
 
     /** 📈 Update Product Stock */

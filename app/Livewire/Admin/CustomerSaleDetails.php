@@ -48,10 +48,10 @@ class CustomerSaleDetails extends Component
                 'sale_items.*',
                 'sales.invoice_number',
                 'sales.created_at as sale_date',
-                'product_details.name as Product_name',
-                'brand_lists.name as Product_brand',
-                'product_details.model as Product_model',
-                'product_details.image as Product_image'
+                'product_details.name as product_name',
+                'brand_lists.brand_name as product_brand',
+                'product_details.model as product_model',
+                'product_details.image as product_image'
             )
             ->orderBy('sales.created_at', 'desc')
             ->get();

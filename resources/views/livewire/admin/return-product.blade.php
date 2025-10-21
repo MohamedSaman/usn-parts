@@ -30,14 +30,14 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Search Customer</label>
-                        <input type="text" class="form-control" wire:model.live="searchCustomer" placeholder="Search by name, phone, or email...">
+                        <label class="form-label fw-semibold">Search Customer or Invoice #</label>
+                        <input type="text" class="form-control" wire:model.live="searchCustomer" placeholder="Search by customer name or invoice number...">
                     </div>
 
-                    @if($searchCustomer && count($customers) > 0)
+                    @if($searchCustomer && (count($customers) > 0 || count($customerInvoices) > 0))
                     <div class="border rounded p-3 bg-light">
                         <h6 class="fw-semibold mb-2">Search Results</h6>
-                        <div class="list-group">
+                        <div class="list-group mb-2">
                             @foreach($customers as $customer)
                             <button class="list-group-item list-group-item-action p-2"
                                 wire:click="selectCustomer({{ $customer->id }})"
@@ -52,6 +52,25 @@
                                     </div>
                                 </div>
                             </button>
+                            @endforeach
+                        </div>
+                        <div class="list-group">
+                            @foreach($customerInvoices as $invoice)
+                            @if(str_contains($invoice->invoice_number, $searchCustomer))
+                            <button class="list-group-item list-group-item-action p-2"
+                                wire:click="selectInvoiceForReturn({{ $invoice->id }})"
+                                type="button">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-3">
+                                        <i class="bi bi-receipt fs-4 text-info"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">Invoice #{{ $invoice->invoice_number }}</div>
+                                        <small class="text-muted">{{ $invoice->created_at->format('Y-m-d') }} | ${{ number_format($invoice->total_amount, 2) }}</small>
+                                    </div>
+                                </div>
+                            </button>
+                            @endif
                             @endforeach
                         </div>
                     </div>
@@ -139,128 +158,61 @@
         </div>
     </div>
 
-    @if($showReturnSection)
-    <!-- Product Search for Return -->
+    @if($showReturnSection && $selectedInvoice)
+    <!-- Invoice Items for Return -->
     <div class="row g-4 mb-4">
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-1">
-                            <i class="bi bi-search text-success me-2"></i> Search Products for Return
-                        </h5>
-                        <p class="text-muted small mb-0">Search products from invoice #{{ $selectedInvoice->invoice_number ?? 'N/A' }}</p>
-                    </div>
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="fw-bold text-dark mb-1">
+                        <i class="bi bi-receipt text-info me-2"></i> Invoice #{{ $selectedInvoice->invoice_number }} Items
+                    </h5>
+                    <p class="text-muted small mb-0">Select return quantity for each item below</p>
                 </div>
                 <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Search Products</label>
-                        <input type="text" class="form-control form-control-lg" wire:model.live="searchReturnProduct" placeholder="Search by product name or code..." autofocus>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Code</th>
+                                    <th>Sold Qty</th>
+                                    <th>Return Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedInvoice->items as $index => $item)
+                                <tr>
+                                    <td>{{ $item->product->name }}</td>
+                                    <td>{{ $item->product->code }}</td>
+                                    <td>{{ $item->quantity }}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px;" min="0" max="{{ $item->quantity }}"
+                                            wire:model.lazy="returnItems.{{ $index }}.return_qty">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.product_id" value="{{ $item->product->id }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.name" value="{{ $item->product->name }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.unit_price" value="{{ $item->unit_price }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.max_qty" value="{{ $item->quantity }}">
+                                    </td>
+                                    <td>${{ number_format($item->unit_price, 2) }}</td>
+                                    <td>
+                                        ${{ isset($returnItems[$index]['return_qty']) ? number_format($returnItems[$index]['return_qty'] * $item->unit_price, 2) : '0.00' }}
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-
-                    @if($searchReturnProduct && count($availableProducts) > 0)
-                    <div class="border rounded p-3 bg-light">
-                        <h6 class="fw-semibold mb-3">Available Products</h6>
-                        <div class="row g-2">
-                            @foreach($availableProducts as $product)
-                            <div class="col-md-6 mb-2">
-                                <div class="card product-card" wire:click="addProductDirectlyToReturn({{ $product['id'] }})" style="cursor: pointer;">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-center">
-                                            <img src="{{ $product['image'] ? asset('storage/' . $product['image']) : asset('images/no-image.png') }}"
-                                                alt="{{ $product['name'] }}"
-                                                class="me-3 rounded"
-                                                style="width: 50px; height: 50px; object-fit: cover;">
-                                            <div class="flex-grow-1">
-                                                <h6 class="fw-semibold mb-1">{{ $product['name'] }}</h6>
-                                                <p class="text-muted small mb-1">Code: {{ $product['code'] }}</p>
-                                                <p class="text-success small mb-0">Price: ${{ number_format($product['selling_price'], 2) }}</p>
-                                                <p class="text-info small mb-0">Max Qty: {{ $product['max_qty'] }}</p>
-                                            </div>
-                                            <div>
-                                                <i class="bi bi-plus-circle text-success fs-4"></i>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
+                    <div class="d-flex justify-content-end mt-3">
+                        <span class="fw-bold fs-5 text-warning">Total Return Value: ${{ number_format($totalReturnValue, 2) }}</span>
                     </div>
-                    @endif
-
-                    @if($searchReturnProduct && count($availableProducts) === 0 && strlen($searchReturnProduct) > 0)
-                    <div class="text-center py-4">
-                        <i class="bi bi-search text-muted fs-1 mb-3"></i>
-                        <p class="text-muted mb-0">No products found matching "{{ $searchReturnProduct }}"</p>
-                    </div>
-                    @endif
-
-                    @if(!$searchReturnProduct)
-                    <div class="text-center py-4">
-                        <i class="bi bi-search text-muted fs-1 mb-3"></i>
-                        <p class="text-muted mb-0">Start typing to search for products</p>
-                        <small class="text-muted">Only products from the selected invoice will be shown</small>
-                    </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        <!-- Return Cart -->
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-1">
-                            <i class="bi bi-cart-x text-warning me-2"></i> Return Cart
-                        </h5>
-                        <p class="text-muted small mb-0">{{ count($returnItems) }} items for return</p>
-                    </div>
-                    <button class="btn btn-warning btn-sm" wire:click="clearReturnCart">
-                        <i class="bi bi-trash me-1"></i> Clear
-                    </button>
-                </div>
-                <div class="card-body">
-                    @if(count($returnItems) > 0)
-                    <div class="mb-3">
-                        @foreach($returnItems as $index => $item)
-                        <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold">{{ $item['name'] }}</div>
-                                <small class="text-muted">Max: {{ $item['max_qty'] }} units</small>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <input type="number"
-                                    class="form-control form-control-sm me-2"
-                                    style="width: 80px;"
-                                    wire:model="returnItems.{{ $index }}.return_qty"
-                                    min="1"
-                                    max="{{ $item['max_qty'] }}">
-                                <button class="btn btn-sm btn-outline-danger"
-                                    wire:click="removeFromReturn({{ $index }})">
-                                    <i class="bi bi-x"></i>
-                                </button>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    <div class="border-top pt-3">
-                        <div class="d-flex justify-content-between mb-2">
-                            <span class="fw-semibold">Total Return Value:</span>
-                            <span class="fw-bold text-warning">${{ number_format($totalReturnValue, 2) }}</span>
-                        </div>
-                        <button class="btn btn-success w-100" wire:click="processReturn">
+                    <div class="d-flex justify-content-end mt-2">
+                        <button class="btn btn-success px-4" wire:click="processReturn">
                             <i class="bi bi-check2-circle me-1"></i> Process Return
                         </button>
                     </div>
-                    @else
-                    <div class="text-center py-4">
-                        <i class="bi bi-cart-x text-muted fs-1 mb-3"></i>
-                        <p class="text-muted mb-0">No items in return cart</p>
-                        <small class="text-muted">Click "Return" on products to add them here</small>
-                    </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -548,6 +500,19 @@
         var modalEl = document.getElementById('invoiceModal');
         var modal = new bootstrap.Modal(modalEl);
         modal.show();
+    });
+
+    // Close return modal after confirm
+    Livewire.on('close-return-modal', () => {
+        var modalEl = document.getElementById('returnModal');
+        var modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) {
+            modal.hide();
+        }
+    });
+    // Reload page after confirm return
+    Livewire.on('reload-page', () => {
+        window.location.reload();
     });
 </script>
 @endpush

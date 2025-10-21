@@ -64,7 +64,7 @@
                                     </span>
                                     <input type="text" class="form-control"
                                         placeholder="Search by code, model, barcode, brand or name..."
-                                        wire:model.live="search" 
+                                        wire:model.live="search"
                                         wire:keydown.enter="$set('search', '')"
                                         autocomplete="off">
                                 </div>
@@ -190,8 +190,8 @@
                                             <div class="input-group input-group-sm" style="width: 120px;">
                                                 <span class="input-group-text">Rs.</span>
                                                 <input type="number" class="form-control form-control-sm"
-                                                    wire:model.live="discounts.{{ $id }}" 
-                                                    min="0" max="{{ $item['price'] }}" 
+                                                    wire:model.live="discounts.{{ $id }}"
+                                                    min="0" max="{{ $item['price'] }}"
                                                     step="0.01"
                                                     wire:change="updateDiscount({{ $id }}, $event.target.value)">
                                             </div>
@@ -966,9 +966,9 @@
                             <div class="receipt-container">
                                 <!-- Receipt Header -->
                                 <div class="text-center mb-4">
-                                    <h3 class="mb-0">ZAHARA INTERNATIONAL</h3>
-                                    <p class="mb-0 text-muted small">NO 14/A, YATIYANA ROAD,HORAGOLLA,NITTAMBUWA</p>
-                                    <p class="mb-0 text-muted small">Phone: (077) 3751785 | (033) 2297739 | Email: zahara.international@yahoo.com</p>
+                                    <h3 class="mb-0">USN Auto Parts</h3>
+                                    <p class="mb-0 text-muted small">103 H,Yatiyanthota Road,Seethawaka,avissawella.</p>
+                                    <p class="mb-0 text-muted small">Phone: ( 076) 9085252| Email: autopartsusn@gmail.com </p>
                                     <h4 class="mt-3 border-bottom border-2 pb-2">SALES RECEIPT</h4>
                                 </div>
 

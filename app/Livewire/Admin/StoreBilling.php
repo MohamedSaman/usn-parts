@@ -71,6 +71,12 @@ class StoreBilling extends Component
     public $duePaymentAttachment;
     public $duePaymentAttachmentPreview = null;
 
+    // New properties for the billing workflow
+    public $paymentAmount = 0;
+    public $chequeFile;
+    public $chequeFilePreview = null;
+    public $paymentNotes = '';
+
     protected $listeners = ['quantityUpdated' => 'updateTotals'];
 
     public function mount()
@@ -401,6 +407,33 @@ class StoreBilling extends Component
         }
     }
 
+    public function updatedChequeFile()
+    {
+        if ($this->chequeFile) {
+            try {
+                $this->chequeFilePreview = $this->chequeFile->temporaryUrl();
+            } catch (\Exception $e) {
+                $this->chequeFilePreview = null;
+                $this->js('swal.fire("Error", "Failed to preview the uploaded file.", "error")');
+            }
+        } else {
+            $this->chequeFilePreview = null;
+        }
+    }
+
+    public function updatedPaymentAmount()
+    {
+        // Validate payment amount doesn't exceed grand total
+        if ($this->paymentAmount > $this->grandTotal) {
+            $this->paymentAmount = $this->grandTotal;
+            $this->js('swal.fire("Warning", "Payment amount cannot exceed grand total.", "warning")');
+        }
+
+        if ($this->paymentAmount < 0) {
+            $this->paymentAmount = 0;
+        }
+    }
+
     protected $validationAttributes = [
         'customerId' => 'customer',
         'paymentMethod' => 'payment method',
@@ -419,6 +452,7 @@ class StoreBilling extends Component
 
     // Only change logic that references staff_products to Product_stocks
 
+
     public function completeSale()
     {
         if (empty($this->cart)) {
@@ -428,47 +462,18 @@ class StoreBilling extends Component
 
         $this->validate([
             'customerId' => 'required',
-            'paymentType' => 'required|in:full,partial',
         ]);
 
-        // Validate full or partial payments
-        // ... (re-use your same validation logic from `completeSale()`)
-        // Validate full or partial payments
-        if ($this->paymentType === 'full') {
-            if ($this->grandTotal <= 0 || !$this->paymentMethod) {
-                $this->js('swal.fire("Error", "Please enter a valid amount and select a payment method for full payment.", "error")');
+        // Validate payment based on amount
+        if ($this->paymentAmount > 0) {
+            if (!$this->paymentMethod) {
+                $this->js('swal.fire("Error", "Please select a payment method.", "error")');
                 return;
             }
 
-            if ($this->paymentMethod === 'cheque' && !$this->bankName) {
-                $this->js('swal.fire("Error", "Please provide a bank name for the cheque payment.", "error")');
-                return;
-            }
-        } elseif ($this->paymentType === 'partial') {
-            if ($this->initialPaymentAmount === null || $this->initialPaymentAmount < 0 || !$this->initialPaymentMethod) {
-                $this->js('swal.fire("Error", "Please enter a valid initial payment amount and select a payment method.", "error")');
-                return;
-            }
-
-            if ($this->initialPaymentMethod === 'cheque' && !$this->initialBankName) {
-                $this->js('swal.fire("Error", "Please provide a bank name for the initial cheque payment.", "error")');
-                return;
-            }
-
-            if ($this->balanceAmount > 0) {
-                if (!$this->balancePaymentMethod) {
-                    $this->js('swal.fire("Error", "Please select a payment method for the balance amount.", "error")');
-                    return;
-                }
-
-                // Only require bank name if payment method is cheque, otherwise allow null
-                if ($this->balancePaymentMethod === 'cheque' && !$this->balanceBankName) {
-                    $this->balanceBankName = null; // Set to null if not provided
-                    // Do not show error, just proceed
-                }
-
-                if (!$this->balanceDueDate) {
-                    $this->js('swal.fire("Error", "Please provide a due date for the balance payment.", "error")');
+            if ($this->paymentMethod === 'cheque') {
+                if (!$this->chequeFile) {
+                    $this->js('swal.fire("Error", "Please upload cheque file.", "error")');
                     return;
                 }
             }
@@ -476,6 +481,16 @@ class StoreBilling extends Component
 
         try {
             DB::beginTransaction();
+
+            // Determine payment status
+            $paymentStatus = 'pending';
+            if ($this->paymentAmount == 0) {
+                $paymentStatus = 'partial';
+            } elseif ($this->paymentAmount >= $this->grandTotal) {
+                $paymentStatus = 'paid';
+            } else {
+                $paymentStatus = 'partial';
+            }
 
             // 1. Create Sale record
             $sale = Sale::create([
@@ -486,11 +501,11 @@ class StoreBilling extends Component
                 'subtotal'         => $this->subtotal,
                 'discount_amount'  => $this->totalDiscount,
                 'total_amount'     => $this->grandTotal,
-                'payment_type'     => $this->paymentType,
-                'payment_status'   => $this->paymentType === 'full' ? 'paid' : 'partial',
+                'payment_type'     => $paymentStatus === 'paid' ? 'full' : 'partial',
+                'payment_status'   => $paymentStatus,
                 'status'          => 'confirm',
                 'notes'            => $this->saleNotes,
-                'due_amount'       => $this->balanceAmount,
+                'due_amount'       => $this->grandTotal - $this->paymentAmount,
             ]);
 
             // 2. Create AdminSale record
@@ -499,14 +514,15 @@ class StoreBilling extends Component
                 'admin_id'       => auth()->id(),
                 'total_quantity' => array_sum($this->quantities),
                 'total_value'    => $this->grandTotal,
-                'sold_quantity'  => 0, // will update below
-                'sold_value'     => 0, // will update below
-                'status'         => 'partial', // will update below
+                'sold_quantity'  => 0,
+                'sold_value'     => 0,
+                'status'         => 'partial',
             ]);
 
             $totalSoldQty = 0;
             $totalSoldVal = 0;
 
+            // 3. Process cart items
             foreach ($this->cart as $id => $item) {
                 $ProductStock = ProductStock::where('product_id', $item['id'])->first();
                 if (!$ProductStock || $ProductStock->available_stock < $this->quantities[$id]) {
@@ -517,7 +533,7 @@ class StoreBilling extends Component
                 $itemDiscount = $this->discounts[$id] ?? 0;
                 $total = ($price * $this->quantities[$id]) - ($itemDiscount * $this->quantities[$id]);
 
-                // Insert sale item (linked to sales table)
+                // Insert sale item
                 SaleItem::create([
                     'sale_id'    => $sale->id,
                     'product_id'   => $item['id'],
@@ -538,78 +554,44 @@ class StoreBilling extends Component
                 $totalSoldVal += $total;
             }
 
-            // Update admin sale status and sold values
+            // Update admin sale
             $adminSale->sold_quantity = $totalSoldQty;
             $adminSale->sold_value = $totalSoldVal;
-            $adminSale->status = $totalSoldQty == $adminSale->total_quantity ? 'completed' : 'partial';
+            $adminSale->status = 'completed';
             $adminSale->save();
 
-            // Handle payment (link to sale)
-            if ($this->paymentType == 'full') {
-                $receiptPath = null;
-                if ($this->paymentReceiptImage) {
-                    $receiptPath = $this->paymentReceiptImage->store('admin-payment-receipts', 'public');
+            // 4. Handle payment if amount > 0
+            if ($this->paymentAmount > 0) {
+                $paymentReference = null;
+                if ($this->paymentMethod === 'cheque' && $this->chequeFile) {
+                    $paymentReference = $this->chequeFile->store('cheque-files', 'public');
                 }
 
                 Payment::create([
                     'sale_id'         => $sale->id,
                     'admin_sale_id'   => $adminSale->id,
-                    'amount'          => $this->grandTotal,
+                    'amount'          => $this->paymentAmount,
                     'payment_method'  => $this->paymentMethod,
-                    'payment_reference' => $receiptPath,
+                    'payment_reference' => $paymentReference,
                     'bank_name'       => $this->paymentMethod == 'cheque' ? $this->bankName : null,
                     'is_completed'    => true,
                     'payment_date'    => now(),
                     'status'          => 'Paid',
                 ]);
-            } else {
-                // Initial partial payment
-                if ($this->initialPaymentAmount > 0) {
-                    $initialReceiptPath = null;
-                    if ($this->initialPaymentReceiptImage) {
-                        $initialReceiptPath = $this->initialPaymentReceiptImage->store('admin-payment-receipts', 'public');
-                    }
-
-                    Payment::create([
-                        'sale_id'         => $sale->id,
-                        'admin_sale_id'   => $adminSale->id,
-                        'amount'          => $this->initialPaymentAmount,
-                        'payment_method'  => $this->initialPaymentMethod,
-                        'payment_reference' => $initialReceiptPath,
-                        'bank_name'       => $this->initialPaymentMethod == 'cheque' ? $this->initialBankName : null,
-                        'is_completed'    => true,
-                        'payment_date'    => now(),
-                        'status'          => 'Paid',
-                    ]);
-                }
-
-                // Balance due payment
-                if ($this->balanceAmount > 0) {
-                    $balanceReceiptPath = null;
-                    if ($this->balancePaymentReceiptImage) {
-                        $balanceReceiptPath = $this->balancePaymentReceiptImage->store('admin-payment-receipts', 'public');
-                    }
-
-                    Payment::create([
-                        'sale_id'         => $sale->id,
-                        'admin_sale_id'   => $adminSale->id,
-                        'amount'          => $this->balanceAmount,
-                        'payment_method'  => $this->balancePaymentMethod,
-                        'payment_reference' => $balanceReceiptPath,
-                        'bank_name'       => $this->balancePaymentMethod == 'cheque' ? $this->balanceBankName : null,
-                        'is_completed'    => false,
-                        'due_date'        => $this->balanceDueDate,
-                    ]);
-                }
             }
 
             DB::commit();
 
             $this->lastSaleId = $sale->id;
-            $this->showReceipt = true;
+
+            // Show success message
             $this->js('swal.fire("Success", "Sale completed successfully! Invoice #' . $sale->invoice_number . '", "success")');
-            $this->clearCart();
-            $this->resetPaymentInfo();
+
+            // Reset form BEFORE showing receipt
+            $this->resetForm();
+
+            // Then show receipt
+            $this->showReceipt = true;
             $this->js('$("#receiptModal").modal("show")');
         } catch (Exception $e) {
             DB::rollBack();
@@ -618,32 +600,81 @@ class StoreBilling extends Component
         }
     }
 
-
-    public function resetPaymentInfo()
+    public function resetForm()
     {
-        $this->paymentType = 'full';
+        // Reset cart and related data
+        $this->cart = [];
+        $this->quantities = [];
+        $this->discounts = [];
+        $this->search = '';
+        $this->searchResults = [];
+
+        // Reset customer selection
+        $this->customerId = null;
+        $this->customerType = 'retail';
+
+        // Reset payment information - IMPORTANT: Set to empty string, not 0
+        $this->paymentAmount = '';
         $this->paymentMethod = '';
-        $this->paymentReceiptImage = null;
-        $this->paymentReceiptImagePreview = null;
+        $this->paymentNotes = '';
+
+        // Reset cheque file
+        $this->chequeFile = null;
+        $this->chequeFilePreview = null;
+
+        // Reset bank name
         $this->bankName = '';
 
+        // Reset sale notes
+        $this->saleNotes = '';
+
+        // Reset payment type fields (for legacy code)
+        $this->paymentType = 'full';
+        $this->paymentReceiptImage = null;
+        $this->paymentReceiptImagePreview = null;
+
+        // Reset initial payment fields
         $this->initialPaymentAmount = 0;
         $this->initialPaymentMethod = '';
         $this->initialPaymentReceiptImage = null;
         $this->initialPaymentReceiptImagePreview = null;
         $this->initialBankName = '';
 
+        // Reset balance payment fields
         $this->balanceAmount = 0;
         $this->balancePaymentMethod = '';
-        $this->balanceDueDate = '';
+        $this->balanceDueDate = date('Y-m-d', strtotime('+7 days'));
         $this->balancePaymentReceiptImage = null;
         $this->balancePaymentReceiptImagePreview = null;
         $this->balanceBankName = '';
+
+        // Reset due payment fields
+        $this->duePaymentMethod = '';
+        $this->duePaymentAttachment = null;
+        $this->duePaymentAttachmentPreview = null;
+
+        // Reset new customer form fields
+        $this->newCustomerName = '';
+        $this->newCustomerPhone = '';
+        $this->newCustomerEmail = '';
+        $this->newCustomerType = 'retail';
+        $this->newCustomerAddress = '';
+        $this->newCustomerNotes = '';
+
+        // Update totals
+        $this->updateTotals();
+
+        // Reset validation errors
+        $this->resetValidation();
+
+        // Dispatch event to force UI refresh
+        $this->dispatch('formReset');
     }
 
     public function closeReceiptModal()
     {
         $this->showReceipt = false;
+        $this->lastSaleId = null;
         $this->js('$("#receiptModal").modal("hide")');
     }
 
