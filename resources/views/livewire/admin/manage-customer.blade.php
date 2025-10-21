@@ -32,7 +32,7 @@
                             <tr>
                                 <td class="text-center">{{ $loop->iteration }}</td>
                                 <td class="text-center">{{ $customer->name ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->bussiness_name ?? '-' }}</td>
+                                <td class="text-center">{{ $customer->business_name ?? '-' }}</td>
                                 <td class="text-center">{{ $customer->phone ?? '-' }}</td>
                                 <td class="text-center">{{ $customer->email ?? '-' }}</td>
                                 <td class="text-center">{{ $customer->type ?? '-' }}</td>
@@ -110,10 +110,10 @@
                             @enderror
                         </div>
                         <div class="col-12 col-md-6">
-                            <label for="bussinessName" class="form-label">Bussiness Name</label>
-                            <input type="text" class="form-control" id="bussinessName" wire:model="bussinessName"
-                                placeholder="Enter Bussiness Name">
-                            @error('bussinessName')
+                            <label for="businessName" class="form-label">Business Name</label>
+                            <input type="text" class="form-control" id="businessName" wire:model="businessName"
+                                placeholder="Enter Business Name">
+                            @error('businessName')
                             <span class="text-danger">* {{ $message }}</span>
                             @enderror
                         </div>
