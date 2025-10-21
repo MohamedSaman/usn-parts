@@ -7,7 +7,6 @@ use Livewire\Component;
 use Exception;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\On;
 
 #[Layout('components.layouts.admin')]
 #[Title('Manage Customer')]
@@ -29,6 +28,9 @@ class ManageCustomer extends Component
     public $editBusinessName;
 
     public $deleteId;
+    public $showEditModal = false;
+    public $showCreateModal = false;
+    public $showDeleteModal = false; // Added this
 
     public function render()
     {
@@ -43,8 +45,26 @@ class ManageCustomer extends Component
      * ---------------------------- */
     public function createCustomer()
     {
-        $this->reset(['name', 'contactNumber', 'address', 'email', 'customerType', 'businessName']);
-        $this->js("$('#createCustomerModal').modal('show')");
+        $this->resetForm();
+        $this->showCreateModal = true;
+    }
+
+    public function resetForm()
+    {
+        $this->reset([
+            'name', 'contactNumber', 'address', 'email', 'customerType', 'businessName',
+            'editCustomerId', 'editName', 'editContactNumber', 'editAddress', 
+            'editEmail', 'editCustomerType', 'editBusinessName'
+        ]);
+        $this->resetErrorBag();
+    }
+
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showDeleteModal = false; // Added this
+        $this->resetForm();
     }
 
     public function saveCustomer()
@@ -69,12 +89,10 @@ class ManageCustomer extends Component
             ]);
 
             $this->js("Swal.fire('Success!', 'Customer Created Successfully', 'success')");
-            $this->reset(['name', 'contactNumber', 'address', 'email', 'customerType', 'businessName']);
+            $this->closeModal();
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
         }
-
-        $this->js("$('#createCustomerModal').modal('hide')");
     }
 
     /** ----------------------------
@@ -97,10 +115,10 @@ class ManageCustomer extends Component
         $this->editAddress = $customer->address;
         $this->editEmail = $customer->email;
 
-        $this->dispatch('open-edit-modal');
+        $this->showEditModal = true;
     }
 
-    public function updateCustomer($id)
+    public function updateCustomer()
     {
         $this->validate([
             'editName' => 'required',
@@ -108,11 +126,11 @@ class ManageCustomer extends Component
             'editBusinessName' => 'nullable',
             'editContactNumber' => 'required',
             'editAddress' => 'required',
-            'editEmail' => 'email|unique:customers,email,' . $id,
+            'editEmail' => 'email|unique:customers,email,' . $this->editCustomerId,
         ]);
 
         try {
-            $customer = Customer::find($id);
+            $customer = Customer::find($this->editCustomerId);
             if (!$customer) {
                 $this->js("Swal.fire('Error!', 'Customer not found.', 'error')");
                 return;
@@ -128,11 +146,10 @@ class ManageCustomer extends Component
             ]);
 
             $this->js("Swal.fire('Success!', 'Customer Updated Successfully', 'success')");
+            $this->closeModal();
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
         }
-
-        $this->js("$('#editCustomerModal').modal('hide')");
     }
 
     /** ----------------------------
@@ -141,14 +158,21 @@ class ManageCustomer extends Component
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
-        $this->dispatch('confirm-delete');
+        $this->showDeleteModal = true; // Changed to show modal directly
     }
 
-    #[On('confirmDelete')]
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteId = null;
+    }
+
     public function deleteCustomer()
     {
         try {
             Customer::where('id', $this->deleteId)->delete();
+            $this->js("Swal.fire('Success!', 'Customer deleted successfully.', 'success')");
+            $this->cancelDelete();
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
         }

@@ -1,308 +1,406 @@
-<div>
-    <div class="container-fluid">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-                    <h4 class="card-title mb-2 mb-sm-0">Customer List</h4>
-                    <div class="card-tools">
-                        <button class="btn btn-primary w-100 w-sm-auto" wire:click="createCustomer">
-                            <i class="bi bi-plus-circle me-1"></i> Create Customer
-                        </button>
-                    </div>
-                </div>
+<div class="container-fluid py-3">
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h3 class="fw-bold text-dark mb-2">
+                <i class="bi bi-people-fill text-primary me-2"></i> Manage Customers
+            </h3>
+            <p class="text-muted mb-0">Manage all customer information efficiently</p>
+        </div>
+       
+    </div>
+
+    @if (session()->has('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if (session()->has('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    {{-- Customer List --}}
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-journal-text text-primary me-2"></i> Customer List
+                </h5>
+                
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
-                        <thead>
-                            <tr>
-                                <th class="text-center">#</th>
-                                <th class="text-center">Customer Name</th>
-                                <th>Bussiness Name</th>
-                                <th>Contact Number</th>
-                                <th>Email</th>
-                                <th>Type</th>
-                                <th>Address</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if ($customers->count() > 0)
+            <div class="card-tools">
+                <button class="btn btn-primary btn-sm" wire:click="createCustomer">
+                    <i class="bi bi-plus-lg me-1"></i> Create Customer
+                </button>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Customer Name</th>
+                            <th>Business Name</th>
+                            <th>Contact Number</th>
+                            <th>Email</th>
+                            <th>Type</th>
+                            <th>Address</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if ($customers->count() > 0)
                             @foreach ($customers as $customer)
                             <tr>
-                                <td class="text-center">{{ $loop->iteration }}</td>
-                                <td class="text-center">{{ $customer->name ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->business_name ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->phone ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->email ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->type ?? '-' }}</td>
-                                <td class="text-center">{{ $customer->address ?? '-' }}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2">
-                                        <button class="btn btn-sm btn-primary"
-                                            wire:click="editCustomer({{ $customer->id }})" wire:loading.attr="disabled">
-                                            <i class="bi bi-pencil" wire:loading.class="d-none"
-                                                wire:target="editproduct({{ $customer->id }})"></i>
-                                            <span wire:loading wire:target="editCustomer({{ $customer->id }})">
-                                                <i class="spinner-border spinner-border-sm"></i>
-                                            </span>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger"
-                                            wire:click="confirmDelete({{ $customer->id }})">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
+                                <td class="ps-4">{{ $loop->iteration }}</td>
+                                <td>
+                                    <span class="fw-medium text-dark">{{ $customer->name ?? '-' }}</span>
+                                </td>
+                                <td>{{ $customer->business_name ?? '-' }}</td>
+                                <td>{{ $customer->phone ?? '-' }}</td>
+                                <td>{{ $customer->email ?? '-' }}</td>
+                                <td>
+                                    @if($customer->type == 'retail')
+                                    <span class="badge bg-success">Retail</span>
+                                    @elseif($customer->type == 'wholesale')
+                                    <span class="badge bg-info">Wholesale</span>
+                                    @else
+                                    <span class="badge bg-secondary">N/A</span>
+                                    @endif
+                                </td>
+                                <td>{{ $customer->address ?? '-' }}</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-link text-primary p-0 me-2" 
+                                            wire:click="editCustomer({{ $customer->id }})" 
+                                            wire:loading.attr="disabled">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-link text-danger p-0" 
+                                            wire:click="confirmDelete({{ $customer->id }})" 
+                                            wire:loading.attr="disabled">
+                                        <i class="bi bi-trash fs-6"></i>
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
-                            @else
+                        @else
                             <tr>
-                                <td colspan="8" class="text-center py-3">
-                                    <div class="alert alert-primary bg-opacity-10 my-2">
-                                        <i class="bi bi-info-circle me-2"></i> No customers found.
-                                    </div>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-people display-4 d-block mb-2"></i>
+                                    No customers found
                                 </td>
                             </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-                {{-- <div class="d-flex justify-content-center">
-                    {{ $customers->links('livewire.custom-pagination') }}
-            </div> --}}
+                        @endif
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-    {{-- Create Suplier Modal --}}
-    <div wire:ignore.self class="modal fade" id="createCustomerModal" tabindex="-1"
-        aria-labelledby="createCustomerModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+
+    {{-- Create Customer Modal --}}
+    @if($showCreateModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="createCustomerModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="createCustomerModalLabel">Create Customer</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-plus-circle text-primary me-2"></i> Create Customer
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="customerName" class="form-label">Customer Name</label>
-                            <input type="text" class="form-control" id="customerName" wire:model="name"
-                                placeholder="Enter customer name">
-                            @error('name')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                    <form wire:submit.prevent="saveCustomer">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Customer Name</label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                           wire:model="name" placeholder="Enter customer name" required>
+                                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Contact Number</label>
+                                    <input type="text" class="form-control @error('contactNumber') is-invalid @enderror" 
+                                           wire:model="contactNumber" placeholder="Enter contact number" required>
+                                    @error('contactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label for="contactNumber" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="contactNumber"
-                                wire:model="contactNumber" placeholder="Enter contact number">
-                            @error('contactNumber')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                           wire:model="email" placeholder="Enter email">
+                                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Business Name</label>
+                                    <input type="text" class="form-control @error('businessName') is-invalid @enderror" 
+                                           wire:model="businessName" placeholder="Enter Business Name">
+                                    @error('businessName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" wire:model="email"
-                                placeholder="Enter email">
-                            @error('email')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Customer Type</label>
+                                    <select class="form-select @error('customerType') is-invalid @enderror" wire:model="customerType" required>
+                                        <option value="">Select customer type</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="wholesale">Wholesale</option>
+                                    </select>
+                                    @error('customerType') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <input type="text" class="form-control @error('address') is-invalid @enderror" 
+                                           wire:model="address" placeholder="Enter address">
+                                    @error('address') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label for="businessName" class="form-label">Business Name</label>
-                            <input type="text" class="form-control" id="businessName" wire:model="businessName"
-                                placeholder="Enter Business Name">
-                            @error('businessName')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span wire:loading.remove>Save Customer</span>
+                                <span wire:loading>Saving...</span>
+                            </button>
                         </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-12 col-md-6">
-                            <label for="customerType" class="form-label">Customer Type</label>
-                            <select class="form-select" id="customerType" wire:model="customerType">
-                                <option value="">Select customer type</option>
-                                <option value="retail">Retail</option>
-                                <option value="wholesale">Wholesale</option>
-                            </select>
-                            @error('customerType')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="col-12 col-md-6">
-                            <label for="address" class="form-label">Address</label>
-                            <input type="text" class="form-control" id="address" wire:model="address"
-                                placeholder="Enter address">
-                            @error('address')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer flex-column flex-sm-row">
-                    <button type="button" class="btn btn-secondary w-100 w-sm-auto mb-2 mb-sm-0" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary w-100 w-sm-auto" wire:click="saveCustomer">Add Customer</button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
-{{-- Edit Customer Modal --}}
-<div wire:ignore.self wire:key="edit-modal-{{ $editCustomerId ?? 'new' }}" class="modal fade hidden" id="editCustomerModal" tabindex="-1"
-    aria-labelledby="editCustomerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h1 class="modal-title fs-5" id="editCustomerModalLabel">Edit Customer</h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label for="editName" class="form-label">Customer Name</label>
-                        <input type="text" class="form-control" id="editName"
-                            wire:model="editName">
-                        @error('editName')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label for="editContactNumber" class="form-label">Contact Number</label>
-                        <input type="text" class="form-control" id="editContactNumber"
-                            wire:model="editContactNumber">
-                        @error('editContactNumber')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
+    @endif
+
+    {{-- Edit Customer Modal --}}
+    @if($showEditModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="editCustomerModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Customer
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label for="editEmail" class="form-label">Email</label>
-                        <input type="email" class="form-control" id="editEmail"
-                            wire:model="editEmail">
-                        @error('editEmail')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label for="editBusinessName" class="form-label">Bussiness Name</label>
-                        <input type="text" class="form-control" id="editBusinessName"
-                            wire:model="editBusinessName">
-                        @error('editBusinessName')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
+                <div class="modal-body">
+                    <form wire:submit.prevent="updateCustomer">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Customer Name</label>
+                                    <input type="text" class="form-control @error('editName') is-invalid @enderror" 
+                                           wire:model="editName" required>
+                                    @error('editName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Contact Number</label>
+                                    <input type="text" class="form-control @error('editContactNumber') is-invalid @enderror" 
+                                           wire:model="editContactNumber" required>
+                                    @error('editContactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control @error('editEmail') is-invalid @enderror" 
+                                           wire:model="editEmail">
+                                    @error('editEmail') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Business Name</label>
+                                    <input type="text" class="form-control @error('editBusinessName') is-invalid @enderror" 
+                                           wire:model="editBusinessName">
+                                    @error('editBusinessName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Customer Type</label>
+                                    <select class="form-select @error('editCustomerType') is-invalid @enderror" wire:model="editCustomerType" required>
+                                        <option value="retail">Retail</option>
+                                        <option value="wholesale">Wholesale</option>
+                                    </select>
+                                    @error('editCustomerType') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <input type="text" class="form-control @error('editAddress') is-invalid @enderror" 
+                                           wire:model="editAddress">
+                                    @error('editAddress') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span wire:loading.remove>Update Customer</span>
+                                <span wire:loading>Updating...</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label for="editCustomerType" class="form-label">Customer Type</label>
-                        <select class="form-select" id="editCustomerType" wire:model="editCustomerType">
-                            <option value="retail">Retail</option>
-                            <option value="wholesale">Wholesale</option>
-                        </select>
-                        @error('editCustomerType')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label for="editAddress" class="form-label">Address</label>
-                        <input type="text" class="form-control" id="editAddress"
-                            wire:model="editAddress">
-                        @error('editAddress')
-                        <span class="text-danger">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-            {{-- @dump($editCustomerId, $editName, $editContactNumber, $editEmail, $editBussinessName, $editCustomerType, $editAddress) --}}
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" wire:click="updateCustomer({{$editCustomerId}})">Update Customer</button>
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Delete Confirmation Modal --}}
+    @if($showDeleteModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="cancelDelete"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-person-x text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold mb-3">Are you sure?</h5>
+                    <p class="text-muted">You are about to delete this customer. This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" wire:click="cancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" wire:click="deleteCustomer" wire:loading.attr="disabled">
+                        <i class="bi bi-trash me-1"></i>
+                        <span wire:loading.remove>Delete Customer</span>
+                        <span wire:loading>Deleting...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
-</div>
-@push('scripts')
-<script>
-    window.addEventListener('confirm-delete', event => {
-        Swal.fire({
-            title: "Are you sure?",
-            text: "You won't be able to revert this!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // call component's function deleteOffer
-                Livewire.dispatch('confirmDelete');
-                Swal.fire({
-                    title: "Deleted!",
-                    text: "Customer has been deleted.",
-                    icon: "success"
-                });
-            }
-        });
-    });
-</script>
-<script>
-    window.addEventListener('open-edit-modal', event => {
-        setTimeout(() => {
-            const modal = new bootstrap.Modal(document.getElementById('editCustomerModal'));
-            modal.show();
-        }, 500); // 500ms delay before showing the modal
-    });
-</script>
-@endpush
+
 @push('styles')
 <style>
-    /* Improve table display on mobile */
-    @media (max-width: 767.98px) {
-
-        .table td,
-        .table th {
-            font-size: 0.85rem;
-            padding: 0.5rem;
-        }
-
-        /* Ensure action buttons are properly sized on small screens */
-        .btn-sm {
-            padding: 0.25rem 0.4rem;
-            font-size: 0.75rem;
-        }
-
-        /* Hide less important columns on very small screens */
-        @media (max-width: 575.98px) {
-
-            .table td:nth-child(5),
-            .table th:nth-child(5),
-            /* Email column */
-            .table td:nth-child(7),
-            .table th:nth-child(7) {
-                /* Address column */
-                display: none;
-            }
-        }
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
     }
 
-    /* Better form handling on small screens */
-    @media (max-width: 575.98px) {
-        .modal-footer {
-            justify-content: center;
-            padding-top: 1rem;
-        }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+    }
 
-        .modal-dialog {
-            margin: 0.5rem;
-            max-width: calc(100% - 1rem);
-        }
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+    }
 
-        .modal-body {
-            padding: 1rem;
-        }
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+
+    .btn-link {
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-link:hover {
+        transform: scale(1.1);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        border-color: #4361ee;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .btn-primary:hover {
+        background-color: #3f37c9;
+        border-color: #3f37c9;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background-color: #e63946;
+        border-color: #e63946;
+    }
+
+    .btn-danger:hover {
+        background-color: #d00000;
+        border-color: #d00000;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
     }
 </style>
 @endpush
