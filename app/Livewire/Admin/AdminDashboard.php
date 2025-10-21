@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Admin;
 
+use App\Models\Expense;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\Sale;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel; // Add this at the top
 
@@ -69,6 +71,15 @@ class AdminDashboard extends Component
     public $activeTab = 'overview';
     public $reportStartDate;
     public $reportEndDate;
+    //espenses
+    public $todayTotal = 0;
+    public $monthTotal = 0;
+    public $totalExpenses = 0;
+    public $monthlyBudget = 10000; // Set your monthly budget here
+    public $monthlyProgressPercentage = 0;
+    public $dailyAverage = 0;
+    public $todayVsAverage = 0;
+    
 
     public function mount()
     {
@@ -81,6 +92,25 @@ class AdminDashboard extends Component
             DB::raw('SUM(due_amount) as total_due'),
             DB::raw('COUNT(*) as sales_count')
         )->first();
+
+        //add total expenses
+        $this->totalExpenses = DB::table('expenses')->sum('amount');
+        // Totals
+        $this->todayTotal = Expense::whereDate('date', Carbon::today())->sum('amount');
+        $this->monthTotal = Expense::whereMonth('date', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
+            ->sum('amount');
+        // Calculate monthly progress percentage
+    $this->monthlyProgressPercentage = $this->monthlyBudget > 0 
+        ? min(round(($this->monthTotal / $this->monthlyBudget) * 100, 2), 100)
+        : 0;
+
+    // Calculate today vs average
+    $daysInMonth = now()->daysInMonth;
+    $this->dailyAverage = $daysInMonth > 0 ? $this->monthTotal / now()->day : 0;
+    $this->todayVsAverage = $this->dailyAverage > 0 
+        ? round((($this->todayTotal - $this->dailyAverage) / $this->dailyAverage) * 100, 2)
+        : 0;
 
         // Calculate total revenue (total_amount - due_amount)
         $this->totalSales = $salesStats->total_sales ?? 0;

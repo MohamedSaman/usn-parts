@@ -917,32 +917,45 @@
                 </div>
             </div>
             <div class="col-sm-6 col-lg-3 mb-3">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <div class="stat-label">Staff Status</div>
-                    </div>
-                    <div class="stat-value">{{ $totalStaffCount }} <span class="fs-6 text-muted">members</span></div>
+    <div class="stat-card">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="stat-label">Today's Expenses</div>
+            
+        </div>
+        <div class="stat-value">Rs. {{ number_format($todayTotal, 2) }}</div>
 
-                    <!-- Staff Product Assignment Progress -->
-                    <div class="stat-info mt-1">
-                        <div class="d-flex justify-content-between mb-1">
-                            <small>Staff with Products</small>
-                            <small>{{ $staffAssignmentPercentage }}% of total</small>
-                        </div>
-                        <div class="progress">
-                            <div class="progress-bar bg-info" role="progressbar"
-                                style="width: {{ $staffAssignmentPercentage }}%;"
-                                aria-valuenow="{{ $staffAssignmentPercentage }}" aria-valuemin="0" aria-valuemax="100">
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <small class="text-muted text-truncate-mobile">{{ $staffWithAssignmentsCount }} staff with
-                                assignments</small>
-                        </div>
-                    </div>
-                    
+        <!-- Monthly Expenses Progress -->
+        <div class="stat-info mt-1">
+            <div class="d-flex justify-content-between mb-1">
+                <small>Monthly Progress</small>
+                <small>{{ $monthlyProgressPercentage }}%</small>
+            </div>
+            <div class="progress">
+                <div class="progress-bar bg-danger" role="progressbar"
+                    style="width: {{ $monthlyProgressPercentage }}%;"
+                    aria-valuenow="{{ $monthlyProgressPercentage }}" aria-valuemin="0" aria-valuemax="100">
                 </div>
             </div>
+            <div class="d-flex justify-content-between mt-1">
+                <small class="text-muted text-truncate-mobile">
+                    Rs. {{ number_format($monthTotal, 2) }} of Rs. {{ number_format($monthlyBudget, 2) }}
+                </small>
+            </div>
+        </div>
+
+        <!-- Additional Expense Metrics -->
+        <div class="stat-info mt-3 pt-2 border-top">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="text-muted"><i class="bi bi-calendar-month text-primary me-1"></i> This Month</small>
+                <span class="badge bg-primary">Rs. {{ number_format($monthTotal, 2) }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted"><i class="bi bi-graph-up text-warning me-1"></i> Total Expenses</small>
+                <span class="badge bg-warning text-dark">Rs. {{ number_format($totalExpenses, 2) }}</span>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
 
         <!-- Chart Section -->
@@ -1015,7 +1028,7 @@
         <!-- Inventory and staff section -->
         <div class="container-fluid mt-4 p-0">
             <div class="row">
-                <div class="col-lg-5 col-md-12 mb-4">
+                <div class="col-lg-12 col-md-12 mb-4">
                     <div class="widget-container">
                         <div class="widget-header d-flex justify-content-between align-items-start flex-wrap">
                             <div class="mb-2 mb-md-0">
@@ -1064,80 +1077,8 @@
                 </div>
             </div>
 
-            <!-- Staff Sales Section -->
-            <div class="col-lg-7 col-md-12 mb-4">
-                <div class="widget-container p-3">
-                    <div class="widget-header mb-3 d-flex justify-content-between align-items-start flex-wrap">
-                        <div class="mb-2 mb-md-0">
-                            <h6 class="fw-bold">Staff Sales</h6>
-                            <p class="text-muted small mb-0">Sales performance and collection status</p>
-                        </div>
-                        <a href="" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-people"></i>
-                        </a>
-                    </div>
-
-                    <!-- Scrollable container WITHOUT footer -->
-                    <div class="staff-sales-container" style="max-height: 400px; overflow-y: auto;">
-                        @forelse($staffSales as $staff)
-                        <div class="staff-card p-3 mb-3 bg-light rounded shadow-sm">
-                            <div class="d-flex align-items-start mb-2">
-                                <div class="staff-avatar me-2">
-                                    <span class="badge bg-primary bg-opacity-25 text-white fw-medium py-2 px-2">
-                                        {{ strtoupper(substr($staff->name, 0, 1)) }}{{
-                                        strtoupper(substr(strpos($staff->name, ' ') !== false ? substr($staff->name,
-                                        strpos($staff->name, ' ') + 1, 1) : '', 0, 1)) }}
-                                    </span>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <h6 class="fw-bold mb-0 text-truncate-mobile">{{ $staff->name }}</h6>
-                                </div>
-                            </div>
-
-                            <!-- Sales Progress Section -->
-                            <div class="sales-progress mb-2">
-                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
-                                    <small class="text-muted">Sales Progress</small>
-                                    <div class="d-flex align-items-center flex-wrap">
-                                        <small class="me-2 text-success fw-bold">Rs.{{ number_format($staff->sold_value,
-                                            2) }}</small>
-                                        <small class="text-muted">/ Rs.{{ number_format($staff->assigned_value, 2)
-                                            }}</small>
-                                        <span class="badge bg-success ms-2">{{ $staff->sales_percentage }}%</span>
-                                    </div>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar bg-success" role="progressbar"
-                                        style="width: {{ $staff->sales_percentage }}%"></div>
-                                </div>
-                            </div>
-
-                            <!-- Payment Progress Section -->
-                            <div class="payment-progress">
-                                <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
-                                    <small class="text-muted">Payment Collection</small>
-                                    <div class="d-flex align-items-center flex-wrap">
-                                        <small class="me-2 text-success fw-bold">Rs.{{
-                                            number_format($staff->collected_amount, 2) }}</small>
-                                        <small class="text-danger fw-bold">- Rs.{{ number_format($staff->total_due, 2)
-                                            }} due</small>
-                                        <span
-                                            class="badge {{ $staff->payment_percentage >= 80 ? 'bg-success' : 'bg-danger' }} ms-2">{{
-                                            $staff->payment_percentage }}%</span>
-                                    </div>
-                                </div>
-                                <div class="progress" style="height: 6px;">
-                                    <div class="progress-bar {{ $staff->payment_percentage >= 80 ? 'bg-success' : 'bg-danger' }}"
-                                        role="progressbar" style="width: {{ $staff->payment_percentage }}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="alert alert-info">No staff sales data available.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
+            
+           
         </div>
     </div>
     </div>
