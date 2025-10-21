@@ -12,8 +12,7 @@
                             </div>
                             <div>
                                 <h4 class="mb-1 fw-bold text-dark">Customer Due Payments</h4>
-                                <p class="text-muted mb-0">Manage and collect pending payments from customers
-                                </p>
+                                <p class="text-muted mb-0">Manage and collect pending payments from customers</p>
                             </div>
                         </div>
                     </div>
@@ -32,7 +31,7 @@
                                             <div>
                                                 <p class="text-xs text-muted mb-0 text-uppercase">Pending Payment</p>
                                                 <div class="d-flex align-items-baseline mt-1">
-                                                    <h3 class="mb-0 fw-bold">{{ $duePayments->where('status', null)->count() }}</h3>
+                                                    <h3 class="mb-0 fw-bold">{{ $pendingCount }}</h3>
                                                     <span class="badge bg-info bg-opacity-10 text-info ms-2">To Collect</span>
                                                 </div>
                                             </div>
@@ -52,7 +51,7 @@
                                             <div>
                                                 <p class="text-xs text-muted mb-0 text-uppercase">Awaiting Approval</p>
                                                 <div class="d-flex align-items-baseline mt-1">
-                                                    <h3 class="mb-0 fw-bold">{{ $duePayments->where('status', 'pending')->count() }}</h3>
+                                                    <h3 class="mb-0 fw-bold">{{ $awaitingApprovalCount }}</h3>
                                                     <span class="badge bg-warning bg-opacity-10 text-warning ms-2">In Review</span>
                                                 </div>
                                             </div>
@@ -73,7 +72,7 @@
                                                 <p class="text-xs text-muted mb-0 text-uppercase">Overdue</p>
                                                 <div class="d-flex align-items-baseline mt-1">
                                                     <h3 class="mb-0 fw-bold">
-                                                        {{ $duePayments->where('status', null)->filter(function($payment) { return now()->gt($payment->due_date); })->count() }}
+                                                        {{ $dueSales->where('payment_status', 'partial')->count() }}
                                                     </h3>
                                                     <span class="badge bg-danger bg-opacity-10 text-danger ms-2">Attention</span>
                                                 </div>
@@ -89,13 +88,13 @@
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-center">
                                             <div class="icon-shape icon-md rounded-circle bg-success bg-opacity-10 me-3 text-center">
-                                                <i class="bi bi text-success">Rs.</i>
+                                                <i class="bi bi text-success"></i>
                                             </div>
                                             <div>
                                                 <p class="text-xs text-muted mb-0 text-uppercase">Total Due</p>
                                                 <div class="d-flex align-items-baseline mt-1">
                                                     <h3 class="mb-0 fw-bold">
-                                                        Rs.{{ number_format($duePayments->where('status', null)->sum('amount'), 0) }}
+                                                        Rs.{{ number_format($totalDueAmount, 0) }}
                                                     </h3>
                                                     <span class="badge bg-success bg-opacity-10 text-success ms-2">Amount</span>
                                                 </div>
@@ -138,23 +137,20 @@
                                     </button>
                                     <div class="dropdown-menu p-3 shadow-lg border-0" style="width: 300px;"
                                         aria-labelledby="filterDropdown">
-                                        <h6 class="dropdown-header bg-light rounded py-2 mb-3 text-center">Filter
-                                            Options</h6>
+                                        <h6 class="dropdown-header bg-light rounded py-2 mb-3 text-center">Filter Options</h6>
 
                                         <div class="mb-3">
                                             <label class="form-label small fw-bold">Payment Status</label>
                                             <select class="form-select form-select-sm rounded-pill shadow-none"
                                                 wire:model.live="filters.status">
                                                 <option value="">All Statuses</option>
-                                                <option value="null">Pending Payment</option>
-                                                <option value="pending">Pending Approval</option>
-                                                <option value="approved">Approved</option>
-                                                <option value="rejected">Rejected</option>
+                                                <option value="partial">Partial Payment</option>
+                                                <option value="pending">Pending</option>
                                             </select>
                                         </div>
 
                                         <div class="mb-3">
-                                            <label class="form-label small fw-bold">Due Date Range</label>
+                                            <label class="form-label small fw-bold">Date Range</label>
                                             <input type="text"
                                                 class="form-control form-control-sm rounded-pill shadow-none"
                                                 placeholder="Select date range" wire:model.live="filters.dateRange">
@@ -178,75 +174,77 @@
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th
-                                            class="ps-4 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                        <th class="ps-4 text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
                                             Invoice</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
                                             Customer</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
-                                            Amount</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                            Total Amount</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                            Due Amount</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
                                             Status</th>
-                                        <th
-                                            class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2 text-center">
                                             Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($duePayments as $payment)
-                                    <tr
-                                        class="border-bottom @if (now()->gt($payment->due_date) && $payment->status === null) bg-danger bg-opacity-10 @endif">
+                                    @forelse($dueSales as $sale)
+                                    <tr class="border-bottom @if ($sale->payment_status === 'partial') bg-warning bg-opacity-10 @endif">
                                         <td class="ps-4">
                                             <div class="d-flex flex-column">
-                                                <h6 class="mb-0 text-sm">{{ $payment->sale->invoice_number }}</h6>
+                                                <h6 class="mb-0 text-sm">{{ $sale->invoice_number }}</h6>
                                                 <p class="text-xs text-muted mb-0">
-                                                    {{ $payment->sale->created_at->format('d M Y') }}
+                                                    {{ $sale->created_at->format('d M Y') }}
                                                 </p>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div
-                                                    class="avatar avatar-sm rounded-circle bg-gradient-primary shadow-sm me-2 d-flex align-items-center justify-content-center">
-                                                    <span
-                                                        class="text-white fw-bold">{{ substr($payment->sale->customer->name, 0, 1) }}</span>
+                                                <div class="avatar avatar-sm rounded-circle bg-gradient-primary shadow-sm me-2 d-flex align-items-center justify-content-center">
+                                                    <span class="text-white fw-bold">{{ substr($sale->customer->name, 0, 1) }}</span>
                                                 </div>
                                                 <div>
                                                     <p class="text-sm font-weight-bold mb-0">
-                                                        {{ $payment->sale->customer->name }}
+                                                        {{ $sale->customer->name }}
                                                     </p>
                                                     <p class="text-xs text-muted mb-0">
-                                                        {{ $payment->sale->customer->phone }}
+                                                        {{ $sale->customer->phone }}
                                                     </p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
+                                            <span class="text-sm">
+                                                Rs.{{ number_format($sale->total_amount, 2) }}
+                                            </span>
+                                        </td>
+                                        <td>
                                             <div class="d-flex align-items-center">
-                                                <div
-                                                    class="icon-shape icon-xs rounded-circle bg-success bg-opacity-10 me-2 text-center">
-                                                    <i class="bi bi text-success">Rs.</i>
+                                                <div class="icon-shape icon-xs rounded-circle bg-danger bg-opacity-10 me-2 text-center">
+                                                    <i class="bi bi text-danger">Rs.</i>
                                                 </div>
-                                                <span class="text-sm font-weight-bold">
-                                                    {{ number_format($payment->amount, 2) }}
+                                                <span class="text-sm font-weight-bold text-danger">
+                                                    {{ number_format($sale->due_amount, 2) }}
                                                 </span>
                                             </div>
                                         </td>
                                         <td>
-                                            {!! $payment->status_badge !!}
+                                            @if($sale->payment_status === 'partial')
+                                                <span class="badge bg-warning">Partial Payment</span>
+                                            @elseif($sale->payment_status === 'pending')
+                                                <span class="badge bg-info">Pending</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ ucfirst($sale->payment_status) }}</span>
+                                            @endif
                                         </td>
                                         <td class="text-center">
-                                            @if ($payment->status === null)
                                             <div class="btn-group">
                                                 <button class="btn btn-sm btn-primary rounded-pill shadow-sm"
-                                                    wire:click="getPaymentDetails({{ $payment->id }})">
+                                                    wire:click="getSaleDetails({{ $sale->id }})">
                                                     <i class="bi bi-currency-dollar me-1"></i> Receive
                                                 </button>
                                             </div>
-                                            @endif
                                         </td>
                                     </tr>
                                     @empty
@@ -254,16 +252,12 @@
                                         <td colspan="6">
                                             <div class="text-center py-5">
                                                 <div class="mb-3">
-                                                    <div
-                                                        class="icon-shape icon-xl rounded-circle bg-light mx-auto">
-                                                        <i class="bi bi-cash-coin text-muted"
-                                                            style="font-size: 2rem;"></i>
+                                                    <div class="icon-shape icon-xl rounded-circle bg-light mx-auto">
+                                                        <i class="bi bi-cash-coin text-muted" style="font-size: 2rem;"></i>
                                                     </div>
                                                 </div>
-                                                <h5 class="text-muted font-weight-normal">No due payments found
-                                                </h5>
-                                                <p class="text-sm mb-0">All customer payments are completed or no
-                                                    matching results found.</p>
+                                                <h5 class="text-muted font-weight-normal">No due payments found</h5>
+                                                <p class="text-sm mb-0">All customer payments are completed or no matching results found.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -273,7 +267,7 @@
                         </div>
 
                         <div class="px-4 py-3 border-top">
-                            {{ $duePayments->links() }}
+                            {{ $dueSales->links() }}
                         </div>
                     </div>
                 </div>
@@ -281,10 +275,10 @@
         </div>
     </div>
 
-    <!-- Payment Detail Modal - Changed to XL size -->
+    <!-- Payment Detail Modal -->
     <div wire:ignore.self class="modal fade" id="payment-detail-modal" tabindex="-1" role="dialog"
         aria-labelledby="payment-detail-modal-label" aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document"> <!-- Changed to modal-xl -->
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content border-0 shadow overflow-hidden">
                 <div class="modal-header bg-gradient-primary text-white p-3">
                     <h5 class="modal-title" id="payment-detail-modal-label">
@@ -294,69 +288,46 @@
                         aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0">
-                    @if ($paymentDetail)
+                    @if ($saleDetail)
                     <div class="row g-0">
-                        <!-- Invoice Overview - Reduced to 3 columns for more payment form space -->
+                        <!-- Invoice Overview -->
                         <div class="col-md-3 bg-light p-4 border-end">
                             <div class="text-center mb-4">
-                                <div
-                                    class="avatar avatar-xl rounded-circle bg-gradient-primary shadow mx-auto d-flex align-items-center justify-content-center">
-                                    <span class="text-white"
-                                        style="font-size: 2rem;">{{ substr($paymentDetail->sale->customer->name, 0, 1) }}</span>
+                                <div class="avatar avatar-xl rounded-circle bg-gradient-primary shadow mx-auto d-flex align-items-center justify-content-center">
+                                    <span class="text-white" style="font-size: 2rem;">{{ substr($saleDetail->customer->name, 0, 1) }}</span>
                                 </div>
-                                <h6 class="mt-3 mb-0 fw-bold">{{ $paymentDetail->sale->customer->name }}</h6>
-                                <p class="text-muted mb-0 small">{{ $paymentDetail->sale->customer->phone }}</p>
+                                <h6 class="mt-3 mb-0 fw-bold">{{ $saleDetail->customer->name }}</h6>
+                                <p class="text-muted mb-0 small">{{ $saleDetail->customer->phone }}</p>
                             </div>
 
-                            <h6 class="text-uppercase text-muted small fw-bold mb-3 border-bottom pb-2">Invoice
-                                Details</h6>
+                            <h6 class="text-uppercase text-muted small fw-bold mb-3 border-bottom pb-2">Invoice Details</h6>
                             <div class="mb-3">
                                 <p class="mb-2 d-flex justify-content-between">
                                     <span class="text-muted">Invoice:</span>
-                                    <span class="fw-bold">{{ $paymentDetail->sale->invoice_number }}</span>
+                                    <span class="fw-bold">{{ $saleDetail->invoice_number }}</span>
                                 </p>
                                 <p class="mb-2 d-flex justify-content-between">
                                     <span class="text-muted">Sale Date:</span>
-                                    <span>{{ $paymentDetail->sale->created_at->format('d/m/Y') }}</span>
+                                    <span>{{ $saleDetail->created_at->format('d/m/Y') }}</span>
+                                </p>
+                                <p class="mb-2 d-flex justify-content-between">
+                                    <span class="text-muted">Total:</span>
+                                    <span>Rs.{{ number_format($saleDetail->total_amount, 2) }}</span>
                                 </p>
                                 <div class="card bg-white border-0 shadow-sm p-2 mt-3">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="text-muted small">Amount Due:</span>
-                                        <span
-                                            class="fw-bold fs-4 text-primary">Rs.{{ number_format($paymentDetail->amount, 2) }}</span>
+                                        <span class="fw-bold fs-4 text-danger">Rs.{{ number_format($saleDetail->due_amount, 2) }}</span>
                                     </div>
                                 </div>
                             </div>
-
-                            @if (strpos($paymentDetail->sale->notes ?? '', 'Due date extended') !== false)
-                            <div class="alert alert-warning bg-warning bg-opacity-10 border-0 mt-3 p-2 small">
-                                <div class="d-flex">
-                                    <div class="me-2">
-                                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
-                                    </div>
-                                    <div>
-                                        <p class="mb-0 fw-bold">Due date has been extended</p>
-                                        @php
-                                        $notes = explode("\n", $paymentDetail->sale->notes);
-                                        $extensionNotes = array_filter($notes, function ($note) {
-                                        return strpos($note, 'Due date extended') !== false;
-                                        });
-                                        @endphp
-                                        @foreach ($extensionNotes as $note)
-                                        <p class="mb-0 text-xs">{{ $note }}</p>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
                         </div>
 
-                        <!-- Payment Form - Increased to 9 columns -->
+                        <!-- Payment Form -->
                         <div class="col-md-9">
                             <form wire:submit.prevent="submitPayment">
                                 <div class="row g-0">
                                     <div class="col-lg-12">
-                                        <!-- Form Header -->
                                         <div class="bg-gradient-light p-4 border-bottom">
                                             <div class="d-flex align-items-center">
                                                 <div class="rounded-circle bg-white shadow p-2 me-3">
@@ -364,8 +335,7 @@
                                                 </div>
                                                 <div>
                                                     <h5 class="mb-0 fw-bold">Payment Collection</h5>
-                                                    <p class="text-muted mb-0">Record customer payment details for
-                                                        admin approval</p>
+                                                    <p class="text-muted mb-0">Record customer payment details for admin approval</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -374,30 +344,31 @@
                                     <!-- Two-column form layout -->
                                     <div class="col-lg-6 p-4">
                                         <div class="mb-4">
-                                            <label class="form-label small fw-bold mb-2">Received Amount</label>
-                                            <input type="text" class="form-control @error('receivedAmount') is-invalid @enderror"
-                                                wire:model="receivedAmount" required>
-                                            @error('receivedAmount')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                            <label class="form-label small fw-bold mb-2">Payment Method <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label small fw-bold mb-2">Received Amount <span class="text-danger">*</span></label>
+                                            <div class="input-group shadow-sm">
+                                                <span class="input-group-text bg-white border-end-0">
+                                                    <i class="bi bi-cash text-primary"></i>
+                                                </span>
+                                                <input type="number" step="0.01" class="form-control border-start-0 ps-0 @error('receivedAmount') is-invalid @enderror"
+                                                    wire:model.defer="receivedAmount" placeholder="Enter amount received" required>
+                                                @error('receivedAmount')
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="form-text">Maximum: Rs.{{ number_format($saleDetail->due_amount, 2) }}</div>
+                                        </div>
 
+                                        <div class="mb-4">
+                                            <label class="form-label small fw-bold mb-2">Payment Method <span class="text-danger">*</span></label>
                                             <div class="input-group shadow-sm">
                                                 <span class="input-group-text bg-white border-end-0">
                                                     <i class="bi bi-credit-card text-primary"></i>
                                                 </span>
-
-
-                                                <select
-                                                    class="form-select border-start-0 ps-0 @error('duePaymentMethod') is-invalid @enderror"
-                                                    wire:model="duePaymentMethod" required>
+                                                <select class="form-select border-start-0 ps-0 @error('duePaymentMethod') is-invalid @enderror"
+                                                    wire:model.defer="duePaymentMethod" required>
                                                     <option value="">-- Select payment method --</option>
                                                     <option value="cash">Cash</option>
                                                     <option value="cheque">Cheque</option>
-                                                    <option value="bank_transfer">Bank Transfer</option>
-                                                    <option value="credit_card">Credit Card</option>
-                                                    <option value="debit_card">Debit Card</option>
                                                 </select>
                                                 @error('duePaymentMethod')
                                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -407,27 +378,23 @@
 
                                         <div class="mb-4">
                                             <label class="form-label small fw-bold mb-2">Payment Notes</label>
-                                            <textarea class="form-control shadow-sm" rows="3" wire:model="paymentNote"
+                                            <textarea class="form-control shadow-sm" rows="3" wire:model.defer="paymentNote"
                                                 placeholder="Add any notes about this payment (optional)"></textarea>
-                                            <div class="form-text">Include any specific details about this payment.
-                                            </div>
+                                            <div class="form-text">Include any specific details about this payment.</div>
                                         </div>
 
-                                        <div
-                                            class="alert alert-info bg-info bg-opacity-10 border-0 d-flex align-items-center shadow-sm">
+                                        <div class="alert alert-info bg-info bg-opacity-10 border-0 d-flex align-items-center shadow-sm">
                                             <i class="bi bi-info-circle-fill text-info fs-5 me-3"></i>
                                             <div>
                                                 <p class="mb-0">This payment will be sent for admin approval.</p>
-                                                <p class="mb-0 small">The customer's account will be updated once
-                                                    approved.</p>
+                                                <p class="mb-0 small">The customer's account will be updated once approved.</p>
                                             </div>
                                         </div>
                                     </div>
-
+                                    
                                     <div class="col-lg-6 p-4 bg-light border-start">
                                         <div class="mb-4">
-                                            <label class="form-label small fw-bold mb-2">Payment
-                                                Receipt/Document</label>
+                                            <label class="form-label small fw-bold mb-2">Payment Receipt/Document</label>
                                             <div class="input-group shadow-sm mb-2">
                                                 <span class="input-group-text bg-white border-end-0">
                                                     <i class="bi bi-file-earmark-image text-primary"></i>
@@ -439,11 +406,10 @@
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="form-text">Upload receipt, cheque image, or other payment
-                                                proof.</div>
+                                            <div class="form-text">Upload receipt, cheque image, or other payment proof.</div>
                                         </div>
 
-                                        <!-- Preview Area with better styling -->
+                                        <!-- Preview Area -->
                                         <div class="card shadow-sm border-0 mb-4 bg-white">
                                             <div class="card-header bg-light py-2 px-3">
                                                 <div class="d-flex align-items-center">
@@ -455,60 +421,30 @@
                                                 @if ($duePaymentAttachment)
                                                 <div class="position-relative">
                                                     @if(is_array($duePaymentAttachmentPreview))
-                                                    @if($duePaymentAttachmentPreview['type'] === 'pdf')
-                                                    <!-- PDF Icon Display -->
-                                                    <div class="d-flex flex-column align-items-center p-4">
-                                                        <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
-                                                        <span class="text-muted">PDF document</span>
-                                                        <span class="text-muted small">{{ $duePaymentAttachment->getClientOriginalName() }}</span>
-                                                    </div>
-                                                    @elseif($duePaymentAttachmentPreview['type'] === 'image' && !empty($duePaymentAttachmentPreview['preview']))
-                                                    <!-- Image Preview -->
-                                                    <img src="{{ $duePaymentAttachmentPreview['preview'] }}" class="img-fluid" style="max-height: 200px">
+                                                        @if($duePaymentAttachmentPreview['type'] === 'pdf')
+                                                        <div class="d-flex flex-column align-items-center p-4">
+                                                            <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
+                                                            <span class="text-muted">PDF document</span>
+                                                            <span class="text-muted small">{{ $duePaymentAttachment->getClientOriginalName() }}</span>
+                                                        </div>
+                                                        @elseif($duePaymentAttachmentPreview['type'] === 'image' && !empty($duePaymentAttachmentPreview['preview']))
+                                                        <img src="{{ $duePaymentAttachmentPreview['preview'] }}" class="img-fluid" style="max-height: 200px">
+                                                        @else
+                                                        <div class="d-flex flex-column align-items-center p-4">
+                                                            <i class="bi {{ $duePaymentAttachmentPreview['icon'] ?? 'bi-file-earmark' }} {{ $duePaymentAttachmentPreview['color'] ?? 'text-secondary' }} fs-1 mb-2"></i>
+                                                            <span class="text-muted">File attached</span>
+                                                            <span class="text-muted small">{{ $duePaymentAttachment->getClientOriginalName() }}</span>
+                                                        </div>
+                                                        @endif
                                                     @else
-                                                    <!-- Generic file icon fallback -->
-                                                    <div class="d-flex flex-column align-items-center p-4">
-                                                        <i class="bi {{ $duePaymentAttachmentPreview['icon'] ?? 'bi-file-earmark' }} {{ $duePaymentAttachmentPreview['color'] ?? 'text-secondary' }} fs-1 mb-2"></i>
-                                                        <span class="text-muted">File attached</span>
-                                                        <span class="text-muted small">{{ $duePaymentAttachment->getClientOriginalName() }}</span>
-                                                    </div>
-                                                    @endif
-                                                    @else
-                                                    <!-- Fallback for unexpected preview data -->
                                                     <div class="d-flex flex-column align-items-center p-4">
                                                         <i class="bi bi-file-earmark text-secondary fs-1 mb-2"></i>
                                                         <span class="text-muted">File attached</span>
-                                                        <span class="text-muted small">{{ $duePaymentAttachment->getClientOriginalName() }}</span>
                                                     </div>
                                                     @endif
                                                     <div class="position-absolute bottom-0 start-0 end-0 py-2 px-3 bg-dark bg-opacity-50 text-white text-start small">
                                                         <i class="bi bi-check-circle-fill text-success me-1"></i>
-                                                        New attachment preview
-                                                    </div>
-                                                </div>
-                                                @elseif($paymentDetail && $paymentDetail->due_payment_attachment)
-                                                <div class="position-relative">
-                                                    @php
-                                                    $attachment = is_array($paymentDetail->due_payment_attachment)
-                                                    ? ($paymentDetail->due_payment_attachment[0] ?? '')
-                                                    : $paymentDetail->due_payment_attachment;
-                                                    @endphp
-                                                    @if(pathinfo($attachment, PATHINFO_EXTENSION) === 'pdf')
-                                                    <div class="d-flex flex-column align-items-center p-4">
-                                                        <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
-                                                        <a href="{{ asset('storage/' . $attachment) }}"
-                                                            target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                            <i class="bi bi-eye me-1"></i> View PDF
-                                                        </a>
-                                                    </div>
-                                                    @else
-                                                    <img src="{{ asset('storage/' . $attachment) }}"
-                                                        class="img-fluid" style="max-height: 200px"
-                                                        onerror="this.onerror=null; this.src=''; this.parentNode.innerHTML='<div class=\'d-flex flex-column align-items-center p-4\'><i class=\'bi bi-file-earmark-image text-primary fs-1 mb-2\'></i><span class=\'text-muted\'>Image (cannot display preview)</span></div>';">
-                                                    @endif
-                                                    <div class="position-absolute bottom-0 start-0 end-0 py-2 px-3 bg-dark bg-opacity-50 text-white text-start small">
-                                                        <i class="bi bi-exclamation-circle-fill text-warning me-1"></i>
-                                                        Existing attachment
+                                                        New attachment ready
                                                     </div>
                                                 </div>
                                                 @else
@@ -523,6 +459,7 @@
                                             </div>
                                         </div>
                                     </div>
+                               
 
                                     <div class="col-12 p-4 bg-white border-top">
                                         <div class="d-flex justify-content-end gap-2">
@@ -554,12 +491,10 @@
 
     @push('styles')
     <style>
-        /* Add smooth transitions */
         .modal.fade .modal-dialog {
             transition: transform .3s ease-out;
         }
 
-        /* Custom avatar classes */
         .avatar {
             width: 38px;
             height: 38px;
@@ -573,7 +508,6 @@
             height: 80px;
         }
 
-        /* Custom icon shape */
         .icon-shape {
             width: 32px;
             height: 32px;
@@ -602,12 +536,10 @@
             height: 24px;
         }
 
-        /* Hover effect on table rows */
         .table tbody tr:hover {
             background-color: rgba(var(--bs-primary-rgb), 0.05);
         }
 
-        /* Custom form controls with consistent height */
         .form-control,
         .form-select {
             min-height: 42px;
@@ -617,16 +549,10 @@
             min-height: 42px;
         }
 
-        /* Add these styles to your existing styles */
         .hover-shadow:hover {
             transform: translateY(-3px);
             box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
             transition: all .2s ease;
-        }
-
-        .icon-shape.icon-md {
-            width: 48px;
-            height: 48px;
         }
 
         .bg-gradient-primary {
@@ -646,13 +572,12 @@
             @this.on('closeModal', (modalId) => {
                 let modalElement = document.getElementById(modalId);
                 let modal = bootstrap.Modal.getInstance(modalElement);
-                modal.hide();
+                if (modal) {
+                    modal.hide();
+                }
             });
 
-            @this.on('showToast', ({
-                type,
-                message
-            }) => {
+            @this.on('showToast', ({type, message}) => {
                 Swal.fire({
                     toast: true,
                     position: 'top-end',
@@ -670,68 +595,4 @@
         });
     </script>
     @endpush
-    <!-- filepath: /home/amhar-dev/Desktop/mr.webxkey/resources/views/livewire/staff/due-payments.blade.php -->
-
-    <!-- Add this modal after the payment-detail-modal -->
-    <div wire:ignore.self class="modal fade" id="extend-due-modal" tabindex="-1" role="dialog"
-        aria-labelledby="extend-due-modal-label" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-gradient-warning text-white p-3">
-                    <h5 class="modal-title" id="extend-due-modal-label">
-                        <i class="bi bi-calendar-plus me-2"></i> Extend Due Date
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form wire:submit.prevent="extendDueDate">
-                        <div class="text-center mb-4">
-                            <div class="icon-shape icon-xl bg-warning bg-opacity-10 rounded-circle mx-auto mb-3">
-                                <i class="bi bi-calendar-week text-warning fs-2"></i>
-                            </div>
-                            <h5 class="fw-bold">Extend Payment Due Date</h5>
-                            <p class="text-muted">Provide a new due date and reason for extension</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold mb-2">New Due Date <span
-                                    class="text-danger">*</span></label>
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-white border-end-0">
-                                    <i class="bi bi-calendar-date text-primary"></i>
-                                </span>
-                                <input type="date"
-                                    class="form-control border-start-0 ps-0 @error('newDueDate') is-invalid @enderror"
-                                    wire:model="newDueDate" min="{{ date('Y-m-d') }}">
-                                @error('newDueDate')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label small fw-bold mb-2">Reason for Extension <span
-                                    class="text-danger">*</span></label>
-                            <textarea class="form-control shadow-sm @error('extensionReason') is-invalid @enderror" wire:model="extensionReason"
-                                rows="3" placeholder="Explain why the due date needs to be extended..."></textarea>
-                            @error('extensionReason')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">This information will be added to the sale notes.</div>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2 mt-4">
-                            <button type="button" class="btn btn-light border" data-bs-dismiss="modal">
-                                <i class="bi bi-x me-1"></i> Cancel
-                            </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check2-circle me-1"></i> Confirm Extension
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
