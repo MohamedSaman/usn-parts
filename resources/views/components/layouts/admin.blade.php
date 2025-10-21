@@ -597,7 +597,7 @@
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-center">
                 <div class="sidebar-title">
-                    <img src="{{ asset('public/images/logo.png') }}" alt="Logo" width="150">
+                    <img src="{{ asset('images/USN.png') }}" alt="Logo" width="150">
                 </div>
             </div>
             <ul class="nav flex-column">
