@@ -824,5 +824,12 @@
             showConfirmButton: false
         });
     }
+
+    document.addEventListener('livewire:initialized', function() {
+        Livewire.on('open--modal', function() {
+            const modal = new bootstrap.Modal(document.getElementById('payment-approval-modal'));
+            modal.show();
+        });
+    });
 </script>
 @endpush>

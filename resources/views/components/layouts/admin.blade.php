@@ -699,11 +699,7 @@
                                     <i class="bi bi-collection"></i> <span>Product Category</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
-                                    <i class="bi bi-collection"></i> <span>Return Product</span>
-                                </a>
-                            </li>
+                            
                         </ul>
                     </div>
                 </li>
@@ -714,18 +710,7 @@
                     </a>
                     <div class="collapse" id="salesSubmenu">
                         <ul class="nav flex-column ms-3">
-                            <!-- Disabled: Sales Approvals -->
-                            <li class="nav-item">
-                                <a class="nav-link py-2 disabled" href="#">
-                                    <i class="bi bi-shield-check"></i> <span>Sales Approvals</span>
-                                </a>
-                            </li>
-                            <!-- Disabled: Staff Sales -->
-                            <li class="nav-item">
-                                <a class="nav-link py-2 disabled" href="#">
-                                    <i class="bi bi-shield-lock"></i> <span>Staff Sales</span>
-                                </a>
-                            </li>
+                            
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
                                     <i class="bi bi-people"></i> <span>Customer Sales</span>
@@ -742,17 +727,8 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.payment-approvals') ? 'active' : '' }}"
-                                    href="{{ route('admin.payment-approvals') }}">
-                                    <i class="bi bi-shield-check "></i><span class="nav-link-text ms-1">Payment
-                                        Approvals</span>
-                                    @php
-                                    $pendingCount = \App\Models\Payment::where('status',
-                                    'pending')->where('is_completed', 0)->count();
-                                    @endphp
-                                    @if($pendingCount > 0)
-                                    <span class="badge bg-danger ms-auto">{{ $pendingCount }}</span>
-                                    @endif
+                                <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
+                                    <i class="bi bi-collection"></i> <span>Return Product</span>
                                 </a>
                             </li>
                         </ul>
@@ -825,10 +801,8 @@
                         <i class="bi bi-cash"></i> <span>Store Billing</span>
                     </a>
                 </li>
-
                 <li>
                 <a class="nav-link" href="{{ route('admin.settings') }}">
-
                     <i class="bi bi-gear"></i> <span>Settings</span>
                 </a>
                 </li>
@@ -843,9 +817,9 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
 
-            <!-- Centered Company Name -->
-            <div class="flex-grow-1 d-flex justify-content-center">
-                <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
+            <!-- Centered Company Name (hidden on small screens) -->
+            <div class="flex-grow-1 d-none d-md-flex justify-content-center">
+                <h2 class="mb-0"><b>USN Auto Parts</b></h2>
             </div>
             @php
             use App\Models\CashInHand as CashModel;

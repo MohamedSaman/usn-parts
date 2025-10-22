@@ -21,8 +21,26 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">Pending Payment</p>
-                            <h4 class="fw-bold mb-0">{{ $duePayments->where('status', null)->count() }}</h4>
+                            <h4 class="fw-bold mb-0">{{ $pendingCount }}</h4>
                             <span class="badge bg-info bg-opacity-10 text-info">To Collect</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Amount Card -->
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card summary-card pending-amount h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="icon-container bg-secondary bg-opacity-10 me-3">
+                            <i class="bi bi-currency-rupee text-secondary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="text-muted mb-1">Pending Amount</p>
+                            <h4 class="fw-bold mb-0">Rs.{{ number_format($pendingAmount, 2) }}</h4>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary">To Collect</span>
                         </div>
                     </div>
                 </div>
@@ -39,28 +57,8 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">Awaiting Approval</p>
-                            <h4 class="fw-bold mb-0">{{ $duePayments->where('status', 'pending')->count() }}</h4>
+                            <h4 class="fw-bold mb-0">{{ $awaitingApprovalCount }}</h4>
                             <span class="badge bg-warning bg-opacity-10 text-warning">In Review</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Overdue Payments Card -->
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card summary-card overdue h-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="icon-container bg-danger bg-opacity-10 me-3">
-                            <i class="bi bi-exclamation-circle text-danger fs-4"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <p class="text-muted mb-1">Overdue</p>
-                            <h4 class="fw-bold mb-0">
-                                {{ $duePayments->where('status', null)->filter(function($payment) { return now()->gt($payment->due_date); })->count() }}
-                            </h4>
-                            <span class="badge bg-danger bg-opacity-10 text-danger">Attention</span>
                         </div>
                     </div>
                 </div>
@@ -77,7 +75,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">Total Due</p>
-                            <h4 class="fw-bold mb-0">Rs.{{ number_format($duePayments->where('status', null)->sum('amount'), 0) }}</h4>
+                            <h4 class="fw-bold mb-0">Rs.{{ number_format($totalDueAmount, 2) }}</h4>
                             <span class="badge bg-success bg-opacity-10 text-success">Amount</span>
                         </div>
                     </div>
@@ -128,15 +126,14 @@
                                 <label class="form-label fw-semibold small">Payment Status</label>
                                 <select class="form-select" wire:model.live="filters.status">
                                     <option value="">All Statuses</option>
-                                    <option value="null">Pending Payment</option>
-                                    <option value="pending">Pending Approval</option>
-                                    <option value="approved">Approved</option>
-                                    <option value="rejected">Rejected</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="paid">Paid</option>
                                 </select>
                             </div>
                             
                             <div class="mb-3">
-                                <label class="form-label fw-semibold small">Due Date Range</label>
+                                <label class="form-label fw-semibold small">Date Range</label>
                                 <input type="text" class="form-control" 
                                        placeholder="Select date range" 
                                        wire:model.live="filters.dateRange">
@@ -159,19 +156,19 @@
                         <tr>
                             <th class="ps-4">Invoice</th>
                             <th>Customer</th>
-                            <th class="text-center">Amount</th>
+                            <th class="text-center">Due Amount</th>
                             <th class="text-center">Status</th>
                             <th class="text-end pe-4">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($duePayments as $payment)
-                            <tr class="@if (now()->gt($payment->due_date) && $payment->status === null) bg-danger bg-opacity-5 @endif">
+                        @forelse($dueSales as $sale)
+                            <tr>
                                 <td class="ps-4">
                                     <div>
-                                        <span class="fw-medium text-dark">{{ $payment->sale->invoice_number }}</span>
+                                        <span class="fw-medium text-dark">{{ $sale->invoice_number }}</span>
                                         <div class="text-muted small">
-                                            {{ $payment->sale->created_at->format('d M Y') }}
+                                            {{ $sale->created_at->format('d M Y') }}
                                         </div>
                                     </div>
                                 </td>
@@ -181,27 +178,43 @@
                                             <i class="bi bi-person text-primary"></i>
                                         </div>
                                         <div>
-                                            <span class="fw-medium text-dark">{{ $payment->sale->customer->name }}</span>
+                                            <span class="fw-medium text-dark">{{ $sale->customer->name }}</span>
                                             <div class="text-muted small">
-                                                {{ $payment->sale->customer->phone }}
+                                                {{ $sale->customer->phone }}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="fw-bold text-dark">Rs.{{ number_format($payment->amount, 2) }}</span>
+                                    <span class="fw-bold text-danger">Rs.{{ number_format($sale->due_amount, 2) }}</span>
+                                    <div class="text-muted small">
+                                        Total: Rs.{{ number_format($sale->total_amount, 2) }}
+                                    </div>
                                 </td>
                                 <td class="text-center">
-                                    {!! $payment->status_badge !!}
+                                    @if($sale->payment_status === 'paid')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif($sale->payment_status === 'partial')
+                                        <span class="badge bg-warning">Partial</span>
+                                    @else
+                                        <span class="badge bg-danger">Unpaid</span>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
-                                    @if ($payment->status === null)
-                                        <button class="btn btn-link text-primary p-0" 
-                                                wire:click="getPaymentDetails({{ $payment->id }})" 
-                                                wire:loading.attr="disabled">
-                                            <i class="bi bi-currency-dollar fs-6"></i>
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-sm btn-primary rounded-pill " 
+                                                wire:click="getSaleDetails({{ $sale->id }})" 
+                                                wire:loading.attr="disabled"
+                                                title="Receive Payment">
+                                            <i class="bi bi-currency-dollar"></i>Receive
                                         </button>
-                                    @endif
+                                        {{--<button class="btn btn-sm btn-warning" 
+                                                wire:click="openExtendDueModal({{ $sale->id }})" 
+                                                wire:loading.attr="disabled"
+                                                title="Extend Due Date">
+                                            <i class="bi bi-calendar-plus"></i>
+                                        </button>--}}
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -218,7 +231,7 @@
             
             {{-- Pagination --}}
             <div class="mt-4">
-                {{ $duePayments->links() }}
+                {{ $dueSales->links() }}
             </div>
         </div>
     </div>
@@ -234,7 +247,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    @if ($paymentDetail)
+                    @if ($saleDetail)
                         <div class="row g-4">
                             <!-- Invoice Overview -->
                             <div class="col-12 col-md-4">
@@ -249,30 +262,34 @@
                                             <div class="icon-container bg-primary bg-opacity-10 mx-auto mb-3">
                                                 <i class="bi bi-person text-primary fs-2"></i>
                                             </div>
-                                            <h6 class="fw-bold mb-1">{{ $paymentDetail->sale->customer->name }}</h6>
-                                            <p class="text-muted small mb-0">{{ $paymentDetail->sale->customer->phone }}</p>
+                                            <h6 class="fw-bold mb-1">{{ $saleDetail->customer->name }}</h6>
+                                            <p class="text-muted small mb-0">{{ $saleDetail->customer->phone }}</p>
                                         </div>
 
                                         <div class="row g-2">
                                             <div class="col-12">
                                                 <label class="form-label fw-semibold text-muted small">Invoice</label>
-                                                <p class="fw-medium text-dark mb-0">{{ $paymentDetail->sale->invoice_number }}</p>
+                                                <p class="fw-medium text-dark mb-0">{{ $saleDetail->invoice_number }}</p>
                                             </div>
                                             <div class="col-12">
                                                 <label class="form-label fw-semibold text-muted small">Sale Date</label>
-                                                <p class="fw-medium text-dark mb-0">{{ $paymentDetail->sale->created_at->format('d/m/Y') }}</p>
+                                                <p class="fw-medium text-dark mb-0">{{ $saleDetail->created_at->format('d/m/Y') }}</p>
                                             </div>
                                             <div class="col-12">
-                                                <div class="card bg-primary bg-opacity-5 border-0 mt-3">
+                                                <label class="form-label fw-semibold text-muted small">Total Amount</label>
+                                                <p class="fw-medium text-dark mb-0">Rs.{{ number_format($saleDetail->total_amount, 2) }}</p>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="card bg-danger bg-opacity-5 border-0 mt-3">
                                                     <div class="card-body text-center py-3">
-                                                        <label class="form-label fw-semibold text-muted small mb-1">Amount Due</label>
-                                                        <h4 class="fw-bold text-primary mb-0">Rs.{{ number_format($paymentDetail->amount, 2) }}</h4>
+                                                        <label class="form-label fw-semibold text-muted text-white small mb-1">Amount Due</label>
+                                                        <h4 class="fw-bold text-white mb-0">Rs.{{ number_format($saleDetail->due_amount, 2) }}</h4>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                        @if (strpos($paymentDetail->sale->notes ?? '', 'Due date extended') !== false)
+                                        @if (strpos($saleDetail->notes ?? '', 'Due date extended') !== false)
                                             <div class="alert alert-warning bg-warning bg-opacity-10 border-0 mt-3">
                                                 <div class="d-flex">
                                                     <div class="me-2">
@@ -281,9 +298,9 @@
                                                     <div>
                                                         <p class="mb-0 fw-bold small">Due date has been extended</p>
                                                         @php
-                                                        $notes = explode("\n", $paymentDetail->sale->notes);
+                                                        $notes = explode("\n", $saleDetail->notes);
                                                         $extensionNotes = array_filter($notes, function ($note) {
-                                                        return strpos($note, 'Due date extended') !== false;
+                                                            return strpos($note, 'Due date extended') !== false;
                                                         });
                                                         @endphp
                                                         @foreach ($extensionNotes as $note)
@@ -310,9 +327,9 @@
                                             <div class="row g-3">
                                                 <div class="col-12 col-md-6">
                                                     <div class="mb-3">
-                                                        <label class="form-label fw-semibold">Received Amount</label>
-                                                        <input type="text" class="form-control @error('receivedAmount') is-invalid @enderror"
-                                                            wire:model="receivedAmount" required>
+                                                        <label class="form-label fw-semibold">Received Amount <span class="text-danger">*</span></label>
+                                                        <input type="number" step="0.01" class="form-control @error('receivedAmount') is-invalid @enderror"
+                                                            wire:model="receivedAmount" required placeholder="0.00">
                                                         @error('receivedAmount')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                         @enderror
@@ -390,24 +407,6 @@
                                                                         </div>
                                                                     @endif
                                                                 </div>
-                                                            @elseif($paymentDetail && $paymentDetail->due_payment_attachment)
-                                                                <div class="text-center">
-                                                                    @php
-                                                                    $attachment = is_array($paymentDetail->due_payment_attachment)
-                                                                    ? ($paymentDetail->due_payment_attachment[0] ?? '')
-                                                                    : $paymentDetail->due_payment_attachment;
-                                                                    @endphp
-                                                                    @if(pathinfo($attachment, PATHINFO_EXTENSION) === 'pdf')
-                                                                        <div class="d-flex flex-column align-items-center p-3">
-                                                                            <i class="bi bi-file-earmark-pdf text-danger fs-1 mb-2"></i>
-                                                                            <a href="{{ asset('storage/' . $attachment) }}" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                                                                                <i class="bi bi-eye me-1"></i> View PDF
-                                                                            </a>
-                                                                        </div>
-                                                                    @else
-                                                                        <img src="{{ asset('storage/' . $attachment) }}" class="img-fluid rounded border" style="max-height: 200px">
-                                                                    @endif
-                                                                </div>
                                                             @else
                                                                 <div class="text-center p-4">
                                                                     <div class="icon-container bg-light mb-3 mx-auto">
@@ -420,18 +419,6 @@
                                                         </div>
                                                     </div>
                                                 </div>
-
-                                                <div class="col-12">
-                                                    <div class="alert alert-info bg-info bg-opacity-10 border-0">
-                                                        <div class="d-flex">
-                                                            <i class="bi bi-info-circle-fill text-info me-3"></i>
-                                                            <div>
-                                                                <p class="mb-0 fw-semibold">This payment will be sent for admin approval.</p>
-                                                                <p class="mb-0 small">The customer's account will be updated once approved.</p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                         <div class="card-footer bg-transparent">
@@ -439,8 +426,14 @@
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                                     <i class="bi bi-x me-1"></i> Cancel
                                                 </button>
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="bi bi-send me-1"></i> Submit for Approval
+                                                <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                                    <span wire:loading.remove>
+                                                        <i class="bi bi-send me-1"></i> Submit
+                                                    </span>
+                                                    <span wire:loading>
+                                                        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                        Submitting...
+                                                    </span>
                                                 </button>
                                             </div>
                                         </div>
@@ -453,7 +446,7 @@
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
                             </div>
-                            <p class="mt-2 text-muted">Loading payment details...</p>
+                            <p class="mt-2 text-muted">Loading sale details...</p>
                         </div>
                     @endif
                 </div>
@@ -462,7 +455,7 @@
     </div>
 
     <!-- Extend Due Date Modal -->
-    <div wire:ignore.self class="modal fade" id="extend-due-modal" tabindex="-1" aria-labelledby="extend-due-modal-label" aria-hidden="true">
+    {{--<div wire:ignore.self class="modal fade" id="extend-due-modal" tabindex="-1" aria-labelledby="extend-due-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -484,7 +477,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">New Due Date <span class="text-danger">*</span></label>
                             <input type="date" class="form-control @error('newDueDate') is-invalid @enderror"
-                                wire:model="newDueDate" min="{{ date('Y-m-d') }}">
+                                wire:model="newDueDate" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                             @error('newDueDate')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -504,15 +497,21 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                 <i class="bi bi-x me-1"></i> Cancel
                             </button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-check2-circle me-1"></i> Confirm Extension
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <span wire:loading.remove>
+                                    <i class="bi bi-check2-circle me-1"></i> Confirm Extension
+                                </span>
+                                <span wire:loading>
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    Processing...
+                                </span>
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
-    </div>
+    </div>--}}
 </div>
 
 @push('styles')
@@ -550,16 +549,16 @@
         border-left-color: #4cc9f0;
     }
 
+    .summary-card.pending-amount {
+        border-left-color: #6c757d;
+    }
+
     .summary-card.awaiting {
         border-left-color: #ffc107;
     }
 
-    .summary-card.overdue {
-        border-left-color: #e63946;
-    }
-
     .summary-card.total {
-        border-left-color: #4361ee;
+        border-left-color: #198754;
     }
 
     .icon-container {
@@ -642,6 +641,11 @@
         transform: translateY(-2px);
     }
 
+    .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.875rem;
+    }
+
     .alert {
         border-radius: 8px;
         border: none;
@@ -651,16 +655,38 @@
         font-size: 0.75rem;
         padding: 0.35rem 0.65rem;
         border-radius: 6px;
+        font-weight: 500;
     }
 
     .input-group-text {
         border-radius: 8px 0 0 8px;
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
     }
 
     .dropdown-menu {
         border-radius: 12px;
         border: none;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        padding: 0.5rem;
+    }
+
+    .btn-group .btn {
+        padding: 0.4rem 0.75rem;
+    }
+
+    .btn-group .btn:first-child {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .btn-group .btn:last-child {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .text-xs {
+        font-size: 0.75rem;
     }
 </style>
 @endpush
@@ -668,18 +694,31 @@
 @push('scripts')
 <script>
     document.addEventListener('livewire:initialized', () => {
-        on('openModal', (modalId) => {
+        Livewire.on('openModal', (modalId) => {
             let modal = new bootstrap.Modal(document.getElementById(modalId));
             modal.show();
         });
 
-        on('closeModal', (modalId) => {
+        Livewire.on('closeModal', (modalId) => {
             let modalElement = document.getElementById(modalId);
             let modal = bootstrap.Modal.getInstance(modalElement);
-            modal.hide();
+            if (modal) {
+                modal.hide();
+            }
         });
 
-        ('showToast', ({ type, message }) => {
+        // Close modal with delay to allow toast to be seen
+        Livewire.on('closeModalDelayed', (modalId) => {
+            setTimeout(() => {
+                let modalElement = document.getElementById(modalId);
+                let modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }, 1500); // 1.5 second delay
+        });
+
+        Livewire.on('showToast', ({ type, message }) => {
             Swal.fire({
                 toast: true,
                 position: 'top-end',

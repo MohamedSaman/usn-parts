@@ -79,9 +79,13 @@
                                 </td>
                                 <td>{{ $order->supplier->name ?? 'N/A' }}</td>
                                 <td>
-                                    <span class="badge {{ $order->status == 'complete' ? 'bg-success' : 'bg-warning' }}">
-                                        {{ ucfirst($order->status) }}
-                                    </span>
+                                    @if($order->status == 'complete')
+                                    <span class="badge bg-success">Completed</span>
+                                    @elseif($order->status == 'cancelled')
+                                    <span class="badge bg-danger">Cancelled</span>
+                                    @else
+                                    <span class="badge bg-warning">Pending</span>
+                                    @endif
                                 </td>
                                 <td class="text-end pe-4">
                                     <button class="btn btn-link text-primary p-0 me-2"
@@ -90,11 +94,25 @@
                                         <i class="bi bi-eye fs-6"></i>
                                     </button>
 
-                                    @if($order->status != 'complete')
-                                    <button class="btn btn-link text-success p-0"
-                                        wire:click="confirmComplete({{ $order->id }})">
+                                    @if($order->status == 'pending')
+                                    <button class="btn btn-link text-success p-0 me-2"
+                                        wire:click="confirmComplete({{ $order->id }})"
+                                        title="Mark Complete">
                                         <i class="bi bi-check-circle fs-6"></i>
                                     </button>
+
+                                    <button class="btn btn-link text-warning p-0 me-2"
+                                        wire:click="editOrder({{ $order->id }})"
+                                        title="Edit Order">
+                                        <i class="bi bi-pencil-square fs-6"></i>
+                                    </button>
+
+                                    <button class="btn btn-link text-danger p-0"
+                                        wire:click="confirmDelete({{ $order->id }})"
+                                        title="Cancel Order">
+                                        <i class="bi bi-x-circle fs-6"></i>
+                                    </button>
+
                                     @endif
                                 </td>
                             </tr>
@@ -134,14 +152,14 @@
                             @if(!empty($products) && count($products) > 0)
                             <ul class="list-group mt-1 position-absolute w-100 me-4 z-3 shadow-lg">
                                 @foreach($products as $product)
-                                <li class="list-group-item list-group-item-action p-2" 
+                                <li class="list-group-item list-group-item-action p-2"
                                     wire:click="selectProduct({{ $product->id }})"
                                     style="cursor: pointer;">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $product->image }}" 
-                                             alt="{{ $product->name }}" 
-                                             class="me-2"
-                                             style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">
+                                        <img src="{{ $product->image }}"
+                                            alt="{{ $product->name }}"
+                                            class="me-2"
+                                            style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">
                                         <div class="flex-grow-1">
                                             <div class="fw-semibold text-dark">{{ $product->name }}</div>
                                             <small class="text-muted">
@@ -259,6 +277,57 @@
         </div>
     </div>
 
+    {{-- Edit Order Modal --}}
+    <div wire:ignore.self class="modal fade" id="editOrderModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Edit Purchase Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($editOrderItems as $index => $item)
+                                <tr>
+                                    <td>{{ $item['name'] }}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" min="1" wire:model.defer="editOrderItems.{{ $index }}.quantity">
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" step="0.01" wire:model.defer="editOrderItems.{{ $index }}.unit_price">
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" wire:click="removeEditItem({{ $index }})">Remove</button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @if(empty($editOrderItems))
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No items to edit</td>
+                                </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button class="btn btn-primary" wire:click="updateOrder">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 @push('styles')
@@ -270,20 +339,20 @@
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
-    
+
     .summary-card:hover {
         transform: translateY(-3px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
-    
+
     .summary-card.pending {
         border-left-color: #ffc107;
     }
-    
+
     .summary-card.completed {
         border-left-color: #28a745;
     }
-    
+
     .icon-container {
         width: 50px;
         height: 50px;
@@ -292,26 +361,26 @@
         align-items: center;
         justify-content: center;
     }
-    
+
     .card {
         border: none;
         border-radius: 12px;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
     }
-    
+
     .card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
-    
+
     .card-header {
         background-color: white;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         border-radius: 12px 12px 0 0 !important;
         padding: 1.25rem 1.5rem;
     }
-    
+
     .table th {
         border-top: none;
         font-weight: 600;
@@ -320,50 +389,52 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    
+
     .table td {
         vertical-align: middle;
         padding: 0.75rem 1rem;
     }
-    
+
     .btn-link {
         text-decoration: none;
         transition: all 0.2s ease;
     }
-    
+
     .btn-link:hover {
         transform: scale(1.1);
     }
-    
+
     .modal-content {
         border: none;
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     }
-    
-    .form-control, .form-select {
+
+    .form-control,
+    .form-select {
         border-radius: 8px;
         padding: 0.75rem 1rem;
         border: 1px solid #e2e8f0;
     }
-    
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         border-color: #4361ee;
     }
-    
+
     .btn {
         border-radius: 8px;
         font-weight: 500;
         padding: 0.50rem 0.75rem;
         transition: all 0.3s ease;
     }
-    
+
     .btn-primary {
         background-color: #4361ee;
         border-color: #4361ee;
     }
-    
+
     .btn-primary:hover {
         background-color: #3f37c9;
         border-color: #3f37c9;
@@ -397,11 +468,6 @@
 
 @push('scripts')
 <script>
-    // Open View Order modal after data is loaded
-    Livewire.on('open-view-order-modal', () => {
-        var modalEl = document.getElementById('viewOrderModal');
-        var modal = new bootstrap.Modal(modalEl);
-        modal.show();
-    });
+    // No additional event listeners needed - modals are opened directly via $this->js() in the component
 </script>
 @endpush

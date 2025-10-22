@@ -42,12 +42,12 @@ class GRN extends Component
     public function viewGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
-        
+
         if (!$this->selectedPO) {
             $this->dispatch('alert', ['message' => 'Order not found!', 'type' => 'error']);
             return;
         }
-        
+
         $this->grnItems = [];
         $this->searchResults = ['unplanned' => []];
 
@@ -63,7 +63,7 @@ class GRN extends Component
                 'status' => $item->status ?? 'received',
             ];
         }
-        
+
         // Dispatch event to open modal after data is loaded
         $this->dispatch('open-view-grn-modal');
     }
@@ -71,12 +71,12 @@ class GRN extends Component
     public function openGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
-        
+
         if (!$this->selectedPO) {
             $this->dispatch('alert', ['message' => 'Order not found!', 'type' => 'error']);
             return;
         }
-        
+
         $this->grnItems = [];
         $this->searchResults = ['unplanned' => []];
 
@@ -89,10 +89,10 @@ class GRN extends Component
                 'received_qty' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount,
-                'status' => $item->status ,
+                'status' => $item->status,
             ];
         }
-        
+
         // Dispatch event to open modal after data is loaded
         $this->dispatch('open-grn-modal');
     }
@@ -178,7 +178,7 @@ class GRN extends Component
             'discount' => 0,
             'status' => 'received',
         ];
-        
+
         // Initialize search results for the new row
         $newIndex = count($this->grnItems) - 1;
         $this->searchResults[$newIndex] = [];
@@ -205,7 +205,7 @@ class GRN extends Component
 
         // Mark the item as received in the UI
         $this->grnItems[$index]['status'] = 'received';
-        
+
         // Update stock immediately if we have a valid product and quantity
         if ($productId && $receivedQty > 0) {
             $this->updateProductStock($productId, $receivedQty);
@@ -234,30 +234,36 @@ class GRN extends Component
                 // Update existing order item
                 $orderItem = PurchaseOrderItem::find($item['id']);
                 if ($orderItem) {
+                    // Calculate delta: new received qty minus previously recorded qty
+                    $previousQty = $orderItem->quantity ?? 0;
                     $orderItem->quantity = $receivedQty;
                     $orderItem->unit_price = $item['unit_price'];
                     $orderItem->discount = $item['discount'];
                     $orderItem->status = $item['status'];
                     $orderItem->save();
 
-                    // Update stock if status is received
+                    // Update stock only with the delta (received now)
                     if (strtolower($item['status'] ?? '') === 'received' && $receivedQty > 0) {
-                        $this->updateProductStock($productId, $receivedQty);
+                        $delta = $receivedQty - $previousQty;
+                        if ($delta > 0) {
+                            $this->updateProductStock($productId, $delta);
+                        }
+                        // If negative delta, do not adjust stock here (manual adjustment needed)
                     }
                 }
             } else {
-                // Create new item for this purchase order (only if product is selected)
+                // Always save new GRN items as 'received' status
                 $newOrderItem = PurchaseOrderItem::create([
                     'order_id' => $this->selectedPO->id,
                     'product_id' => $productId,
                     'quantity' => $receivedQty,
                     'unit_price' => $item['unit_price'] ?? 0,
                     'discount' => $item['discount'] ?? 0,
-                    'status' => $item['status'],
+                    'status' => 'received',
                 ]);
 
-                // Update stock if status is received
-                if (strtolower($item['status'] ?? '') === 'received' && $receivedQty > 0) {
+                // Update stock for new received item
+                if ($receivedQty > 0) {
                     $this->updateProductStock($productId, $receivedQty);
                 }
             }

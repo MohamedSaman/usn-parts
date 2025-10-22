@@ -574,7 +574,7 @@
                                     </h6>
                                 </div>
                                 <div class="card-body">
-                                    <p class="mb-0">{{ $selectedPayment->sale->notes }}</p>
+                                    <p class="mb-0">{{ $selectedPayment->due_payment_attachment }}</p>
                                 </div>
                             </div>
                             @endif
