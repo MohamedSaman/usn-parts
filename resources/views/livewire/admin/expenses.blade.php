@@ -17,8 +17,6 @@
         </div>
     </div>
 
-    
-
     @if (session()->has('error'))
     <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
         <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
@@ -118,10 +116,13 @@
                                         <span class="fw-bold text-dark">${{ number_format($expense->amount, 2) }}</span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled">
+                                        <button class="btn btn-link text-info p-0 me-2" wire:click="viewExpense({{ $expense->id }})" wire:loading.attr="disabled" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled">
+                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled" title="Delete">
                                             <i class="bi bi-trash fs-6"></i>
                                         </button>
                                     </td>
@@ -184,10 +185,13 @@
                                         @endif
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled">
+                                        <button class="btn btn-link text-info p-0 me-2" wire:click="viewExpense({{ $expense->id }})" wire:loading.attr="disabled" title="View">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled">
+                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled" title="Delete">
                                             <i class="bi bi-trash fs-6"></i>
                                         </button>
                                     </td>
@@ -430,6 +434,105 @@
     </div>
     @endif
 
+    <!-- View Expense Modal -->
+    @if($showViewModal && $viewExpense)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="viewExpenseModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye-fill text-info me-2"></i> Expense Details
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeViewModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <!-- Expense Type -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                <span class="fw-semibold">Expense Type:</span>
+                                <span class="badge bg-{{ $viewExpense->expense_type === 'daily' ? 'primary' : 'info' }}">
+                                    {{ ucfirst($viewExpense->expense_type) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Date</small>
+                                <strong>{{ $viewExpense->date ? \Carbon\Carbon::parse($viewExpense->date)->format('M d, Y') : 'N/A' }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Category</small>
+                                <strong>{{ $viewExpense->category }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Amount -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Amount</small>
+                                <strong class="text-success">${{ number_format($viewExpense->amount, 2) }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Status (for monthly expenses) -->
+                        @if($viewExpense->expense_type === 'monthly')
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Status</small>
+                                @if($viewExpense->status == 'Paid')
+                                    <span class="badge bg-success">Paid</span>
+                                @elseif($viewExpense->status == 'Pending')
+                                    <span class="badge bg-warning text-dark">Pending</span>
+                                @else
+                                    <span class="badge bg-secondary">N/A</span>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Description -->
+                        <div class="col-12">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Description</small>
+                                <strong>{{ $viewExpense->description ?: 'No description provided' }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Created At -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Created</small>
+                                <small>{{ $viewExpense->created_at->format('M d, Y h:i A') }}</small>
+                            </div>
+                        </div>
+
+                        <!-- Last Updated -->
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded">
+                                <small class="text-muted d-block">Last Updated</small>
+                                <small>{{ $viewExpense->updated_at->format('M d, Y h:i A') }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeViewModal">Close</button>
+                    <button type="button" class="btn btn-primary" wire:click="editExpense({{ $viewExpense->id }})">
+                        <i class="bi bi-pencil me-1"></i> Edit Expense
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Delete Confirmation Modal -->
     @if($showDeleteModal)
     <div class="modal fade show d-block" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
@@ -538,6 +641,10 @@
         transform: scale(1.1);
     }
 
+    .btn-link.text-info:hover {
+        color: #0dcaf0 !important;
+    }
+
     .modal-content {
         border: none;
         border-radius: 12px;
@@ -596,6 +703,14 @@
         animation: spin 1s ease-in-out infinite;
     }
 
+    .modal-body .border {
+        border-color: #e9ecef !important;
+    }
+
+    .modal-body .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
     @keyframes spin {
         to {
             transform: rotate(360deg);
@@ -603,6 +718,7 @@
     }
 </style>
 @endpush
+
 @push('scripts')
 <script>
     document.addEventListener('livewire:initialized', () => {
@@ -613,6 +729,12 @@
                 modal.hide();
             }
         });
+        
+        Livewire.on('refreshPage', () => {
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500); // Refresh after 1.5 seconds to show success message
+        });
 
         // Reset form fields when add modals are hidden
         const addModals = ['addDailyExpenseModal', 'addMonthlyExpenseModal'];
@@ -622,7 +744,7 @@
             if (modalElement) {
                 modalElement.addEventListener('hidden.bs.modal', function () {
                     // Reset form fields when modal is closed
-                    @this.resetFields();
+                    resetFields();
                 });
             }
         });
@@ -633,9 +755,10 @@
         const editModals = document.querySelectorAll('.modal[wire\\:id]');
         editModals.forEach(modal => {
             if (event.target === modal) {
-                @this.call('closeEditDailyModal');
-                @this.call('closeEditMonthlyModal');
-                @this.call('cancelDelete');
+                call('closeViewModal');
+                call('closeEditDailyModal');
+                call('closeEditMonthlyModal');
+                call('cancelDelete');
             }
         });
     });

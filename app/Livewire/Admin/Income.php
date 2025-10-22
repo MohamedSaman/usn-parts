@@ -98,6 +98,7 @@ class Income extends Component
 
             $cashRecord->update(['value' => $newCash]);
             $this->cashInHand = $newCash;
+
         }
     }
 
@@ -123,6 +124,8 @@ class Income extends Component
 
         $this->js("Swal.fire('Success!', 'Deposit added and Cash in Hand updated.', 'success')");
         $this->dispatch('close-modal', modalId: 'addIncomeModal');
+                    $this->dispatch('refreshPage');
+
     }
 
     public function deleteDeposit($id)
@@ -134,6 +137,8 @@ class Income extends Component
         $this->updateCashInHandFromDeposits();
 
         $this->js("Swal.fire('Deleted!', 'Deposit has been deleted and Cash in Hand updated.', 'success')");
+                            $this->dispatch('refreshPage');
+
     }
 
     public function updateCashInHand()
@@ -162,6 +167,8 @@ class Income extends Component
         // ✅ Close the correct modal (the one in your top bar)
         $this->dispatch('close-modal', modalId: 'addCashInHandModal');
         $this->dispatch('close-modal', modalId: 'editCashModal');
+                            $this->dispatch('refreshPage');
+
     }
 
 

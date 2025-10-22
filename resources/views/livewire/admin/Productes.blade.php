@@ -105,6 +105,11 @@
             transform: scale(1.1);
         }
 
+        .action-btn.view {
+            color: #17a2b8;
+            background-color: rgba(23, 162, 184, 0.1);
+        }
+
         .action-btn.edit {
             color: #4361ee;
             background-color: rgba(67, 97, 238, 0.1);
@@ -113,6 +118,10 @@
         .action-btn.delete {
             color: #dc3545;
             background-color: rgba(220, 53, 69, 0.1);
+        }
+
+        .action-btn:hover.view {
+            background-color: rgba(23, 162, 184, 0.2);
         }
 
         .action-btn:hover.edit {
@@ -135,13 +144,15 @@
         }
 
         /* Modern form styling */
-        .form-control, .form-select {
+        .form-control,
+        .form-select {
             border-radius: 8px;
             padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
         }
 
-        .form-control:focus, .form-select:focus {
+        .form-control:focus,
+        .form-select:focus {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
             border-color: #4361ee;
         }
@@ -273,39 +284,35 @@
                 </div>
             </div>
 
-
-                
             <!-- Search and Actions -->
-<div class="inventory-header w-100 mb-3">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center w-100 gap-3">
-        
-        <!-- 🔍 Search Bar -->
-        <div class="search-bar flex-grow-1">
-            <div class="input-group">
-                <span class="input-group-text bg-light border-end-0">
-                    <i class="bi bi-search text-muted"></i>
-                </span>
-                <input 
-                    type="text" 
-                    class="form-control border-start-0" 
-                    id="product-search" 
-                    wire:model.live="search"
-                    placeholder="Search Products..."
-                >
+            <div class="inventory-header w-100 mb-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center w-100 gap-3">
+
+                    <!-- 🔍 Search Bar -->
+                    <div class="search-bar flex-grow-1">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input
+                                type="text"
+                                class="form-control border-start-0"
+                                id="product-search"
+                                wire:model.live="search"
+                                placeholder="Search Products...">
+                        </div>
+                    </div>
+
+                    <!-- ➕ Add Button -->
+                    <div class="d-flex justify-content-md-end">
+                        <button class="btn btn-primary add-product-btn" wire:click="openCreateModal">
+                            <i class="bi bi-plus-lg"></i>
+                            <span class="d-none d-sm-inline">Add Product</span>
+                        </button>
+                    </div>
+
+                </div>
             </div>
-        </div>
-
-        <!-- ➕ Add Button -->
-        <div class="d-flex justify-content-md-end">
-            <button class="btn btn-primary add-product-btn" wire:click="openCreateModal">
-                <i class="bi bi-plus-lg"></i>
-                <span class="d-none d-sm-inline">Add Product</span>
-            </button>
-        </div>
-
-    </div>
-</div>
-
 
             <!-- Products Table -->
             <div class="row g-4">
@@ -334,7 +341,7 @@
                                             <th>Supplier Price</th>
                                             <th>Selling Price</th>
                                             <th>Status</th>
-                                            <th class="text-end pe-4">Actions</th>
+                                            <th class="text-end pe-5">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -376,8 +383,17 @@
                                                 <span class="badge bg-danger">Inactive</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end pe-4">
+                                            <td class="text-end pe-2">
                                                 <div class="action-btns">
+                                                    <button class="btn action-btn view" title="View Details"
+                                                        wire:click="viewProductDetails({{ $product->id }})"
+                                                        wire:loading.attr="disabled">
+                                                        <i class="bi bi-eye" wire:loading.class="d-none"
+                                                            wire:target="viewProductDetails({{ $product->id }})"></i>
+                                                        <span wire:loading wire:target="viewProductDetails({{ $product->id }})">
+                                                            <i class="spinner-border spinner-border-sm"></i>
+                                                        </span>
+                                                    </button>
                                                     <button class="btn action-btn edit" title="Edit"
                                                         wire:click="editProduct({{ $product->id }})"
                                                         wire:loading.attr="disabled">
@@ -418,6 +434,125 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View Product Modal -->
+            <div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
+                aria-labelledby="viewProductModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title fw-bold">
+                                <i class="bi bi-eye text-primary me-2"></i> Product Details
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            @if($viewProduct)
+                            <div class="row g-0">
+                                <!-- Product Image Section -->
+                                <div class="col-md-4 d-flex flex-column align-items-center justify-content-center p-3 border-end">
+                                    <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
+                                        alt="Product Image" class="img-fluid rounded shadow mb-3"
+                                        style="width: 200px; height: 200px; object-fit: cover;">
+                                    <span class="fw-bold fs-5">{{ $viewProduct->name }}</span>
+                                    <span class="text-muted">{{ $viewProduct->code }}</span>
+                                </div>
+                                
+                                <!-- Product Details Section -->
+                                <div class="col-md-8 p-3">
+                                    <!-- Basic Information -->
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold text-primary mb-2">
+                                            <i class="bi bi-info-circle me-1"></i> Basic Information
+                                        </h6>
+                                        <div class="row mb-1">
+                                            <div class="col-4 text-muted">Product Name:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->name }}</div>
+                                            <div class="col-4 text-muted">Code:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->code }}</div>
+                                            <div class="col-4 text-muted">Model:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->model ?? '-' }}</div>
+                                            <div class="col-4 text-muted">Brand:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->brand ?? '-' }}</div>
+                                            <div class="col-4 text-muted">Category:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->category ?? '-' }}</div>
+                                            <div class="col-4 text-muted">Barcode:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->barcode ?? '-' }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Pricing Information -->
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold text-primary mb-2">
+                                            <i class="bi bi-currency-dollar me-1"></i> Pricing Information
+                                        </h6>
+                                        <div class="row mb-1">
+                                            <div class="col-4 text-muted">Supplier Price:</div>
+                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->supplier_price ?? 0, 2) }}</div>
+                                            <div class="col-4 text-muted">Selling Price:</div>
+                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->selling_price ?? 0, 2) }}</div>
+                                            <div class="col-4 text-muted">Discount Price:</div>
+                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->discount_price ?? 0, 2) }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stock Information -->
+                                    <div class="mb-3 pb-2 border-bottom">
+                                        <h6 class="fw-bold text-primary mb-2">
+                                            <i class="bi bi-box-seam me-1"></i> Stock Information
+                                        </h6>
+                                        <div class="row mb-1">
+                                            <div class="col-4 text-muted">Available Stock:</div>
+                                            <div class="col-8">
+                                                <span class="fw-medium">{{ $viewProduct->stock->available_stock ?? 0 }}</span>
+                                                @if(($viewProduct->stock->available_stock ?? 0) > 0)
+                                                <span class="badge bg-success ms-2">In Stock</span>
+                                                @else
+                                                <span class="badge bg-danger ms-2">Out of Stock</span>
+                                                @endif
+                                            </div>
+                                            <div class="col-4 text-muted">Damage Stock:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->stock->damage_stock ?? 0 }}</div>
+                                            <div class="col-4 text-muted">Total Stock:</div>
+                                            <div class="col-8 fw-medium">{{ $viewProduct->stock->total_stock ?? 0 }}</div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Status & Description -->
+                                    <div class="mb-3">
+                                        <h6 class="fw-bold text-primary mb-2">
+                                            <i class="bi bi-card-text me-1"></i> Additional Information
+                                        </h6>
+                                        <div class="row mb-1">
+                                            <div class="col-4 text-muted">Status:</div>
+                                            <div class="col-8">
+                                                @if($viewProduct->status == 'active')
+                                                <span class="badge bg-success">Active</span>
+                                                @elseif($viewProduct->status == 'inactive')
+                                                <span class="badge bg-danger">Inactive</span>
+                                                @else
+                                                <span class="badge bg-secondary">{{ $viewProduct->status }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="col-4 text-muted">Description:</div>
+                                            <div class="col-8">
+                                                <p class="mb-0">{{ $viewProduct->description ?? 'No description available' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @else
+                            <div class="text-center py-4">
+                                <i class="bi bi-exclamation-circle text-muted fs-1"></i>
+                                <p class="text-muted mt-2">Product details not found.</p>
+                            </div>
+                            @endif
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -642,7 +777,14 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" wire:click="createProduct">Save Product</button>
+                            <button type="button" class="btn btn-primary" wire:click="createProduct">
+                                <span wire:loading wire:target="createProduct">
+                                    <i class="spinner-border spinner-border-sm"></i> Creating...
+                                </span>
+                                <span wire:loading.remove wire:target="createProduct">
+                                    Save Product
+                                </span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -660,61 +802,50 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body p-4">
-                            <!-- Basic Information -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editCode" class="form-label fw-semibold">Code:</label>
-                                                <input type="text" class="form-control" id="editCode" wire:model="editCode">
-                                                @error('editCode')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editName" class="form-label fw-semibold">Name:</label>
-                                                <input type="text" class="form-control" id="editName" wire:model="editName">
-                                                @error('editName')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editBrand" class="form-label fw-semibold">Brand:</label>
-                                                <select class="form-select" id="editBrand" wire:model="editBrand">
-                                                    <option value="">Select Brand</option>
-                                                    @foreach ($brands as $brand)
-                                                    <option value="{{ $brand->id }}">{{ $brand->brand_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('editBrand')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editModel" class="form-label fw-semibold">Model:</label>
-                                                <input type="text" class="form-control" id="editModel" wire:model="editModel">
-                                                @error('editModel')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+    <!-- Basic Information -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
+            </h5>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="editCode" class="form-label fw-semibold">Code:</label>
+                        <input type="text" class="form-control" id="editCode" wire:model="editCode">
+                        @error('editCode')
+                            <span class="text-danger small">* {{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="editName" class="form-label fw-semibold">Name:</label>
+                        <input type="text" class="form-control" id="editName" wire:model="editName">
+                        @error('editName')
+                            <span class="text-danger small">* {{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="editModel" class="form-label fw-semibold">Model:</label>
+                        <input type="text" class="form-control" id="editModel" wire:model="editModel">
+                        @error('editModel')
+                            <span class="text-danger small">* {{ $message }}</span>
+                        @enderror
+                    </div>
+                </div>
+            </div> <!-- /.row -->
+        </div> <!-- /.card-body -->
+    </div> <!-- /.card -->
+
+
 
                             <!-- Classification -->
                             <div class="card mb-4">
@@ -735,6 +866,20 @@
                                                     @endforeach
                                                 </select>
                                                 @error('editCategory')
+                                                <span class="text-danger small">* {{ $message }}</span>
+                                                @enderror
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="mb-3">
+                                                <label for="editBrand" class="form-label fw-semibold">Brand:</label>
+                                                <select class="form-select" id="editBrand" wire:model="editBrand">
+                                                    <option value="">Select Brand</option>
+                                                    @foreach ($brands as $brand)
+                                                    <option value="{{ $brand->id }}">{{ $brand->brand_name }}</option>
+                                                    @endforeach
+                                                </select>
+                                                @error('editBrand')
                                                 <span class="text-danger small">* {{ $message }}</span>
                                                 @enderror
                                             </div>
@@ -860,16 +1005,21 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-success" wire:click="duplicateProduct({{ $editId }})">
-                                <i class="bi bi-copy me-1"></i> Duplicate Product
+                            <button type="button" class="btn btn-primary" wire:click="updateProduct">
+                                <span wire:loading wire:target="updateProduct">
+                                    <i class="spinner-border spinner-border-sm"></i> Updating...
+                                </span>
+                                <span wire:loading.remove wire:target="updateProduct">
+                                    Update Product
+                                </span>
                             </button>
-                            <button type="button" class="btn btn-primary" wire:click="updateProduct">Update Product</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    </div> <!-- /.modal-body -->
 
     @push('scripts')
     <script>
@@ -885,6 +1035,20 @@
                     const tabId = this.getAttribute('data-tab');
                     document.getElementById(tabId).classList.add('active');
                 });
+            });
+
+            Livewire.on('refreshPage', () => {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500); // Refresh after 1.5 seconds to show success message
+            });
+
+            // Close modals when Livewire operations complete
+            Livewire.on('closeModal', (modalId) => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+                if (modal) {
+                    modal.hide();
+                }
             });
         });
     </script>

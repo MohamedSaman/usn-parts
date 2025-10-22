@@ -261,13 +261,8 @@
                                                 <div class="d-flex align-items-center">
                                                     @if($item->product_image)
                                                     <div class="me-3" style="width: 50px; height: 50px;">
-<<<<<<< Updated upstream
                                                         <img src="$item->product_image)"
                                                             class="img-fluid rounded"
-=======
-                                                        <img src="{{ asset('storage/' . $item->product_image) }}"
-                                                            class="img-fluid rounded border"
->>>>>>> Stashed changes
                                                             alt="{{ $item->product_name }}"
                                                             style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>

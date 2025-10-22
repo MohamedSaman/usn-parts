@@ -35,6 +35,8 @@ class Expenses extends Component
     public $showEditDailyModal = false;
     public $showEditMonthlyModal = false;
     public $showDeleteModal = false;
+    public $showViewModal = false;
+    public $viewExpense = null;
 
     public function mount()
     {
@@ -72,8 +74,9 @@ class Expenses extends Component
 
         $this->reset(['category', 'amount', 'description']);
         $this->loadExpenses();
-         $this->js("swal.fire('Success!', 'Daily expense added successfully.', 'success')");
+        $this->js("swal.fire('Success!', 'Daily expense added successfully.', 'success')");
         $this->dispatch('close-modal', 'addDailyExpenseModal');
+        $this->dispatch('refreshPage');
     }
 
     public function saveMonthlyExpense()
@@ -95,8 +98,9 @@ class Expenses extends Component
 
         $this->reset(['date', 'category', 'amount', 'status', 'description']);
         $this->loadExpenses();
-       $this->js("swal.fire('Success!', 'Monthly expense added successfully.', 'success')");
+        $this->js("swal.fire('Success!', 'Monthly expense added successfully.', 'success')");
         $this->dispatch('close-modal', 'addMonthlyExpenseModal');
+        $this->dispatch('refreshPage');
     }
 
     public function confirmDelete($id)
@@ -113,6 +117,7 @@ class Expenses extends Component
             $this->js("swal.fire('Deleted!', 'Expense has been deleted.', 'success')");
             $this->showDeleteModal = false;
             $this->expenseToDelete = null;
+            $this->dispatch('refreshPage');
         }
     }
 
@@ -134,6 +139,12 @@ class Expenses extends Component
         } else {
             $this->showEditMonthlyModal = true;
         }
+    }
+
+    public function viewExpense($id)
+    {
+        $this->viewExpense = Expense::findOrFail($id);
+        $this->showViewModal = true;
     }
 
     public function updateExpense()
@@ -169,6 +180,7 @@ class Expenses extends Component
         $this->resetEditFields();
         $this->loadExpenses();
         $this->js("swal.fire('Success!', 'Expense updated successfully.', 'success')");
+        $this->dispatch('refreshPage');
     }
 
     public function resetEditFields()
@@ -184,6 +196,12 @@ class Expenses extends Component
     {
         $this->reset(['category', 'amount', 'date', 'status', 'description']);
         $this->resetErrorBag();
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->viewExpense = null;
     }
 
     public function cancelDelete()

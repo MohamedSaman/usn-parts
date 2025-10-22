@@ -43,6 +43,7 @@ class ManageStaff extends Component
     public $editEmail;
     public $editPassword;
     public $editConfirmPassword;
+    public $editStatus; // Add this line
 
     public $deleteId;
     public $showEditModal = false;
@@ -111,7 +112,7 @@ class ManageStaff extends Component
             'department', 'gender', 'join_date', 'fingerprint_id', 'allowance',
             'basic_salary', 'user_image', 'description', 'status',
             'editStaffId', 'editName', 'editContactNumber', 'editEmail', 
-            'editPassword', 'editConfirmPassword'
+            'editPassword', 'editConfirmPassword', 'editStatus' // Add editStatus here
         ]);
         $this->resetErrorBag();
     }
@@ -203,10 +204,13 @@ class ManageStaff extends Component
             return;
         }
 
+        $userDetail = \App\Models\UserDetail::where('user_id', $user->id)->first();
+
         $this->editStaffId = $user->id;
         $this->editName = $user->name;
         $this->editContactNumber = $user->contact;
         $this->editEmail = $user->email;
+        $this->editStatus = $userDetail ? $userDetail->status : 'active'; // Set status
         $this->editPassword = '';
         $this->editConfirmPassword = '';
 
@@ -219,6 +223,7 @@ class ManageStaff extends Component
             'editName' => 'required',
             'editContactNumber' => 'required',
             'editEmail' => 'required|email|unique:users,email,' . $this->editStaffId,
+            'editStatus' => 'required|in:active,inactive', // Add status validation
         ];
         
         // Only validate password if it's provided
@@ -242,6 +247,14 @@ class ManageStaff extends Component
                 }
                 
                 $user->save();
+
+                // Update user details status
+                $userDetail = \App\Models\UserDetail::where('user_id', $this->editStaffId)->first();
+                if ($userDetail) {
+                    $userDetail->status = $this->editStatus;
+                    $userDetail->save();
+                }
+
                 $this->js("Swal.fire('Success!', 'Staff Updated Successfully', 'success')");
                 $this->closeModal();
             } else {

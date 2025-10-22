@@ -801,12 +801,11 @@
                         <i class="bi bi-cash"></i> <span>Store Billing</span>
                     </a>
                 </li>
-
-                </li>
+                <li>
                 <a class="nav-link" href="{{ route('admin.settings') }}">
                     <i class="bi bi-gear"></i> <span>Settings</span>
                 </a>
-
+                </li>
             </ul>
         </div>
 
