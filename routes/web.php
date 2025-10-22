@@ -98,10 +98,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/manage-customer', ManageCustomer::class)->name('manage-customer');
         Route::get('/Product-stock-details', ProductStockDetails::class)->name('Product-stock-details');
         Route::get('/staff-stock-details', StaffStockDetails::class)->name('staff-stock-details');
-        Route::get('/staff-sale-details', StaffSaleDetails::class)->name('staff-sale-details');
+        
         Route::get('/staff-due-details', StaffDueDetails::class)->name('staff-due-details');
         Route::get('/customer-sale-details', CustomerSaleDetails::class)->name('customer-sale-details');
-        Route::get('/payment-approvals', PaymentApprovals::class)->name('payment-approvals');
+       
         Route::get('/view-payments', ViewPayments::class)->name('view-payments');
         Route::get('/admin/staff/{staffId}/reentry', \App\Livewire\Admin\StockReentry::class)->name('staff.reentry');
         Route::get('/store-billing', StoreBilling::class)->name('store-billing');
@@ -109,7 +109,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/staff-attendance', StaffAttendance::class)->name('staff-attendance');
         Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
         Route::get('/loan-management', LoanManage::class)->name('loan-management');
-        Route::get('/sales-approvals', SalesApproval::class)->name('sales-approvals');
+        
 
         Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
         Route::get('/quotation', Quotation::class)->name('quotation');

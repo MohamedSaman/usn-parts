@@ -101,14 +101,17 @@ class DuePayments extends Component
                 $attachmentPath = "due-receipts/{$receiptName}";
             }
 
+            
+
             // Create a new payment record for this due payment
             $payment = Payment::create([
                 'sale_id' => $sale->id,
                 'amount' => $receivedAmount,
                 'payment_method' => $this->duePaymentMethod,
                 'payment_reference' => $attachmentPath,
-                'is_completed' => false,
-                'status' => 'pending',  // Pending admin approval
+                'due_payment_attachment' => $this->paymentNote,
+                'is_completed' => true,
+                'status' => 'paid',
                 'payment_date' => now(),
             ]);
 
@@ -125,24 +128,10 @@ class DuePayments extends Component
 
             $sale->save();
 
-            // Add a note to track this payment submission
-            $noteText = "Payment received on " . now()->format('Y-m-d H:i') . ": Rs." . number_format($receivedAmount, 2) . " via " . $this->duePaymentMethod;
-            if ($this->paymentNote) {
-                $noteText .= " - " . $this->paymentNote;
-            }
-            $noteText .= " (Pending approval)";
-
-            $sale->update([
-                'notes' => ($sale->notes ? $sale->notes . "\n" : '') . $noteText
-            ]);
-
             DB::commit();
 
             $this->dispatch('closeModal', 'payment-detail-modal');
-            $this->dispatch('showToast', [
-                'type' => 'success',
-                'message' => 'Payment submitted successfully and sent for admin approval'
-            ]);
+            $this->js("Swal.fire('Success!', 'Payment submitted successfully and sent for admin approval', 'success')");
 
             $this->reset(['saleDetail', 'duePaymentMethod', 'duePaymentAttachment', 'paymentNote', 'receivedAmount', 'duePaymentAttachmentPreview']);
         } catch (Exception $e) {
@@ -287,6 +276,10 @@ class DuePayments extends Component
             ->where('payment_status', 'partial')
             ->count();
 
+        $pendingAmount = Sale::where('due_amount', '>', 0)
+            ->where('payment_status', 'partial')
+            ->sum('due_amount');
+
         $awaitingApprovalCount = Payment::where('status', 'pending')
             ->whereHas('sale', function($q) {
                 $q->where('due_amount', '>', 0);
@@ -302,6 +295,7 @@ class DuePayments extends Component
             'pendingCount' => $pendingCount,
             'awaitingApprovalCount' => $awaitingApprovalCount,
             'totalDueAmount' => $totalDueAmount,
+            'pendingAmount' => $pendingAmount,
         ]);
     }
 }
