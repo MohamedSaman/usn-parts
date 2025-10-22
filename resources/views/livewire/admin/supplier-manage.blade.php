@@ -48,10 +48,19 @@
                                 <td>{{ $supplier->contact }}</td>
                                 <td>{{ $supplier->email }}</td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-link text-primary p-0 me-2" wire:click="edit({{ $supplier->id }})">
+                                    <!-- View Button -->
+                                    <button class="btn btn-link text-info p-0 me-2" wire:click="view({{ $supplier->id }})" 
+                                            title="View Supplier Details">
+                                        <i class="bi bi-eye fs-6"></i>
+                                    </button>
+                                    <!-- Edit Button -->
+                                    <button class="btn btn-link text-primary p-0 me-2" wire:click="edit({{ $supplier->id }})"
+                                            title="Edit Supplier">
                                         <i class="bi bi-pencil fs-6"></i>
                                     </button>
-                                    <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $supplier->id }})">
+                                    <!-- Delete Button -->
+                                    <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $supplier->id }})"
+                                            title="Delete Supplier">
                                         <i class="bi bi-trash fs-6"></i>
                                     </button>
                                 </td>
@@ -134,6 +143,71 @@
                         </div>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- View Supplier Modal -->
+    @if($showViewModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-hidden="true" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye text-info me-2"></i> Supplier Details
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Supplier Name</label>
+                            <p class="form-control-plaintext fw-medium">{{ $name }}</p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Business Name</label>
+                            <p class="form-control-plaintext">{{ $businessname ?: 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Contact Number</label>
+                            <p class="form-control-plaintext">{{ $contact ?: 'N/A' }}</p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Email</label>
+                            <p class="form-control-plaintext">{{ $email ?: 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Phone</label>
+                            <p class="form-control-plaintext">{{ $phone ?: 'N/A' }}</p>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold text-muted">Status</label>
+                            <p class="form-control-plaintext">
+                                <span class="badge bg-{{ $status === 'active' ? 'success' : 'secondary' }}">
+                                    {{ ucfirst($status) }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-muted">Address</label>
+                        <p class="form-control-plaintext">{{ $address ?: 'N/A' }}</p>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-muted">Notes</label>
+                        <p class="form-control-plaintext">{{ $notes ?: 'No notes available' }}</p>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-secondary" wire:click="closeModal">
+                            <i class="bi bi-x-circle me-1"></i> Close
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -287,6 +361,12 @@
         border-color: #3f37c9;
         transform: translateY(-2px);
     }
+    
+    .form-control-plaintext {
+        padding: 0.5rem 0;
+        border: none;
+        background: transparent;
+    }
 </style>
 @endpush
 
@@ -303,7 +383,11 @@
                 showConfirmButton: false
             });
         });
-
+ Livewire.on('refreshPage', () => {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500); // Refresh after 1.5 seconds to show success message
+            });
         // Delete confirmation
         Livewire.on('swal:confirm', ([data]) => {
             Swal.fire({

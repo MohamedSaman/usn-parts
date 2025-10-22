@@ -459,6 +459,12 @@
         });
     });
 
+     Livewire.on('refreshPage', () => {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500); // Refresh after 1.5 seconds to show success message
+            });
+
     // Auto-hide success alert after 3 seconds
     document.addEventListener('livewire:navigated', () => {
         const alert = document.querySelector('.alert-success');

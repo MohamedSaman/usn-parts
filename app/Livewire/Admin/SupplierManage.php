@@ -27,6 +27,7 @@ class SupplierManage extends Component
     
     public $showCreateModal = false;
     public $showEditModal = false;
+    public $showViewModal = false; // Added for view modal
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -66,6 +67,26 @@ class SupplierManage extends Component
         $this->showCreateModal = false;
 
         $this->dispatch('show-toast', 'success', 'Supplier created successfully!');
+                        $this->dispatch('refreshPage');
+
+    }
+
+    // -------------------- VIEW --------------------
+    public function view($id) // Added view method
+    {
+        $supplier = ProductSupplier::findOrFail($id);
+
+        $this->supplierId = $supplier->id;
+        $this->name = $supplier->name;
+        $this->businessname = $supplier->businessname;
+        $this->contact = $supplier->contact;
+        $this->address = $supplier->address;
+        $this->email = $supplier->email;
+        $this->phone = $supplier->phone;
+        $this->status = $supplier->status;
+        $this->notes = $supplier->notes;
+
+        $this->showViewModal = true;
     }
 
     // -------------------- EDIT --------------------
@@ -113,6 +134,8 @@ class SupplierManage extends Component
         $this->showEditModal = false;
 
         $this->dispatch('show-toast', 'success', 'Supplier updated successfully!');
+                        $this->dispatch('refreshPage');
+
     }
 
     // -------------------- CONFIRM DELETE --------------------
@@ -140,12 +163,15 @@ class SupplierManage extends Component
         } else {
             $this->dispatch('show-toast', 'error', 'Supplier not found.');
         }
+                $this->dispatch('refreshPage');
+
     }
 
     public function closeModal()
     {
         $this->showCreateModal = false;
         $this->showEditModal = false;
+        $this->showViewModal = false; // Added for view modal
         $this->resetForm();
     }
 

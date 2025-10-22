@@ -35,9 +35,7 @@
                 <h5 class="fw-bold text-dark mb-1">
                     <i class="bi bi-journal-text text-primary me-2"></i> Customer List
                 </h5>
-                
             </div>
-        
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -76,14 +74,22 @@
                                 </td>
                                 <td>{{ $customer->address ?? '-' }}</td>
                                 <td class="text-end pe-4">
+                                    <button class="btn btn-link text-info p-0 me-2" 
+                                            wire:click="viewDetails({{ $customer->id }})" 
+                                            wire:loading.attr="disabled"
+                                            title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
                                     <button class="btn btn-link text-primary p-0 me-2" 
                                             wire:click="editCustomer({{ $customer->id }})" 
-                                            wire:loading.attr="disabled">
+                                            wire:loading.attr="disabled"
+                                            title="Edit Customer">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="btn btn-link text-danger p-0" 
                                             wire:click="confirmDelete({{ $customer->id }})" 
-                                            wire:loading.attr="disabled">
+                                            wire:loading.attr="disabled"
+                                            title="Delete Customer">
                                         <i class="bi bi-trash fs-6"></i>
                                     </button>
                                 </td>
@@ -270,6 +276,90 @@
     </div>
     @endif
 
+    {{-- View Details Modal --}}
+    @if($showViewModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-person-badge text-primary me-2"></i> Customer Details
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex flex-column align-items-center justify-content-center p-4 border-end bg-light rounded-start">
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mb-3" 
+                                 style="width: 100px; height: 100px;">
+                                <i class="bi bi-person-fill text-white fs-1"></i>
+                            </div>
+                            <span class="fw-bold fs-5 text-dark">{{ $viewCustomerDetail['name'] ?? '-' }}</span>
+                            <span class="text-muted text-capitalize">{{ $viewCustomerDetail['type'] ?? '-' }} Customer</span>
+                        </div>
+                        <div class="col-md-8 p-4">
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-person-lines-fill me-1"></i> Personal Information
+                                </h6>
+                                <div class="row">
+                                    <div class="col-4 text-muted fw-semibold mb-2">Contact:</div>
+                                    <div class="col-8 mb-2">{{ $viewCustomerDetail['phone'] ?? '-' }}</div>
+                                    
+                                    <div class="col-4 text-muted fw-semibold mb-2">Email:</div>
+                                    <div class="col-8 mb-2">{{ $viewCustomerDetail['email'] ?? '-' }}</div>
+                                    
+                                    <div class="col-4 text-muted fw-semibold mb-2">Business Name:</div>
+                                    <div class="col-8 mb-2">{{ $viewCustomerDetail['business_name'] ?? '-' }}</div>
+                                    
+                                    <div class="col-4 text-muted fw-semibold mb-2">Customer Type:</div>
+                                    <div class="col-8 mb-2">
+                                        @if(($viewCustomerDetail['type'] ?? '') == 'retail')
+                                            <span class="badge bg-success">Retail</span>
+                                        @elseif(($viewCustomerDetail['type'] ?? '') == 'wholesale')
+                                            <span class="badge bg-info">Wholesale</span>
+                                        @else
+                                            <span class="badge bg-secondary">N/A</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4 pb-3 border-bottom">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-geo-alt me-1"></i> Address Information
+                                </h6>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <p class="mb-0">{{ $viewCustomerDetail['address'] ?? '-' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-clock-history me-1"></i> Account Information
+                                </h6>
+                                <div class="row">
+                                    <div class="col-4 text-muted fw-semibold mb-2">Created:</div>
+                                    <div class="col-8 mb-2">
+                                        {{ $viewCustomerDetail['created_at'] ? \Carbon\Carbon::parse($viewCustomerDetail['created_at'])->format('M d, Y h:i A') : '-' }}
+                                    </div>
+                                    
+                                    <div class="col-4 text-muted fw-semibold mb-2">Last Updated:</div>
+                                    <div class="col-8 mb-2">
+                                        {{ $viewCustomerDetail['updated_at'] ? \Carbon\Carbon::parse($viewCustomerDetail['updated_at'])->format('M d, Y h:i A') : '-' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Delete Confirmation Modal --}}
     @if($showDeleteModal)
     <div class="modal fade show d-block" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
@@ -401,6 +491,36 @@
         font-size: 0.75rem;
         padding: 0.35rem 0.65rem;
         border-radius: 6px;
+    }
+
+    /* Additional styles for view modal */
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+
+    .rounded-start {
+        border-top-left-radius: 12px !important;
+        border-bottom-left-radius: 12px !important;
+    }
+
+    .text-capitalize {
+        text-transform: capitalize;
+    }
+
+    .bg-primary {
+        background-color: #4361ee !important;
+    }
+
+    .border-bottom {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+
+    .pb-3 {
+        padding-bottom: 1rem !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem !important;
     }
 </style>
 @endpush

@@ -28,6 +28,7 @@ class StoreBilling extends Component
     public $cart = [];
     public $quantities = [];
     public $discounts = [];
+    public $prices = []; // Add this property for editable prices
     public $ProductDetails = null;
     public $subtotal = 0;
     public $totalDiscount = 0;
@@ -155,16 +156,21 @@ class StoreBilling extends Component
             $existingCartItem = $this->cart[$ProductId];
             $existingQuantity = $this->quantities[$ProductId];
             $existingDiscount = $this->discounts[$ProductId];
+            $existingPrice = $this->prices[$ProductId] ?? $existingCartItem['price'];
 
             unset($this->cart[$ProductId]);
             unset($this->quantities[$ProductId]);
             unset($this->discounts[$ProductId]);
+            unset($this->prices[$ProductId]);
 
             $this->cart = [$ProductId => $existingCartItem] + $this->cart;
             $this->quantities = [$ProductId => $existingQuantity] + $this->quantities;
             $this->discounts = [$ProductId => $existingDiscount] + $this->discounts;
+            $this->prices = [$ProductId => $existingPrice] + $this->prices;
         } else {
             $discountPrice = $Product->discount_price ?? 0;
+            $sellingPrice = $Product->selling_price ?? 0;
+            
             $newItem = [
                 'id' => $Product->id,
                 'code' => $Product->code,
@@ -172,7 +178,8 @@ class StoreBilling extends Component
                 'model' => $Product->model,
                 'brand' => $Product->brand,
                 'image' => $Product->image,
-                'price' => $Product->selling_price ?? 0,
+                'price' => $sellingPrice,
+                'original_price' => $sellingPrice, // Store original price for reference
                 'discountPrice' => $discountPrice ?? 0,
                 'inStock' => $Product->available_stock ?? 0,
             ];
@@ -181,10 +188,42 @@ class StoreBilling extends Component
             $this->cart = [$ProductId => $newItem] + $this->cart;
             $this->quantities = [$ProductId => 1] + $this->quantities;
             $this->discounts = [$ProductId => $discountPrice] + $this->discounts;
+            $this->prices = [$ProductId => $sellingPrice] + $this->prices;
         }
 
         $this->search = '';
         $this->searchResults = [];
+        $this->updateTotals();
+    }
+
+    public function updateUnitPrice($ProductId, $newPrice)
+    {
+        if (!isset($this->cart[$ProductId])) {
+            return;
+        }
+
+        $newPrice = floatval($newPrice);
+        
+        // Validate the new price is not negative
+        if ($newPrice < 0) {
+            $this->prices[$ProductId] = 0;
+            $this->dispatch('showToast', [
+                'type' => 'warning',
+                'message' => 'Price cannot be negative'
+            ]);
+        } else {
+            $this->prices[$ProductId] = $newPrice;
+            
+            // Show confirmation if price is significantly different from original
+            $originalPrice = $this->cart[$ProductId]['original_price'];
+            if (abs($newPrice - $originalPrice) / $originalPrice > 0.1) { // More than 10% difference
+                $this->dispatch('showToast', [
+                    'type' => 'info',
+                    'message' => "Price updated from Rs." . number_format($originalPrice, 2) . " to Rs." . number_format($newPrice, 2)
+                ]);
+            }
+        }
+
         $this->updateTotals();
     }
 
@@ -238,7 +277,8 @@ class StoreBilling extends Component
 
     public function updateDiscount($ProductId, $discount)
     {
-        $this->discounts[$ProductId] = max(0, min($discount, $this->cart[$ProductId]['price']));
+        $currentPrice = $this->prices[$ProductId] ?? $this->cart[$ProductId]['price'];
+        $this->discounts[$ProductId] = max(0, min($discount, $currentPrice));
         $this->updateTotals();
     }
 
@@ -247,6 +287,7 @@ class StoreBilling extends Component
         unset($this->cart[$ProductId]);
         unset($this->quantities[$ProductId]);
         unset($this->discounts[$ProductId]);
+        unset($this->prices[$ProductId]);
         $this->updateTotals();
     }
 
@@ -273,12 +314,18 @@ class StoreBilling extends Component
         $this->totalDiscount = 0;
 
         foreach ($this->cart as $id => $item) {
-            $price = $item['price'] ?: $item['price'];
+            // Use custom price if set, otherwise use original price
+            $price = $this->prices[$id] ?? $item['price'];
             $this->subtotal += $price * $this->quantities[$id];
             $this->totalDiscount += $this->discounts[$id] * $this->quantities[$id];
         }
 
         $this->grandTotal = $this->subtotal - $this->totalDiscount;
+        
+        // Update balance amount if partial payment
+        if ($this->paymentType == 'partial') {
+            $this->calculateBalanceAmount();
+        }
     }
 
     public function clearCart()
@@ -286,6 +333,7 @@ class StoreBilling extends Component
         $this->cart = [];
         $this->quantities = [];
         $this->discounts = [];
+        $this->prices = [];
         $this->updateTotals();
     }
 
@@ -446,13 +494,6 @@ class StoreBilling extends Component
         'newCustomerPhone' => 'phone number',
     ];
 
-    // ...Keep all file upload, validation, and payment logic as in staff billing...
-
-    // (Copy all methods for payment receipt handling, due payment, etc. from staff Billing.php)
-
-    // Only change logic that references staff_products to Product_stocks
-
-
     public function completeSale()
     {
         if (empty($this->cart)) {
@@ -529,7 +570,8 @@ class StoreBilling extends Component
                     throw new Exception("Insufficient stock for item: {$item['name']}. Available: {$ProductStock->available_stock}");
                 }
 
-                $price = $item['price'] ?: 0;
+                // Use custom price if set, otherwise use original price
+                $price = $this->prices[$id] ?? $item['price'];
                 $itemDiscount = $this->discounts[$id] ?? 0;
                 $total = ($price * $this->quantities[$id]) - ($itemDiscount * $this->quantities[$id]);
 
@@ -606,6 +648,7 @@ class StoreBilling extends Component
         $this->cart = [];
         $this->quantities = [];
         $this->discounts = [];
+        $this->prices = [];
         $this->search = '';
         $this->searchResults = [];
 
@@ -737,8 +780,6 @@ class StoreBilling extends Component
             ];
         }
     }
-
-    // ...rest of the methods (viewReceipt, printReceipt, downloadReceipt, getFilePreviewInfo)...
 
     public function render()
     {

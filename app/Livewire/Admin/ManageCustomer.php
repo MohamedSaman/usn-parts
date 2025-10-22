@@ -30,7 +30,9 @@ class ManageCustomer extends Component
     public $deleteId;
     public $showEditModal = false;
     public $showCreateModal = false;
-    public $showDeleteModal = false; // Added this
+    public $showDeleteModal = false;
+    public $showViewModal = false; // Add this
+    public $viewCustomerDetail = []; // Add this
 
     public function render()
     {
@@ -63,8 +65,34 @@ class ManageCustomer extends Component
     {
         $this->showCreateModal = false;
         $this->showEditModal = false;
-        $this->showDeleteModal = false; // Added this
+        $this->showDeleteModal = false;
+        $this->showViewModal = false; // Add this
         $this->resetForm();
+    }
+
+    /** ----------------------------
+     * View Customer Details
+     * ---------------------------- */
+    public function viewDetails($id) // Add this method
+    {
+        $customer = Customer::find($id);
+        if (!$customer) {
+            $this->js("Swal.fire('Error!', 'Customer Not Found', 'error')");
+            return;
+        }
+        
+        $this->viewCustomerDetail = [
+            'name' => $customer->name,
+            'business_name' => $customer->business_name,
+            'phone' => $customer->phone,
+            'email' => $customer->email,
+            'type' => $customer->type,
+            'address' => $customer->address,
+            'created_at' => $customer->created_at,
+            'updated_at' => $customer->updated_at,
+        ];
+        
+        $this->showViewModal = true;
     }
 
     public function saveCustomer()
@@ -158,7 +186,7 @@ class ManageCustomer extends Component
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
-        $this->showDeleteModal = true; // Changed to show modal directly
+        $this->showDeleteModal = true;
     }
 
     public function cancelDelete()

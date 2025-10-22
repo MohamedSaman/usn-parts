@@ -189,9 +189,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="closeModal">Close</button>
-                </div>
             </div>
         </div>
     </div>
@@ -438,88 +435,98 @@
     </div>
     @endif
 
-    {{-- Edit Staff Modal --}}
-    @if($showEditModal)
-    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Staff
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="closeModal"></button>
-                </div>
-                <div class="modal-body">
-                    <form wire:submit.prevent="updateStaff">
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Staff Name</label>
-                                    <input type="text" class="form-control @error('editName') is-invalid @enderror" 
-                                           wire:model="editName" required>
-                                    @error('editName') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Contact Number</label>
-                                    <input type="text" class="form-control @error('editContactNumber') is-invalid @enderror" 
-                                           wire:model="editContactNumber" required>
-                                    @error('editContactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Email</label>
-                                    <input type="email" class="form-control @error('editEmail') is-invalid @enderror" 
-                                           wire:model="editEmail" required>
-                                    @error('editEmail') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Password (leave blank to keep current)</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control @error('editPassword') is-invalid @enderror" 
-                                               wire:model="editPassword" placeholder="Enter new password">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editPassword')">
-                                            <i class="bi bi-eye" id="editPasswordToggleIcon"></i>
-                                        </button>
-                                    </div>
-                                    @error('editPassword') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
+  {{-- Edit Staff Modal --}}
+@if($showEditModal)
+<div class="modal fade show d-block" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-pencil-square text-primary me-2"></i> Edit Staff
+                </h5>
+                <button type="button" class="btn-close" wire:click="closeModal"></button>
+            </div>
+            <div class="modal-body">
+                <form wire:submit.prevent="updateStaff">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Staff Name</label>
+                                <input type="text" class="form-control @error('editName') is-invalid @enderror" 
+                                       wire:model="editName" required>
+                                @error('editName') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        @if(!empty($editPassword))
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Confirm Password</label>
-                                    <div class="input-group">
-                                        <input type="password" class="form-control @error('editConfirmPassword') is-invalid @enderror" 
-                                               wire:model="editConfirmPassword" placeholder="Confirm new password">
-                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editConfirmPassword')">
-                                            <i class="bi bi-eye" id="editConfirmPasswordToggleIcon"></i>
-                                        </button>
-                                    </div>
-                                    @error('editConfirmPassword') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Contact Number</label>
+                                <input type="text" class="form-control @error('editContactNumber') is-invalid @enderror" 
+                                       wire:model="editContactNumber" required>
+                                @error('editContactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        @endif
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                                <i class="bi bi-check2-circle me-1"></i>
-                                <span wire:loading.remove>Update Staff</span>
-                                <span wire:loading>Updating...</span>
-                            </button>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control @error('editEmail') is-invalid @enderror" 
+                                       wire:model="editEmail" required>
+                                @error('editEmail') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
                         </div>
-                    </form>
-                </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Status</label>
+                                <select class="form-select @error('editStatus') is-invalid @enderror" wire:model="editStatus" required>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                @error('editStatus') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Password (leave blank to keep current)</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control @error('editPassword') is-invalid @enderror" 
+                                           wire:model="editPassword" placeholder="Enter new password">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editPassword')">
+                                        <i class="bi bi-eye" id="editPasswordToggleIcon"></i>
+                                    </button>
+                                </div>
+                                @error('editPassword') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    @if(!empty($editPassword))
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Confirm Password</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control @error('editConfirmPassword') is-invalid @enderror" 
+                                           wire:model="editConfirmPassword" placeholder="Confirm new password">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editConfirmPassword')">
+                                        <i class="bi bi-eye" id="editConfirmPasswordToggleIcon"></i>
+                                    </button>
+                                </div>
+                                @error('editConfirmPassword') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            <span wire:loading.remove>Update Staff</span>
+                            <span wire:loading>Updating...</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    @endif
+</div>
+@endif
 
     {{-- Delete Confirmation Modal --}}
     @if($showDeleteModal)
