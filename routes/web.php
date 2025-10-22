@@ -47,6 +47,11 @@ use App\Livewire\Admin\LoanManage;
 use App\Livewire\Admin\Quotation;
 use App\Livewire\Admin\SalesApproval;
 use App\Livewire\Admin\SupplierManage;
+
+
+
+use App\Models\Setting as ModelsSetting;
+
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Expenses;
 use App\Livewire\Admin\Income;
@@ -112,6 +117,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/expenses', Expenses::class)->name('expenses');
         Route::get('/income', Income::class)->name('income');
 
+        Route::get('/systemsetting', Settings::class)->name('systemsetting');
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
         

@@ -1,569 +1,677 @@
-<div>
-    <div class="container-fluid">
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-                    <h4 class="card-title mb-2 mb-sm-0">Staff List</h4>
-                    <div class="card-tools">
-                        <button class="btn btn-primary w-100 w-sm-auto" wire:click="createStaff">
-                            <i class="bi bi-plus-circle me-1"></i> Create Staff
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <!-- Wrap table in div with table-responsive class -->
-                    <table class="table table-bordered table-hover">
-                        <!-- Remove table-responsive from table -->
-                        <thead>
-                            <tr>
-                                <th class="text-center">#</th>
-                                <th class="text-center">Staff Name</th>
-                                <th class="text-center">Contact Number</th>
-                                <th class="text-center">Email</th>
-                                <th class="text-center">Role</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if ($staffs->count() > 0)
-                            @foreach ($staffs as $staff)
-                            <tr>
-                                <td class="text-center">{{ $loop->iteration }}</td>
-                                <td class="text-center">{{ $staff->name ?? '-' }}</td>
-                                <td class="text-center">{{ $staff->contact ?? '-' }}</td>
-                                <td class="text-center">{{ $staff->email ?? '-' }}</td>
-                                <td class="text-center">{{ $staff->role ?? '-' }}</td>
-                                <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-2 flex-wrap">
-                                        <button class="btn btn-sm btn-info" wire:click="viewDetails({{ $staff->id }})">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-primary" wire:click="editStaff({{ $staff->id }})"
-                                            wire:loading.attr="disabled">
-                                            <i class="bi bi-pencil" wire:loading.class="d-none"
-                                                wire:target="editStaff({{ $staff->id }})"></i>
-                                            <span wire:loading wire:target="editStaff({{ $staff->id }})">
-                                                <i class="spinner-border spinner-border-sm"></i>
-                                            </span>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger"
-                                            wire:click="confirmDelete({{ $staff->id }})">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            {{-- View Details Modal --}}
-                            <div wire:ignore.self class="modal fade" id="viewDetailsModal" tabindex="-1"
-                                aria-labelledby="viewDetailsModalLabel" aria-hidden="true">
-                                <div class="modal-dialog modal-lg">
-                                    <div class="modal-content">
-                                        <div class="modal-header bg-primary text-white">
-                                            <h1 class="modal-title fs-5" id="viewDetailsModalLabel"><i
-                                                    class="bi bi-person-badge me-2"></i>Staff Details</h1>
-                                            <button type="button" class="btn-close btn-close-white"
-                                                data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body bg-light">
-                                            <div class="row g-0">
-                                                <div
-                                                    class="col-md-4 d-flex flex-column align-items-center justify-content-center p-3 border-end">
-                                                    <img src="{{ $viewUserDetail['user_image'] ?? 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
-                                                        alt="User Image" class="img-fluid rounded-circle shadow mb-3"
-                                                        style="width: 140px; height: 140px; object-fit: cover;">
-                                                    <span class="fw-bold fs-5">{{ $viewUserDetail['name'] ?? '-'
-                                                        }}</span>
-                                                    <span class="text-muted">{{ $viewUserDetail['role'] ?? '-' }}</span>
-                                                </div>
-                                                <div class="col-md-8 p-3">
-                                                    <div class="mb-3 pb-2 border-bottom">
-                                                        <h6 class="fw-bold text-primary mb-2"><i
-                                                                class="bi bi-person-lines-fill me-1"></i>Personal Info
-                                                        </h6>
-                                                        <div class="row mb-1">
-                                                            <div class="col-5 text-muted">Contact:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['contact'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Email:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['email'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Date of Birth:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['dob'] ?? '-' }}</div>
-                                                            <div class="col-5 text-muted">Age:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['age'] ?? '-' }}</div>
-                                                            <div class="col-5 text-muted">NIC Number:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['nic_num'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Gender:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['gender'] ?? '-' }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="mb-3 pb-2 border-bottom">
-                                                        <h6 class="fw-bold text-primary mb-2"><i
-                                                                class="bi bi-building me-1"></i>Work Info</h6>
-                                                        <div class="row mb-1">
-                                                            <div class="col-5 text-muted">Work Role:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['work_role'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Department:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['department'] ?? '-'
-                                                                }}</div>
-                                                            <div class="col-5 text-muted">Join Date:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['join_date'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Fingerprint ID:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['fingerprint_id'] ??
-                                                                '-' }}</div>
-                                                            <div class="col-5 text-muted">Allowance:</div>
-                                                            <div class="col-7">{{ is_array($viewUserDetail['allowance']
-                                                                ?? null) ? implode(', ', $viewUserDetail['allowance']) :
-                                                                ($viewUserDetail['allowance'] ?? '-') }}</div>
-                                                            <div class="col-5 text-muted">Basic Salary:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['basic_salary'] ?? '-'
-                                                                }}</div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="mb-3 pb-2 border-bottom">
-                                                        <h6 class="fw-bold text-primary mb-2"><i
-                                                                class="bi bi-geo-alt me-1"></i>Address & Status</h6>
-                                                        <div class="row mb-1">
-                                                            <div class="col-5 text-muted">Address:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['address'] ?? '-' }}
-                                                            </div>
-                                                            <div class="col-5 text-muted">Status:</div>
-                                                            <div class="col-7">{{ $viewUserDetail['status'] ?? '-' }}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <h6 class="fw-bold text-primary mb-2"><i
-                                                                class="bi bi-chat-left-text me-1"></i>Description</h6>
-                                                        <div class="row mb-1">
-                                                            <div class="col-12">{{ $viewUserDetail['description'] ?? '-'
-                                                                }}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer bg-light">
-                                            <button type="button" class="btn btn-secondary"
-                                                data-bs-dismiss="modal">Close</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                            @else
-                            <tr>
-                                <td colspan="6" class="text-center">
-                                    <div class="alert alert-primary bg-opacity-10 my-2">
-                                        <i class="bi bi-info-circle me-2"></i> No staffs found.
-                                    </div>
-                                </td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-                {{-- <div class="d-flex justify-content-center">
-                    {{ $staffs->links('livewire.custom-pagination') }}
-                </div> --}}
-            </div>
+<div class="container-fluid py-3">
+    {{-- Header --}}
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h3 class="fw-bold text-dark mb-2">
+                <i class="bi bi-people-fill text-primary me-2"></i> Manage Staff
+            </h3>
+            <p class="text-muted mb-0">Manage all staff information efficiently</p>
         </div>
-        {{-- Create Suplier Modal --}}
-        <div wire:ignore.self class="modal fade" id="createStaffModal" tabindex="-1"
-            aria-labelledby="createStaffModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h1 class="modal-title fs-5" id="createStaffModalLabel"><i
-                                class="bi bi-person-plus me-2"></i>Create Staff</h1>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body bg-light">
-                        <div class="row g-0">
+        <div>
+                <button class="btn btn-primary" wire:click="createStaff">
+                    <i class="bi bi-plus-lg me-2"></i> Create Staff
+                </button>
+            </div>
+    </div>
 
-                            <div class="col-md-12 p-3">
-                                <div class="mb-3 pb-2 border-bottom">
-                                    <h6 class="fw-bold text-primary mb-2"><i
-                                            class="bi bi-person-lines-fill me-1"></i>Personal Info</h6>
-                                    <div class="row mb-1">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="staffName" class="form-label">Staff Name</label>
-                                            <input type="text" class="form-control" id="staffName" wire:model="name"
-                                                placeholder="Enter staff name">
-                                            @error('name')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="contactNumber" class="form-label">Contact Number</label>
-                                            <input type="text" class="form-control" id="contactNumber"
-                                                wire:model="contactNumber" placeholder="Enter contact number">
-                                            @error('contactNumber')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="email" class="form-label">Email</label>
-                                            <input type="email" class="form-control" id="email" wire:model="email"
-                                                placeholder="Enter email">
-                                            @error('email')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="dob" class="form-label">Date of Birth</label>
-                                            <input type="date" class="form-control" id="dob" wire:model="dob">
-                                            @error('dob')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="age" class="form-label">Age</label>
-                                            <input type="number" class="form-control" id="age" wire:model="age" min="0">
-                                            @error('age')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="nic_num" class="form-label">NIC Number</label>
-                                            <input type="text" class="form-control" id="nic_num" wire:model="nic_num"
-                                                placeholder="Enter NIC number">
-                                            @error('nic_num')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-12 mb-2">
-                                            <label for="gender" class="form-label">Gender</label>
-                                            <select class="form-select" id="gender" wire:model="gender">
-                                                <option value="">Select Gender</option>
-                                                <option value="male">Male</option>
-                                                <option value="female">Female</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                            @error('gender')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-3 pb-2 border-bottom">
-                                    <h6 class="fw-bold text-primary mb-2"><i class="bi bi-building me-1"></i>Work Info
-                                    </h6>
-                                    <div class="row mb-1">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="work_role" class="form-label">Work Role</label>
-                                            <input type="text" class="form-control" id="work_role"
-                                                wire:model="work_role" placeholder="Enter work role">
-                                            @error('work_role')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="work_type" class="form-label">Work Type</label>
-                                            <select class="form-select" id="work_type" wire:model="work_type">
-                                                <option value="">Select Work Type</option>
-                                                <option value="daily">Daily</option>
-                                                <option value="monthly">Monthly</option>
-                                            </select>
-                                            @error('work_type')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="department" class="form-label">Department</label>
-                                            <input type="text" class="form-control" id="department"
-                                                wire:model="department" placeholder="Enter department">
-                                            @error('department')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="join_date" class="form-label">Join Date</label>
-                                            <input type="date" class="form-control" id="join_date"
-                                                wire:model="join_date">
-                                            @error('join_date')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="fingerprint_id" class="form-label">Fingerprint ID</label>
-                                            <input type="text" class="form-control" id="fingerprint_id"
-                                                wire:model="fingerprint_id" placeholder="Enter fingerprint ID">
-                                            @error('fingerprint_id')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="allowance" class="form-label">Allowance (comma
-                                                separated)</label>
-                                            <input type="text" class="form-control" id="allowance"
-                                                wire:model="allowance" placeholder="e.g. fix,food">
-                                            @error('allowance')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="basic_salary" class="form-label">Basic Salary</label>
-                                            <input type="number" step="0.01" class="form-control" id="basic_salary"
-                                                wire:model="basic_salary" placeholder="Enter basic salary">
-                                            @error('basic_salary')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-3 pb-2 border-bottom">
-                                    <h6 class="fw-bold text-primary mb-2"><i class="bi bi-geo-alt me-1"></i>Address &
-                                        Status</h6>
-                                    <div class="row mb-1">
-                                        <div class="col-md-12 mb-2">
-                                            <label for="address" class="form-label">Address</label>
-                                            <textarea class="form-control" id="address" wire:model="address"
-                                                placeholder="Enter address"></textarea>
-                                            @error('address')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="status" class="form-label">Status</label>
-                                            <select class="form-select" id="status" wire:model="status">
-                                                <option value="active">Active</option>
-                                                <option value="inactive">Inactive</option>
-                                            </select>
-                                            @error('status')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="user_image" class="form-label">User Image (URL or path)</label>
-                                            <input type="text" class="form-control" id="user_image"
-                                                wire:model="user_image" placeholder="Image URL or path">
-                                            @error('user_image')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold text-primary mb-2"><i
-                                            class="bi bi-chat-left-text me-1"></i>Description</h6>
-                                    <div class="row mb-1">
-                                        <div class="col-md-12 mb-2">
-                                            <textarea class="form-control" id="description" wire:model="description"
-                                                placeholder="Enter description"></textarea>
-                                            @error('description')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mb-3 pb-2 border-bottom">
-                                    <h6 class="fw-bold text-primary mb-2"><i class="bi bi-key me-1"></i>Login Info</h6>
-                                    <div class="row mb-1">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="password" class="form-label">Password</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="password"
-                                                    wire:model="password" placeholder="Enter password">
-                                                <button class="btn btn-outline-secondary" type="button"
-                                                    onclick="togglePasswordVisibility('password')">
-                                                    <i class="bi bi-eye" id="passwordToggleIcon"></i>
-                                                </button>
-                                            </div>
-                                            @error('password')<span class="text-danger">* {{ $message }}</span>@enderror
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                            <div class="input-group">
-                                                <input type="password" class="form-control" id="confirmPassword"
-                                                    wire:model="confirmPassword" placeholder="Confirm password">
-                                                <button class="btn btn-outline-secondary" type="button"
-                                                    onclick="togglePasswordVisibility('confirmPassword')">
-                                                    <i class="bi bi-eye" id="confirmPasswordToggleIcon"></i>
-                                                </button>
-                                            </div>
-                                            @error('confirmPassword')<span class="text-danger">* {{ $message
-                                                }}</span>@enderror
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light flex-column flex-sm-row">
-                        <button type="button" class="btn btn-secondary w-100 w-sm-auto mb-2 mb-sm-0"
-                            data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary w-100 w-sm-auto" wire:click="saveStaff">Add
-                            Staff</button>
-                    </div>
-                </div>
+    @if (session()->has('error'))
+    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-2"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if (session()->has('success'))
+    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    {{-- Staff List --}}
+    <div class="card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="fw-bold text-dark mb-1">
+                    <i class="bi bi-journal-text text-primary me-2"></i> Staff List
+                </h5>
+            </div>
+            
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Staff Name</th>
+                            <th>Contact Number</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if ($staffs->count() > 0)
+                            @foreach ($staffs as $staff)
+                            @php
+                                $userDetail = \App\Models\UserDetail::where('user_id', $staff->id)->first();
+                            @endphp
+                            <tr>
+                                <td class="ps-4">{{ $loop->iteration }}</td>
+                                <td>
+                                    <span class="fw-medium text-dark">{{ $staff->name ?? '-' }}</span>
+                                </td>
+                                <td>{{ $staff->contact ?? '-' }}</td>
+                                <td>{{ $staff->email ?? '-' }}</td>
+                                <td>
+                                    <span class="badge bg-info">Staff</span>
+                                </td>
+                                <td>
+                                    @if($userDetail && $userDetail->status == 'active')
+                                    <span class="badge bg-success">Active</span>
+                                    @else
+                                    <span class="badge bg-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-link text-info p-0 me-2" 
+                                            wire:click="viewDetails({{ $staff->id }})" 
+                                            wire:loading.attr="disabled">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-link text-primary p-0 me-2" 
+                                            wire:click="editStaff({{ $staff->id }})" 
+                                            wire:loading.attr="disabled">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-link text-danger p-0" 
+                                            wire:click="confirmDelete({{ $staff->id }})" 
+                                            wire:loading.attr="disabled">
+                                        <i class="bi bi-trash fs-6"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-people display-4 d-block mb-2"></i>
+                                    No staff found
+                                </td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-    {{-- Edit Staff Modal --}}
-    <div wire:ignore.self wire:key="edit-modal-{{ $editStaffId ?? 'new' }}" class="modal fade hidden"
-        id="editStaffModal" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
+
+    {{-- View Details Modal --}}
+    @if($showViewModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="viewDetailsModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="editStaffModalLabel">Edit Staff</h1>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-person-badge text-primary me-2"></i> Staff Details
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editName" class="form-label">Staff Name</label>
-                            <input type="text" class="form-control" id="editName" wire:model="editName">
-                            @error('editName')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                    <div class="row g-0">
+                        <div class="col-md-4 d-flex flex-column align-items-center justify-content-center p-3 border-end">
+                            <img src="{{ $viewUserDetail['user_image'] ?? 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
+                                alt="User Image" class="img-fluid rounded-circle shadow mb-3"
+                                style="width: 140px; height: 140px; object-fit: cover;">
+                            <span class="fw-bold fs-5">{{ $viewUserDetail['name'] ?? '-' }}</span>
+                            <span class="text-muted">{{ $viewUserDetail['role'] ?? '-' }}</span>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="editContactNumber" class="form-label">Contact Number</label>
-                            <input type="text" class="form-control" id="editContactNumber"
-                                wire:model="editContactNumber">
-                            @error('editContactNumber')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="editEmail" wire:model="editEmail">
-                            @error('editEmail')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="editPassword" class="form-label">Password (leave blank to keep
-                                current)</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="editPassword" wire:model="editPassword">
-                                <button class="btn btn-outline-secondary" type="button"
-                                    onclick="togglePasswordVisibility('editPassword')">
-                                    <i class="bi bi-eye" id="editPasswordToggleIcon"></i>
-                                </button>
+                        <div class="col-md-8 p-3">
+                            <div class="mb-3 pb-2 border-bottom">
+                                <h6 class="fw-bold text-primary mb-2">
+                                    <i class="bi bi-person-lines-fill me-1"></i> Personal Info
+                                </h6>
+                                <div class="row mb-1">
+                                    <div class="col-5 text-muted">Contact:</div>
+                                    <div class="col-7">{{ $viewUserDetail['contact'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Email:</div>
+                                    <div class="col-7">{{ $viewUserDetail['email'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Date of Birth:</div>
+                                    <div class="col-7">{{ $viewUserDetail['dob'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Age:</div>
+                                    <div class="col-7">{{ $viewUserDetail['age'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">NIC Number:</div>
+                                    <div class="col-7">{{ $viewUserDetail['nic_num'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Gender:</div>
+                                    <div class="col-7">{{ $viewUserDetail['gender'] ?? '-' }}</div>
+                                </div>
                             </div>
-                            @error('editPassword')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="editConfirmPassword" class="form-label">Confirm Password</label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="editConfirmPassword"
-                                    wire:model="editConfirmPassword">
-                                <button class="btn btn-outline-secondary" type="button"
-                                    onclick="togglePasswordVisibility('editConfirmPassword')">
-                                    <i class="bi bi-eye" id="editConfirmPasswordToggleIcon"></i>
-                                </button>
+                            <div class="mb-3 pb-2 border-bottom">
+                                <h6 class="fw-bold text-primary mb-2">
+                                    <i class="bi bi-building me-1"></i> Work Info
+                                </h6>
+                                <div class="row mb-1">
+                                    <div class="col-5 text-muted">Work Role:</div>
+                                    <div class="col-7">{{ $viewUserDetail['work_role'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Department:</div>
+                                    <div class="col-7">{{ $viewUserDetail['department'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Join Date:</div>
+                                    <div class="col-7">{{ $viewUserDetail['join_date'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Fingerprint ID:</div>
+                                    <div class="col-7">{{ $viewUserDetail['fingerprint_id'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Allowance:</div>
+                                    <div class="col-7">{{ is_array($viewUserDetail['allowance'] ?? null) ? implode(', ', $viewUserDetail['allowance']) : ($viewUserDetail['allowance'] ?? '-') }}</div>
+                                    <div class="col-5 text-muted">Basic Salary:</div>
+                                    <div class="col-7">{{ $viewUserDetail['basic_salary'] ?? '-' }}</div>
+                                </div>
                             </div>
-                            @error('editConfirmPassword')
-                            <span class="text-danger">* {{ $message }}</span>
-                            @enderror
+                            <div class="mb-3 pb-2 border-bottom">
+                                <h6 class="fw-bold text-primary mb-2">
+                                    <i class="bi bi-geo-alt me-1"></i> Address & Status
+                                </h6>
+                                <div class="row mb-1">
+                                    <div class="col-5 text-muted">Address:</div>
+                                    <div class="col-7">{{ $viewUserDetail['address'] ?? '-' }}</div>
+                                    <div class="col-5 text-muted">Status:</div>
+                                    <div class="col-7">{{ $viewUserDetail['status'] ?? '-' }}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-primary mb-2">
+                                    <i class="bi bi-chat-left-text me-1"></i> Description
+                                </h6>
+                                <div class="row mb-1">
+                                    <div class="col-12">{{ $viewUserDetail['description'] ?? '-' }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                {{-- @dump($editStaffId, $editName, $editContactNumber, $editEmail, $editBussinessName, $editStaffType,
-                $editAddress) --}}
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" wire:click="updateStaff({{ $editStaffId }})">Update
-                        Staff</button>
+                    <button type="button" class="btn btn-secondary" wire:click="closeModal">Close</button>
                 </div>
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- Create Staff Modal --}}
+    @if($showCreateModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="createStaffModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-plus-circle text-primary me-2"></i> Create Staff
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <form wire:submit.prevent="saveStaff">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3">
+                                    <i class="bi bi-person-lines-fill me-1"></i> Personal Information
+                                </h6>
+                            </div>
+                            
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Staff Name</label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                           wire:model="name" placeholder="Enter staff name" required>
+                                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Contact Number</label>
+                                    <input type="text" class="form-control @error('contactNumber') is-invalid @enderror" 
+                                           wire:model="contactNumber" placeholder="Enter contact number" required>
+                                    @error('contactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                           wire:model="email" placeholder="Enter email" required>
+                                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Date of Birth</label>
+                                    <input type="date" class="form-control @error('dob') is-invalid @enderror" 
+                                           wire:model="dob">
+                                    @error('dob') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Age</label>
+                                    <input type="number" class="form-control @error('age') is-invalid @enderror" 
+                                           wire:model="age" min="0" placeholder="Enter age">
+                                    @error('age') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">NIC Number</label>
+                                    <input type="text" class="form-control @error('nic_num') is-invalid @enderror" 
+                                           wire:model="nic_num" placeholder="Enter NIC number">
+                                    @error('nic_num') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Gender</label>
+                                    <select class="form-select @error('gender') is-invalid @enderror" wire:model="gender">
+                                        <option value="">Select Gender</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    @error('gender') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">User Image (URL)</label>
+                                    <input type="text" class="form-control @error('user_image') is-invalid @enderror" 
+                                           wire:model="user_image" placeholder="Image URL or path">
+                                    @error('user_image') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3 mt-4">
+                                    <i class="bi bi-building me-1"></i> Work Information
+                                </h6>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Work Role</label>
+                                    <input type="text" class="form-control @error('work_role') is-invalid @enderror" 
+                                           wire:model="work_role" placeholder="Enter work role">
+                                    @error('work_role') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Work Type</label>
+                                    <select class="form-select @error('work_type') is-invalid @enderror" wire:model="work_type" required>
+                                        <option value="">Select Work Type</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                    @error('work_type') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Department</label>
+                                    <input type="text" class="form-control @error('department') is-invalid @enderror" 
+                                           wire:model="department" placeholder="Enter department">
+                                    @error('department') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Join Date</label>
+                                    <input type="date" class="form-control @error('join_date') is-invalid @enderror" 
+                                           wire:model="join_date">
+                                    @error('join_date') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Fingerprint ID</label>
+                                    <input type="text" class="form-control @error('fingerprint_id') is-invalid @enderror" 
+                                           wire:model="fingerprint_id" placeholder="Enter fingerprint ID">
+                                    @error('fingerprint_id') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Allowance (comma separated)</label>
+                                    <input type="text" class="form-control @error('allowance') is-invalid @enderror" 
+                                           wire:model="allowance" placeholder="e.g. fix,food">
+                                    @error('allowance') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Basic Salary</label>
+                                    <input type="number" step="0.01" class="form-control @error('basic_salary') is-invalid @enderror" 
+                                           wire:model="basic_salary" placeholder="Enter basic salary">
+                                    @error('basic_salary') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3 mt-4">
+                                    <i class="bi bi-geo-alt me-1"></i> Address & Status
+                                </h6>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Address</label>
+                                    <textarea class="form-control @error('address') is-invalid @enderror" 
+                                              wire:model="address" placeholder="Enter address" rows="3"></textarea>
+                                    @error('address') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Status</label>
+                                    <select class="form-select @error('status') is-invalid @enderror" wire:model="status" required>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                    </select>
+                                    @error('status') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3 mt-4">
+                                    <i class="bi bi-chat-left-text me-1"></i> Description
+                                </h6>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <textarea class="form-control @error('description') is-invalid @enderror" 
+                                              wire:model="description" placeholder="Enter description" rows="3"></textarea>
+                                    @error('description') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <h6 class="fw-bold text-primary mb-3 mt-4">
+                                    <i class="bi bi-key me-1"></i> Login Information
+                                </h6>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                               wire:model="password" placeholder="Enter password" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('createPassword')">
+                                            <i class="bi bi-eye" id="createPasswordToggleIcon"></i>
+                                        </button>
+                                    </div>
+                                    @error('password') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Confirm Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control @error('confirmPassword') is-invalid @enderror" 
+                                               wire:model="confirmPassword" placeholder="Confirm password" required>
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('createConfirmPassword')">
+                                            <i class="bi bi-eye" id="createConfirmPasswordToggleIcon"></i>
+                                        </button>
+                                    </div>
+                                    @error('confirmPassword') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span wire:loading.remove>Save Staff</span>
+                                <span wire:loading>Saving...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Edit Staff Modal --}}
+    @if($showEditModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="editStaffModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Staff
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="closeModal"></button>
+                </div>
+                <div class="modal-body">
+                    <form wire:submit.prevent="updateStaff">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Staff Name</label>
+                                    <input type="text" class="form-control @error('editName') is-invalid @enderror" 
+                                           wire:model="editName" required>
+                                    @error('editName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Contact Number</label>
+                                    <input type="text" class="form-control @error('editContactNumber') is-invalid @enderror" 
+                                           wire:model="editContactNumber" required>
+                                    @error('editContactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Email</label>
+                                    <input type="email" class="form-control @error('editEmail') is-invalid @enderror" 
+                                           wire:model="editEmail" required>
+                                    @error('editEmail') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Password (leave blank to keep current)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control @error('editPassword') is-invalid @enderror" 
+                                               wire:model="editPassword" placeholder="Enter new password">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editPassword')">
+                                            <i class="bi bi-eye" id="editPasswordToggleIcon"></i>
+                                        </button>
+                                    </div>
+                                    @error('editPassword') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        @if(!empty($editPassword))
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold">Confirm Password</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control @error('editConfirmPassword') is-invalid @enderror" 
+                                               wire:model="editConfirmPassword" placeholder="Confirm new password">
+                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('editConfirmPassword')">
+                                            <i class="bi bi-eye" id="editConfirmPasswordToggleIcon"></i>
+                                        </button>
+                                    </div>
+                                    @error('editConfirmPassword') <span class="text-danger small">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                                <i class="bi bi-check2-circle me-1"></i>
+                                <span wire:loading.remove>Update Staff</span>
+                                <span wire:loading>Updating...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Delete Confirmation Modal --}}
+    @if($showDeleteModal)
+    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Delete
+                    </h5>
+                    <button type="button" class="btn-close" wire:click="cancelDelete"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <i class="bi bi-person-x text-danger fs-1 mb-3 d-block"></i>
+                    <h5 class="fw-bold mb-3">Are you sure?</h5>
+                    <p class="text-muted">You are about to delete this staff member. This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" wire:click="cancelDelete">Cancel</button>
+                    <button type="button" class="btn btn-danger" wire:click="deleteStaff" wire:loading.attr="disabled">
+                        <i class="bi bi-trash me-1"></i>
+                        <span wire:loading.remove>Delete Staff</span>
+                        <span wire:loading>Deleting...</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>
-@push('scripts')
-<script>
-    window.addEventListener('confirm-delete', event => {
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#3085d6",
-                cancelButtonColor: "#d33",
-                confirmButtonText: "Yes, delete it!"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // call component's function deleteOffer
-                    Livewire.dispatch('confirmDelete');
-                    Swal.fire({
-                        title: "Deleted!",
-                        text: "Staff has been deleted.",
-                        icon: "success"
-                    });
-                }
-            });
-        });
 
-        window.addEventListener('edit-staff-modal', event => {
-            setTimeout(() => {
-                const modal = new bootstrap.Modal(document.getElementById('editStaffModal'));
-                modal.show();
-            }, 500); // 500ms delay before showing the modal
-        });
-
-        // Password toggle visibility function
-        function togglePasswordVisibility(inputId) {
-            const passwordInput = document.getElementById(inputId);
-            const toggleIcon = document.getElementById(inputId + 'ToggleIcon');
-
-            if (passwordInput.type === "password") {
-                passwordInput.type = "text";
-                toggleIcon.classList.remove("bi-eye");
-                toggleIcon.classList.add("bi-eye-slash");
-            } else {
-                passwordInput.type = "password";
-                toggleIcon.classList.remove("bi-eye-slash");
-                toggleIcon.classList.add("bi-eye");
-            }
-        }
-</script>
-@endpush
 @push('styles')
 <style>
-    /* Make modals more mobile-friendly */
-    @media (max-width: 575.98px) {
-        .modal-dialog {
-            margin: 0.5rem;
-            max-width: calc(100% - 1rem);
-        }
-
-        .modal-header {
-            padding: 0.75rem 1rem;
-        }
-
-        .modal-body {
-            padding: 1rem;
-        }
-
-        .modal-footer {
-            padding: 0.75rem 1rem;
-        }
-
-        .btn {
-            padding: 0.375rem 0.5rem;
-        }
+    .card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
     }
 
-    /* Improve table display on smaller screens */
-    @media (max-width: 767.98px) {
-        .table {
-            font-size: 0.85rem;
-        }
-
-        .table td,
-        .table th {
-            padding: 0.5rem 0.25rem;
-        }
-
-        .btn-sm {
-            padding: 0.2rem 0.4rem;
-            font-size: 0.75rem;
-        }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
 
-    /* Focus on most important content for very small screens */
-    @media (max-width: 400px) {
-
-        /* Option to hide less important columns if needed */
-        .table td:nth-child(4),
-        .table th:nth-child(4) {
-            display: none;
-            /* Hides email column on very small screens */
-        }
+    .card-header {
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
     }
 
-    /* Ensure password toggle button is properly sized */
-    .input-group .btn-outline-secondary {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        color: #6c757d;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .table td {
+        vertical-align: middle;
+        padding: 1rem 0.75rem;
+    }
+
+    .btn-link {
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-link:hover {
+        transform: scale(1.1);
+    }
+
+    .modal-content {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        border-color: #4361ee;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 500;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #4361ee;
+        border-color: #4361ee;
+    }
+
+    .btn-primary:hover {
+        background-color: #3f37c9;
+        border-color: #3f37c9;
+        transform: translateY(-2px);
+    }
+
+    .btn-danger {
+        background-color: #e63946;
+        border-color: #e63946;
+    }
+
+    .btn-danger:hover {
+        background-color: #d00000;
+        border-color: #d00000;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.65rem;
+        border-radius: 6px;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    // Password toggle visibility function
+    function togglePasswordVisibility(inputId) {
+        const passwordInput = document.getElementById(inputId);
+        const toggleIcon = document.getElementById(inputId + 'ToggleIcon');
+        
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            toggleIcon.classList.remove("bi-eye");
+            toggleIcon.classList.add("bi-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            toggleIcon.classList.remove("bi-eye-slash");
+            toggleIcon.classList.add("bi-eye");
+        }
+    }
+</script>
 @endpush

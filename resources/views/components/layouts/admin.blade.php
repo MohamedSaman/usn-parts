@@ -234,6 +234,23 @@
             /* Add small space after last submenu item */
         }
 
+        /* Disabled menu item styles */
+        .nav-link.disabled {
+            color: #adb5bd !important;
+            cursor: not-allowed !important;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .nav-link.disabled i {
+            color: #adb5bd !important;
+        }
+
+        .nav-link.disabled:hover {
+            background-color: transparent !important;
+            color: #adb5bd !important;
+        }
+
         /* Top bar styles */
         .top-bar {
             height: 60px;
@@ -627,23 +644,27 @@
                                     <i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
                                 </a>
                             </li>
+                            <!-- Disabled: Manage Staff -->
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.manage-staff') }}">
+                                <a class="nav-link py-2 " href="{{ route('admin.manage-staff') }}">
                                     <i class="bi bi-person-lines-fill"></i> <span>Manage Staff</span>
                                 </a>
                             </li>
+                            <!-- Disabled: Staff Attendance -->
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-attendance') }}">
+                                <a class="nav-link py-2 disabled" href="#">
                                     <i class="bi bi-calendar-check"></i> <span>Staff Attendance</span>
                                 </a>
                             </li>
+                            <!-- Disabled: Staff Salary -->
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-salary') }}">
+                                <a class="nav-link py-2 disabled" href="#">
                                     <i class="bi bi-currency-dollar"></i> <span>Staff Salary</span>
                                 </a>
                             </li>
+                            <!-- Disabled: Loan Management -->
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.loan-management') }}">
+                                <a class="nav-link py-2 disabled" href="#">
                                     <i class="bi bi-credit-card"></i> <span>Loan Management</span>
                                 </a>
                             </li>
@@ -682,8 +703,8 @@
                                 <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
                                     <i class="bi bi-collection"></i> <span>Return Product</span>
                                 </a>
-                            </li
-                                </ul>
+                            </li>
+                        </ul>
                     </div>
                 </li>
                 <li class="nav-item">
@@ -693,23 +714,18 @@
                     </a>
                     <div class="collapse" id="salesSubmenu">
                         <ul class="nav flex-column ms-3">
+                            <!-- Disabled: Sales Approvals -->
                             <li class="nav-item">
-                                <a class="nav-link {{ request()->routeIs('admin.sales-approvals') ? 'active' : '' }}"
-                                    href="{{ route('admin.sales-approvals') }}">
-                                    <i class="bi bi-shield-check "></i><span class="nav-link-text ms-1">Sales
-                                        Approvals</span>
+                                <a class="nav-link py-2 disabled" href="#">
+                                    <i class="bi bi-shield-check"></i> <span>Sales Approvals</span>
                                 </a>
                             </li>
+                            <!-- Disabled: Staff Sales -->
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-sale-details') }}">
+                                <a class="nav-link py-2 disabled" href="#">
                                     <i class="bi bi-shield-lock"></i> <span>Staff Sales</span>
                                 </a>
                             </li>
-                            <!--<li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.staff-due-details') }}">
-                                    <i class="bi bi-person-lines-fill"></i> <span>Staff Due</span>
-                                </a>
-                            </li>-->
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
                                     <i class="bi bi-people"></i> <span>Customer Sales</span>
@@ -811,7 +827,6 @@
                 </li>
 
                 </li>
-
                 <a class="nav-link" href="{{ route('admin.settings') }}">
                     <i class="bi bi-gear"></i> <span>Settings</span>
                 </a>
@@ -827,9 +842,9 @@
                 <i class="bi bi-list fs-5"></i>
             </button>
 
-            <!-- Centered Company Name -->
-            <div class="flex-grow-1 d-flex justify-content-center">
-                <h2 class="mb-0"> <b>USN Auto Parts</b></h2>
+            <!-- Centered Company Name (hidden on small screens) -->
+            <div class="flex-grow-1 d-none d-md-flex justify-content-center">
+                <h2 class="mb-0"><b>USN Auto Parts</b></h2>
             </div>
             @php
             use App\Models\CashInHand as CashModel;

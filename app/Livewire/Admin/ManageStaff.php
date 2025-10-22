@@ -1,11 +1,10 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use App\Models\User;
 use Livewire\Component;
-use Livewire\Attributes\On;
-use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Hash;
@@ -15,13 +14,61 @@ use Illuminate\Support\Facades\Hash;
 class ManageStaff extends Component
 {
     public $viewUserDetail = [];
+    public $name;
+    public $contactNumber;
+    public $email;
+    public $password;
+    public $confirmPassword;
+    
+    // UserDetails fields
+    public $dob;
+    public $age;
+    public $nic_num;
+    public $address;
+    public $work_role;
+    public $work_type;
+    public $department;
+    public $gender;
+    public $join_date;
+    public $fingerprint_id;
+    public $allowance;
+    public $basic_salary;
+    public $user_image;
+    public $description;
+    public $status = 'active';
+
+    public $editStaffId;
+    public $editName;
+    public $editContactNumber;
+    public $editEmail;
+    public $editPassword;
+    public $editConfirmPassword;
+
+    public $deleteId;
+    public $showEditModal = false;
+    public $showCreateModal = false;
+    public $showDeleteModal = false;
+    public $showViewModal = false;
+
+    public function render()
+    {
+        $staffs = User::where('role', 'staff')->get();
+        return view('livewire.admin.manage-staff', [
+            'staffs' => $staffs,
+        ]);
+    }
+
+    /** ----------------------------
+     * View Staff Details
+     * ---------------------------- */
     public function viewDetails($id)
     {
         $user = User::find($id);
-        if (! $user) {
+        if (!$user) {
             $this->js("Swal.fire('Error!', 'Staff Not Found', 'error')");
             return;
         }
+        
         $userDetail = \App\Models\UserDetail::where('user_id', $user->id)->first();
         $this->viewUserDetail = [
             'name' => $user->name,
@@ -43,43 +90,41 @@ class ManageStaff extends Component
             'description' => $userDetail ? $userDetail->description : '-',
             'status' => $userDetail ? $userDetail->status : '-',
         ];
-        $this->js("$('#viewDetailsModal').modal('show')");
+        
+        $this->showViewModal = true;
     }
-    public function render()
-    {
-        $staffs = User::where('role', 'staff')->get();
-        return view('livewire.admin.manage-staff', [
-            'staffs' => $staffs,
-        ]);
 
-    }
+    /** ----------------------------
+     * Create Staff
+     * ---------------------------- */
     public function createStaff()
     {
-        $this->reset();
-        $this->js("$('#createStaffModal').modal('show')");
+        $this->resetForm();
+        $this->showCreateModal = true;
     }
-    public $name;
-    public $contactNumber;
-    public $email;
-    public $password;
-    public $confirmPassword;
-    // UserDetails fields
-    public $dob;
-    public $age;
-    public $nic_num;
-    public $address;
-    public $work_role;
-    public $work_type;
-    public $department;
-    public $gender;
-    public $join_date;
-    public $fingerprint_id;
-    public $allowance;
-    public $basic_salary;
-    public $user_image;
-    public $description;
-    public $status = 'active';
- 
+
+    public function resetForm()
+    {
+        $this->reset([
+            'name', 'contactNumber', 'email', 'password', 'confirmPassword',
+            'dob', 'age', 'nic_num', 'address', 'work_role', 'work_type',
+            'department', 'gender', 'join_date', 'fingerprint_id', 'allowance',
+            'basic_salary', 'user_image', 'description', 'status',
+            'editStaffId', 'editName', 'editContactNumber', 'editEmail', 
+            'editPassword', 'editConfirmPassword'
+        ]);
+        $this->resetErrorBag();
+    }
+
+    public function closeModal()
+    {
+        $this->showCreateModal = false;
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->showViewModal = false;
+        $this->resetForm();
+    }
+
     public function saveStaff()
     {
         $this->validate([
@@ -108,7 +153,7 @@ class ManageStaff extends Component
         try {
             $user = User::create([
                 'name' => $this->name,
-                'contact'=> $this->contactNumber,
+                'contact' => $this->contactNumber,
                 'email' => $this->email,
                 'password' => Hash::make($this->password),
                 'role' => 'staff',
@@ -141,36 +186,31 @@ class ManageStaff extends Component
             ]);
 
             $this->js("Swal.fire('Success!', 'Staff Created Successfully', 'success')");
+            $this->closeModal();
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
-
-        $this->js('$("#createStaffModal").modal("hide")');
     }
 
-    public $editName;
-    public $editContactNumber;
-    public $editEmail;
-    
-    public $editStaffId;
-    public $editPassword;
-    public $editConfirmPassword;
+    /** ----------------------------
+     * Edit Staff
+     * ---------------------------- */
     public function editStaff($id)
     {
         $user = User::find($id);
-        if(! $user) {
+        if (!$user) {
             $this->js("Swal.fire('Error!', 'Staff Not Found', 'error')");
             return;
         }
+
+        $this->editStaffId = $user->id;
         $this->editName = $user->name;
         $this->editContactNumber = $user->contact;
         $this->editEmail = $user->email;
-        $this->editStaffId = $user->id;
-        // Don't set password fields - leave them blank
         $this->editPassword = '';
         $this->editConfirmPassword = '';
 
-        $this->dispatch('edit-staff-modal');
+        $this->showEditModal = true;
     }
 
     public function updateStaff()
@@ -203,30 +243,38 @@ class ManageStaff extends Component
                 
                 $user->save();
                 $this->js("Swal.fire('Success!', 'Staff Updated Successfully', 'success')");
+                $this->closeModal();
             } else {
                 $this->js("Swal.fire('Error!', 'Staff Not Found', 'error')");
             }
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
+    }
 
-        $this->js('$("#editStaffModal").modal("hide")');
-    }
-    public $deleteId;
-    #[On('confirmDelete')]
-    public function deleteStaff()
-    {
-        $user = User::find($this->deleteId);
-        if ($user) {
-            $user->delete();
-            $this->js("Swal.fire('Success!', 'Staff Deleted Successfully', 'success')");
-        } else {
-            $this->js("Swal.fire('Error!', 'Staff Not Found', 'error')");
-        }
-    }
+    /** ----------------------------
+     * Delete Staff
+     * ---------------------------- */
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
-        $this->dispatch('confirm-delete');
+        $this->showDeleteModal = true;
+    }
+
+    public function cancelDelete()
+    {
+        $this->showDeleteModal = false;
+        $this->deleteId = null;
+    }
+
+    public function deleteStaff()
+    {
+        try {
+            User::where('id', $this->deleteId)->delete();
+            $this->js("Swal.fire('Success!', 'Staff deleted successfully.', 'success')");
+            $this->cancelDelete();
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
+        }
     }
 }
