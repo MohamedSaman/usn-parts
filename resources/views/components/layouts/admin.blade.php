@@ -629,10 +629,10 @@
             <ul class="nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('admin.dashboard') }}">
-                        <i class="bi bi-bar-chart-line"></i> <span>Overview</span>
+                        <i class="bi bi-speedometer2"></i> <span>Overview</span>
                     </a>
                 </li>
-                <li class="nav-item">
+                {{-- <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#hrSubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="hrSubmenu">
                         <i class="bi bi-people"></i> <span>HR Management</span>
@@ -645,11 +645,7 @@
                                 </a>
                             </li>
                             <!-- Disabled: Manage Staff -->
-                            <li class="nav-item">
-                                <a class="nav-link py-2 " href="{{ route('admin.manage-staff') }}">
-                                    <i class="bi bi-person-lines-fill"></i> <span>Manage Staff</span>
-                                </a>
-                            </li>
+                            
                             <!-- Disabled: Staff Attendance -->
                             <li class="nav-item">
                                 <a class="nav-link py-2 disabled" href="#">
@@ -675,28 +671,28 @@
                             </li>
                         </ul>
                     </div>
-                </li>
+                </li> --}}
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#inventorySubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="inventorySubmenu">
-                        <i class="bi bi-box-seam"></i> <span>Inventory</span>
+                        <i class="bi bi-basket3"></i> <span>Products</span>
                     </a>
                     <div class="collapse" id="inventorySubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Productes') }}">
-                                    <i class="bi bi-box-seam"></i> <span>Product Details</span>
+                                    <i class="bi bi-card-list"></i> <span>List Product</span>
                                 </a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
-                                    <i class="bi bi-tag-fill"></i> <span>Product Brand</span>
+                                    <i class="bi bi-tags"></i> <span>Product Brand</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-category') }}">
-                                    <i class="bi bi-collection"></i> <span>Product Category</span>
+                                    <i class="bi bi-tags-fill"></i> <span>Product Category</span>
                                 </a>
                             </li>
                             
@@ -706,17 +702,29 @@
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#salesSubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="salesSubmenu">
-                        <i class="bi bi-people"></i> <span>Sales</span>
+                        <i class="bi bi-cash-stack"></i> <span>Sales</span>
                     </a>
                     <div class="collapse" id="salesSubmenu">
                         <ul class="nav flex-column ms-3">
-                            
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
-                                    <i class="bi bi-people"></i> <span>Customer Sales</span>
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-plus-circle"></i> <span>Add Sales</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-table"></i> <span>List Sales</span>
+                                </a>
+                            </li>
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-shop"></i> <span>POS Sales</span>
+                                </a>
+                            </li>
+
+                            {{-- no need him  --}}
+                          
+                            {{-- <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.due-payments') }}">
                                     <i class="bi bi-cash-coin"></i> <span>Due Payments</span>
                                 </a>
@@ -730,67 +738,168 @@
                                 <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
                                     <i class="bi bi-collection"></i> <span>Return Product</span>
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                     </div>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#stockSubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="stockSubmenu">
-                        <i class="bi bi-people"></i> <span>Stock Deails</span>
+                        <i class="bi bi-file-earmark-text"></i> <span>Quatation</span>
                     </a>
                     <div class="collapse" id="stockSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-file-plus"></i> <span>Add Quatation</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-card-list"></i> <span>List Quatation</span>
+                                </a>
+                            </li>
+                            {{-- <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
                                     <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                                 </a>
-                            </li>
+                            </li> --}}
                         </ul>
                     </div>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#purchaseSubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="purchaseSubmenu">
-                        <i class="bi bi-key"></i><span>Purchase</span>
+                        <i class="bi bi-truck"></i><span>Purchase</span>
                     </a>
                     <div class="collapse" id="purchaseSubmenu">
                         <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.supplier-management') }}">
-                                    <i class="bi bi-briefcase"></i> <span>Supplier Manage</span>
-                                </a>
-                            </li>
+                           
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.quotation') }}">
-                                    <i class="bi bi-receipt"></i> <span>Purchase Order</span>
+                                    <i class="bi bi-journal-bookmark"></i> <span>Purchase Order</span>
                                 </a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link py-2" href="{{ route('admin.grn') }}">
-                                    <i class="bi bi-box-seam"></i><span>GRN</span>
+                                    <i class="bi bi-boxes"></i><span>GRN</span>
                                 </a>
                             </li>
                         </ul>
                     </div>
                 </li>
-                <!-- //add financing -->
                 <li class="nav-item">
-                    <a class="nav-link dropdown-toggle" href="#FinancingSubmenu" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="FinancingSubmenu">
-                        <i class="bi bi-cash-stack"></i> <span>Financing</span>
+                    <a class="nav-link dropdown-toggle" href="#returnSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="returnSubmenu">
+                        <i class="bi bi-arrow-counterclockwise"></i> <span>Return</span>
                     </a>
-                    <div class="collapse" id="FinancingSubmenu">
+                    <div class="collapse" id="returnSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{route('admin.expenses')}}">
-                                    <i class="bi bi-wallet2"></i> <span>Expenses</span>
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-wallet2"></i> <span>List Return</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                {{-- // cheque / banks --}}
+                 <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#banksSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="banksSubmenu">
+                        <i class="bi bi-bank"></i> <span>Cheque / Banks</span>
+                    </a>
+                    <div class="collapse" id="banksSubmenu">
+                        <ul class="nav flex-column ms-3">
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-cash-stack"></i> <span>Deposit By Cash</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{route('admin.income')}}">
-                                    <i class="bi bi-graph-up-arrow"></i> <span>Income</span>
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-card-text"></i> <span>Cheque List</span>
 
+                                </a>
+                            </li>
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-arrow-left-right"></i> <span>Return Cheque</span>
+
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                {{-- // Expensive  --}}
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#expensesSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="expensesSubmenu">
+                        <i class="bi bi-wallet2"></i> <span>Expenses</span>
+                    </a>
+                    <div class="collapse" id="expensesSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-wallet2"></i> <span>List Expenses</span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </li>
+                <!-- //add financing -->
+                <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#paymentSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="paymentSubmenu">
+                        <i class="bi bi-receipt-cutoff"></i> <span>Payment Management</span>
+                    </a>
+                    <div class="collapse" id="paymentSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-person-plus"></i> <span>Add Customer Receipt</span>
+                                </a>
+                            </li>
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-people-fill"></i> <span>List Customer Receipt</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="">
+                                    <i class="bi bi-truck-flatbed"></i> <span>Add Supplier Receipt</span>
+                                </a>
+                            </li>
+                                <li class="nav-item">
+                                    <a class="nav-link py-2" href="">
+                                        <i class="bi bi-clipboard-data"></i> <span>List Supplier Receipt</span>
+                                    </a>
+                                </li>
+                        </ul>
+                    </div>
+                </li>
+                {{-- // people management --}}
+                 <li class="nav-item">
+                    <a class="nav-link dropdown-toggle" href="#peopleSubmenu" data-bs-toggle="collapse" role="button"
+                        aria-expanded="false" aria-controls="peopleSubmenu">
+                        <i class="bi bi-people-fill"></i> <span>People</span>
+                    </a>
+                    <div class="collapse" id="peopleSubmenu">
+                        <ul class="nav flex-column ms-3">
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.supplier-management') }}">
+                                    <i class="bi bi-people"></i> <span>List Suppliers</span>
+                                </a>
+                            </li>
+                                                            <li class="nav-item">
+                                                                <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
+                                                                        <i class="bi bi-person-lines-fill"></i> <span>List Customer</span>
+                                                                </a>
+                                                        </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2 " href="{{ route('admin.manage-staff') }}">
+                                    <i class="bi bi-person-badge"></i> <span>List Staff</span>
                                 </a>
                             </li>
                         </ul>
@@ -798,7 +907,7 @@
                 </li>
                 <li>
                     <a class="nav-link" href="{{ route('admin.store-billing') }}">
-                        <i class="bi bi-cash"></i> <span>Store Billing</span>
+                        <i class="bi bi-cash"></i> <span>POS</span>
                     </a>
                 </li>
                 <li>
@@ -890,7 +999,7 @@
 
                             <!-- Amount Input -->
                             <div class="mb-4">
-                                <label class="form-label fw-semibold">New Cash Amount (Rs.)</label>
+                                <label class="form-label fw-semibold">POS</label>
                                 <div class="input-group">
                                     <span class="input-group-text bg-light">Rs.</span>
                                     <input type="number" step="0.01" class="form-control" name="newCashInHand"
