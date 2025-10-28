@@ -968,11 +968,7 @@
                                 <div class="text-center mb-4">
                                     <h3 class="mb-0">USN Auto Parts</h3>
                                     <p class="mb-0 text-muted small">103 H,Yatiyanthota Road,Seethawaka,avissawella.</p>
-<<<<<<< Updated upstream
                                     <p class="mb-0 text-muted small">Phone: ( 076) 9085252| Email: autopartsusn@gmail.com </p>
-=======
-                                    <p class="mb-0 text-muted small">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
->>>>>>> Stashed changes
                                     <h4 class="mt-3 border-bottom border-2 pb-2">SALES RECEIPT</h4>
                                 </div>
 

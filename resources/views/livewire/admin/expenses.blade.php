@@ -7,14 +7,7 @@
             </h3>
             <p class="text-muted mb-0">Track and manage your company expenses efficiently</p>
         </div>
-        <div>
-            <button class="btn btn-primary">
-                <i class="bi bi-download me-2"></i> Export Today Report
-            </button>
-            <button class="btn btn-primary">
-                <i class="bi bi-download me-2"></i> Export Month Report
-            </button>
-        </div>
+       
     </div>
 
     @if (session()->has('error'))

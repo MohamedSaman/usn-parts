@@ -13,8 +13,11 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
+            $table->string('sale_id')->unique();
             $table->string('invoice_number')->unique();
+            $table->enum('sale_type', ['pos', 'admin'])->default('pos');
             $table->foreignId('customer_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->enum('customer_type', ['retail', 'wholesale'])->default('retail');
             $table->decimal('subtotal', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);
