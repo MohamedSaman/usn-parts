@@ -90,7 +90,7 @@
 
         /* Sidebar styles */
         .sidebar {
-            width: 250px;
+            width: 265px;
             height: 100vh;
             background-color: var(--sidebar-bg);
             border-right: 1px solid var(--border);
