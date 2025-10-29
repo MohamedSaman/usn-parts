@@ -11,6 +11,7 @@ class Sale extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sale_id',
         'invoice_number',
         'customer_id',
         'customer_type',
@@ -23,6 +24,7 @@ class Sale extends Model
         'notes',
         'due_amount',
         'user_id',
+        'sale_type', 
     ];
 
     public function customer()
@@ -43,6 +45,26 @@ class Sale extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Generate unique sale ID
+    public static function generateSaleId()
+    {
+        $prefix = 'SALE-';
+        $date = now()->format('Ymd');
+        $lastSale = self::where('sale_id', 'like', "{$prefix}{$date}%")
+            ->orderBy('sale_id', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+
+        if ($lastSale) {
+            $parts = explode('-', $lastSale->sale_id);
+            $lastNumber = intval(end($parts));
+            $nextNumber = $lastNumber + 1;
+        }
+
+        return $prefix . $date . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     // Generate unique invoice numbers

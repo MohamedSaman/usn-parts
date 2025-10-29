@@ -707,17 +707,17 @@
                     <div class="collapse" id="salesSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.sales-system') }}">
                                     <i class="bi bi-plus-circle"></i> <span>Add Sales</span>
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.sales-list') }}">
                                     <i class="bi bi-table"></i> <span>List Sales</span>
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.pos-sales') }}">
                                     <i class="bi bi-shop"></i> <span>POS Sales</span>
                                 </a>
                             </li>
@@ -745,18 +745,18 @@
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#stockSubmenu" data-bs-toggle="collapse" role="button"
                         aria-expanded="false" aria-controls="stockSubmenu">
-                        <i class="bi bi-file-earmark-text"></i> <span>Quatation</span>
+                        <i class="bi bi-file-earmark-text"></i> <span>Quotation</span>
                     </a>
                     <div class="collapse" id="stockSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
-                                    <i class="bi bi-file-plus"></i> <span>Add Quatation</span>
+                                <a class="nav-link py-2" href="{{ route('admin.quotation-system') }}">
+                                    <i class="bi bi-file-plus"></i> <span>Add Quotation</span>
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
-                                    <i class="bi bi-card-list"></i> <span>List Quatation</span>
+                                <a class="nav-link py-2" href="{{ route('admin.quotation-list') }}">
+                                    <i class="bi bi-card-list"></i> <span>List Quotation</span>
                                 </a>
                             </li>
                             {{-- <li class="nav-item">
@@ -831,6 +831,13 @@
                         </ul>
                     </div>
                 </li>
+                 </li>
+                             <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.income') }}">
+                                    <i class="bi bi-cash-stack"></i> <span>Income</span>
+
+                                </a>
+                            </li>
                 {{-- // Expensive  --}}
                 <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#expensesSubmenu" data-bs-toggle="collapse" role="button"
@@ -840,7 +847,7 @@
                     <div class="collapse" id="expensesSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.expenses') }}">
                                     <i class="bi bi-wallet2"></i> <span>List Expenses</span>
                                 </a>
                             </li>
@@ -862,7 +869,7 @@
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
                                     <i class="bi bi-people-fill"></i> <span>List Customer Receipt</span>
                                 </a>
                             </li>
@@ -893,7 +900,7 @@
                                 </a>
                             </li>
                                                             <li class="nav-item">
-                                                                <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
+                                                                <a class="nav-link py-2" href="{{ route('admin.manage-customer') }}">
                                                                         <i class="bi bi-person-lines-fill"></i> <span>List Customer</span>
                                                                 </a>
                                                         </li>
@@ -909,6 +916,16 @@
                     <a class="nav-link" href="{{ route('admin.store-billing') }}">
                         <i class="bi bi-cash"></i> <span>POS</span>
                     </a>
+                </li>
+                <li>
+                <a class="nav-link" href="{{ route('admin.reports') }}">
+                    <i class="bi bi-file-earmark-bar-graph"></i> <span>Reports</span>
+                </a>
+                </li>
+                <li>
+                <a class="nav-link" href="{{ route('admin.analytics') }}">
+                    <i class="bi bi-bar-chart"></i> <span>Analytics</span>
+                </a>
                 </li>
                 <li>
                 <a class="nav-link" href="{{ route('admin.settings') }}">

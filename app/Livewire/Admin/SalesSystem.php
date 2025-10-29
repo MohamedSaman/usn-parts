@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.layouts.admin')]
-#[Title('Store Billing')]
-class StoreBilling extends Component
+#[Title('Create Sale')]
+class SalesSystem extends Component
 {
     // Basic Properties
     public $search = '';
@@ -39,10 +39,6 @@ class StoreBilling extends Component
     
     // Sale Properties
     public $notes = '';
-    
-    // Payment Properties
-    public $paymentMethod = 'cash'; // 'cash', 'credit', 'cheque' - for display only
-    public $paidAmount = 0;
     
     // Discount Properties
     public $additionalDiscount = 0;
@@ -101,32 +97,6 @@ class StoreBilling extends Component
         return $this->subtotalAfterItemDiscounts - $this->additionalDiscountAmount;
     }
 
-    public function getDueAmountProperty()
-    {
-        return max(0, $this->grandTotal - $this->paidAmount);
-    }
-
-    public function getPaymentStatusProperty()
-    {
-        if ($this->paidAmount <= 0) {
-            return 'pending';
-        } elseif ($this->paidAmount >= $this->grandTotal) {
-            return 'paid';
-        } else {
-            return 'partial';
-        }
-    }
-
-    // Determine payment_type for database (must be 'full' or 'partial')
-    public function getDatabasePaymentTypeProperty()
-    {
-        if ($this->paidAmount >= $this->grandTotal) {
-            return 'full';
-        } else {
-            return 'partial';
-        }
-    }
-
     // When customer is selected from dropdown
     public function updatedCustomerId($value)
     {
@@ -137,35 +107,6 @@ class StoreBilling extends Component
             }
         } else {
             $this->selectedCustomer = null;
-        }
-    }
-
-    // When payment method changes
-    public function updatedPaymentMethod($value)
-    {
-        if ($value === 'credit') {
-            $this->paidAmount = 0;
-        } else {
-            $this->paidAmount = $this->grandTotal;
-        }
-    }
-
-    // When paid amount changes
-    public function updatedPaidAmount($value)
-    {
-        if ($value === '') {
-            $this->paidAmount = 0;
-            return;
-        }
-
-        if ($value < 0) {
-            $this->paidAmount = 0;
-            return;
-        }
-
-        if ($value > $this->grandTotal) {
-            $this->paidAmount = $this->grandTotal;
-            return;
         }
     }
 
@@ -364,8 +305,6 @@ class StoreBilling extends Component
         $this->cart = [];
         $this->additionalDiscount = 0;
         $this->additionalDiscountType = 'fixed';
-        $this->paidAmount = 0;
-        $this->paymentMethod = 'cash';
         session()->flash('message', 'Cart cleared!');
     }
 
@@ -433,7 +372,7 @@ class StoreBilling extends Component
                 return;
             }
 
-            // Create sale - use database-compatible payment_type
+            // Create sale
             $sale = Sale::create([
                 'sale_id' => Sale::generateSaleId(),
                 'invoice_number' => Sale::generateInvoiceNumber(),
@@ -442,13 +381,13 @@ class StoreBilling extends Component
                 'subtotal' => $this->subtotal,
                 'discount_amount' => $this->totalDiscount + $this->additionalDiscountAmount,
                 'total_amount' => $this->grandTotal,
-                'payment_type' => $this->databasePaymentType, // Use computed property
-                'payment_status' => $this->paymentStatus,
-                'due_amount' => $this->dueAmount,
+                'payment_type' => 'full',
+                'payment_status' => 'pending',
+                'due_amount' => $this->grandTotal,
                 'notes' => $this->notes,
                 'user_id' => Auth::id(),
                 'status' => 'confirm',
-                'sale_type' => 'pos'
+                'sale_type' => 'admin'
             ]);
 
             // Create sale items and update stock
@@ -480,12 +419,7 @@ class StoreBilling extends Component
             $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);
             $this->showSaleModal = true;
             
-            $statusMessage = 'Sale created successfully! Payment status: ' . ucfirst($this->paymentStatus);
-            if ($this->dueAmount > 0) {
-                $statusMessage .= ' | Due Amount: Rs.' . number_format($this->dueAmount, 2);
-            }
-
-            session()->flash('success', $statusMessage);
+            session()->flash('success', 'Sale created successfully! Payment status: Pending');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -537,15 +471,12 @@ class StoreBilling extends Component
 
     public function render()
     {
-        return view('livewire.admin.store-billing', [
+        return view('livewire.admin.sales-system', [
             'subtotal' => $this->subtotal,
             'totalDiscount' => $this->totalDiscount,
             'subtotalAfterItemDiscounts' => $this->subtotalAfterItemDiscounts,
             'additionalDiscountAmount' => $this->additionalDiscountAmount,
-            'grandTotal' => $this->grandTotal,
-            'dueAmount' => $this->dueAmount,
-            'paymentStatus' => $this->paymentStatus,
-            'databasePaymentType' => $this->databasePaymentType
+            'grandTotal' => $this->grandTotal
         ]);
     }
 }

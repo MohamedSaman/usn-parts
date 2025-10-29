@@ -9,7 +9,6 @@ use Livewire\Attributes\Title;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Facades\Excel; // Add this at the top
 
 #[Layout('components.layouts.admin')]
 #[Title('Dashboard')]
@@ -24,16 +23,16 @@ class AdminDashboard extends Component
     public $revenueChangePercentage = 0;
     public $fullPaidCount = 0;
     public $fullPaidAmount = 0;
-
     public $partialPaidCount = 0;
     public $partialPaidAmount = 0;
 
     public $totalStock = 0;
     public $soldStock = 0;
     public $availableStock = 0;
-    public $assignmentPercentage = 0;
     public $soldPercentage = 0;
+    public $availablePercentage = 0;
     public $damagedStock = 0;
+    public $damagedPercentage = 0;
     public $damagedValue = 0;
     public $totalInventoryValue = 0;
     public $totalAvailableInventory = 0;
@@ -44,48 +43,20 @@ class AdminDashboard extends Component
 
     public $recentSales = [];
     public $ProductInventory = [];
-    public $brandSales = [];
+    public $categorySales = []; // Changed from brandSales to categorySales
     public $staffSales = [];
 
-    // Analytics data
-    public $monthlySalesData = [];
-    public $monthlyRevenueData = [];
-    public $invoiceStatusData = [];
-    public $paymentTrendsData = [];
-    public $topPerformingMonths = [];
-
-    public $selectedReport = '';
-    public $salesReport = [];
-    public $salesReportTotal = 0;
-    public $salaryReport = [];
-    public $salaryReportTotal = 0;
-    public $inventoryReport = [];
-    public $inventoryReportTotal = 0;
-    public $staffReport = [];
-    public $staffReportTotal = 0;
-    public $paymentsReport = [];
-    public $paymentsReportTotal = 0;
-    public $attendanceReport = [];
-    public $attendanceReportTotal = 0;
-
-    public $activeTab = 'overview';
-    public $reportStartDate;
-    public $reportEndDate;
-    //espenses
+    // Expenses
     public $todayTotal = 0;
     public $monthTotal = 0;
     public $totalExpenses = 0;
-    public $monthlyBudget = 10000; // Set your monthly budget here
+    public $monthlyBudget = 10000;
     public $monthlyProgressPercentage = 0;
     public $dailyAverage = 0;
     public $todayVsAverage = 0;
-    
 
     public function mount()
     {
-        // Restore active tab from session if available
-        $this->activeTab = session('activeTab', 'overview');
-
         // Get sales statistics
         $salesStats = Sale::select(
             DB::raw('SUM(total_amount) as total_sales'),
@@ -93,24 +64,25 @@ class AdminDashboard extends Component
             DB::raw('COUNT(*) as sales_count')
         )->first();
 
-        //add total expenses
+        // Add total expenses
         $this->totalExpenses = DB::table('expenses')->sum('amount');
         // Totals
         $this->todayTotal = Expense::whereDate('date', Carbon::today())->sum('amount');
         $this->monthTotal = Expense::whereMonth('date', Carbon::now()->month)
             ->whereYear('date', Carbon::now()->year)
             ->sum('amount');
+        
         // Calculate monthly progress percentage
-    $this->monthlyProgressPercentage = $this->monthlyBudget > 0 
-        ? min(round(($this->monthTotal / $this->monthlyBudget) * 100, 2), 100)
-        : 0;
+        $this->monthlyProgressPercentage = $this->monthlyBudget > 0 
+            ? min(round(($this->monthTotal / $this->monthlyBudget) * 100, 2), 100)
+            : 0;
 
-    // Calculate today vs average
-    $daysInMonth = now()->daysInMonth;
-    $this->dailyAverage = $daysInMonth > 0 ? $this->monthTotal / now()->day : 0;
-    $this->todayVsAverage = $this->dailyAverage > 0 
-        ? round((($this->todayTotal - $this->dailyAverage) / $this->dailyAverage) * 100, 2)
-        : 0;
+        // Calculate today vs average
+        $daysInMonth = now()->daysInMonth;
+        $this->dailyAverage = $daysInMonth > 0 ? $this->monthTotal / now()->day : 0;
+        $this->todayVsAverage = $this->dailyAverage > 0 
+            ? round((($this->todayTotal - $this->dailyAverage) / $this->dailyAverage) * 100, 2)
+            : 0;
 
         // Calculate total revenue (total_amount - due_amount)
         $this->totalSales = $salesStats->total_sales ?? 0;
@@ -169,14 +141,15 @@ class AdminDashboard extends Component
             )->first();
 
         $this->totalStock = $stockStats->total_stock ?? 0;
-
         $this->soldStock = $stockStats->sold_stock ?? 0;
         $this->damagedStock = $stockStats->damaged_stock ?? 0;
         $this->availableStock = $stockStats->available_stock ?? 0;
 
-        // Calculate percentages
+        // Calculate percentages for the 3 new cards
         if ($this->totalStock > 0) {
             $this->soldPercentage = round(($this->soldStock / $this->totalStock) * 100, 1);
+            $this->availablePercentage = round(($this->availableStock / $this->totalStock) * 100, 1);
+            $this->damagedPercentage = round(($this->damagedStock / $this->totalStock) * 100, 1);
         }
 
         // Calculate damaged inventory value
@@ -188,7 +161,7 @@ class AdminDashboard extends Component
 
         $this->damagedValue = $damagedValue->damaged_value ?? 0;
 
-        // Calculate total inventory value (all stocks)
+        // Calculate total inventory value
         $totalInventoryValue = DB::table('product_details')
             ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
             ->join('product_prices', 'product_details.id', '=', 'product_prices.product_id')
@@ -214,6 +187,7 @@ class AdminDashboard extends Component
         if ($this->totalStaffCount > 0) {
             $this->staffAssignmentPercentage = round(($this->staffWithAssignmentsCount / $this->totalStaffCount) * 100, 1);
         }
+        
         $staffSalesTotal = DB::table('staff_sales')
             ->select(DB::raw('SUM(total_value) as total_value'))
             ->first();
@@ -226,94 +200,11 @@ class AdminDashboard extends Component
         // Fetch Product inventory data
         $this->loadProductInventory();
 
-        // Fetch brand sales data
-        $this->loadBrandSales();
+        // Fetch category sales data (replaced brand sales)
+        $this->loadCategorySales();
 
         // Fetch staff sales data
         $this->loadStaffSales();
-
-        // Load analytics data
-        $this->loadAnalyticsData();
-    }
-
-    public function loadAnalyticsData()
-    {
-        // Get monthly sales data for the last 12 months
-        $this->monthlySalesData = DB::table('sales')
-            ->select(
-                DB::raw('YEAR(created_at) as year'),
-                DB::raw('MONTH(created_at) as month'),
-                DB::raw('COUNT(*) as total_invoices'),
-                DB::raw('SUM(total_amount) as total_sales'),
-                DB::raw('SUM(total_amount - due_amount) as revenue'),
-                DB::raw('SUM(due_amount) as due_amount')
-            )
-            ->where('created_at', '>=', now()->subMonths(12))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'asc')
-            ->orderBy('month', 'asc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'year' => $item->year,
-                    'month' => $item->month,
-                    'month_name' => date('M Y', mktime(0, 0, 0, $item->month, 1, $item->year)),
-                    'total_invoices' => $item->total_invoices,
-                    'total_sales' => $item->total_sales,
-                    'revenue' => $item->revenue,
-                    'due_amount' => $item->due_amount
-                ];
-            })
-            ->toArray();
-
-        // Get invoice status distribution
-        $this->invoiceStatusData = DB::table('sales')
-            ->select(
-                'payment_status',
-                DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(total_amount) as amount')
-            )
-            ->groupBy('payment_status')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'payment_status' => $item->payment_status,
-                    'count' => $item->count,
-                    'amount' => $item->amount
-                ];
-            })
-            ->toArray();
-
-        // Get payment trends (last 6 months)
-        $this->paymentTrendsData = DB::table('payments')
-            ->select(
-                DB::raw('YEAR(payment_date) as year'),
-                DB::raw('MONTH(payment_date) as month'),
-                DB::raw('COUNT(*) as payment_count'),
-                DB::raw('SUM(amount) as total_payments')
-            )
-            ->where('payment_date', '>=', now()->subMonths(6))
-            ->groupBy('year', 'month')
-            ->orderBy('year', 'asc')
-            ->orderBy('month', 'asc')
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'year' => $item->year,
-                    'month' => $item->month,
-                    'month_name' => date('M Y', mktime(0, 0, 0, $item->month, 1, $item->year)),
-                    'payment_count' => $item->payment_count,
-                    'total_payments' => $item->total_payments
-                ];
-            })
-            ->toArray();
-
-        // Get top performing months
-        $this->topPerformingMonths = collect($this->monthlySalesData)
-            ->sortByDesc('revenue')
-            ->take(3)
-            ->values()
-            ->toArray();
     }
 
     public function loadRecentSales()
@@ -357,13 +248,43 @@ class AdminDashboard extends Component
             ->get();
     }
 
-    public function loadBrandSales()
+    public function loadCategorySales()
     {
-        // Get total sales per brand
-        $this->brandSales = DB::table('sale_items')
+        try {
+            // Get total sales per category using category_lists table
+            $this->categorySales = DB::table('sale_items')
+                ->join('product_details', 'sale_items.product_id', '=', 'product_details.id')
+                ->join('category_lists', 'product_details.category_id', '=', 'category_lists.id')
+                ->select(
+                    'category_lists.category_name as category', 
+                    DB::raw('SUM(sale_items.total) as total_sales')
+                )
+                ->groupBy('category_lists.id', 'category_lists.category_name')
+                ->orderBy('total_sales', 'desc')
+                ->get()
+                ->toArray();
+
+            // If no categories found, use fallback
+            if (empty($this->categorySales)) {
+                $this->categorySales = $this->getFallbackCategorySales();
+            }
+
+        } catch (\Exception $e) {
+            // If there's an error (like table doesn't exist), use fallback
+            $this->categorySales = $this->getFallbackCategorySales();
+        }
+    }
+
+    private function getFallbackCategorySales()
+    {
+        // Fallback: Use brands if categories are not available
+        return DB::table('sale_items')
             ->join('product_details', 'sale_items.product_id', '=', 'product_details.id')
             ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
-            ->select('brand_lists.brand_name as brand', DB::raw('SUM(sale_items.total) as total_sales'))
+            ->select(
+                'brand_lists.brand_name as category', 
+                DB::raw('SUM(sale_items.total) as total_sales'
+            ))
             ->groupBy('brand_lists.id', 'brand_lists.brand_name')
             ->orderBy('total_sales', 'desc')
             ->get()
@@ -411,158 +332,8 @@ class AdminDashboard extends Component
             });
     }
 
-    public function selectedTab($tab)
-    {
-        $this->activeTab = $tab;
-        session(['activeTab' => $tab]);
-    }
-
-    public function generateReport()
-    {
-        $currentTab = $this->activeTab;
-
-        // Validate date range (optional)
-        if ($this->reportStartDate && $this->reportEndDate && $this->reportStartDate > $this->reportEndDate) {
-            $this->addError('reportEndDate', 'End date must be after start date.');
-            return;
-        }
-
-        if ($this->selectedReport === 'sales') {
-            $this->salesReport = $this->getSalesReport($this->reportStartDate, $this->reportEndDate);
-            $this->salesReportTotal = collect($this->salesReport)->sum('total_amount');
-        } elseif ($this->selectedReport === 'salary') {
-            $this->salaryReport = $this->getSalaryReport($this->reportStartDate, $this->reportEndDate);
-            $this->salaryReportTotal = collect($this->salaryReport)->sum('net_salary');
-        } elseif ($this->selectedReport === 'inventory') {
-            $this->inventoryReport = $this->getInventoryReport($this->reportStartDate, $this->reportEndDate);
-            $this->inventoryReportTotal = collect($this->inventoryReport)->sum('available_stock');
-        } elseif ($this->selectedReport === 'staff') {
-            $this->staffReport = $this->getStaffReport($this->reportStartDate, $this->reportEndDate);
-            $this->staffReportTotal = collect($this->staffReport)->sum('total_sales');
-        } elseif ($this->selectedReport === 'payments') {
-            $this->paymentsReport = $this->getPaymentsReport($this->reportStartDate, $this->reportEndDate);
-            $this->paymentsReportTotal = collect($this->paymentsReport)->sum('amount');
-        } elseif ($this->selectedReport === 'attendance') {
-            $this->attendanceReport = $this->getAttendanceReport($this->reportStartDate, $this->reportEndDate);
-            $this->attendanceReportTotal = collect($this->attendanceReport)->count();
-        }
-
-        $this->activeTab = $currentTab;
-        session(['activeTab' => $currentTab]);
-    }
-
-    public function downloadReport()
-    {
-        $filename = 'report.xlsx';
-        $data = [];
-
-        switch ($this->selectedReport) {
-            case 'sales':
-                $data = $this->salesReport;
-                $export = new \App\Exports\SalesReportExport($data, $this->salesReportTotal);
-                break;
-            case 'salary':
-                $data = $this->salaryReport;
-                $export = new \App\Exports\SalaryReportExport($data, $this->salaryReportTotal);
-                break;
-            case 'inventory':
-                $data = $this->inventoryReport;
-                $export = new \App\Exports\InventoryReportExport($data, $this->inventoryReportTotal);
-                break;
-            case 'staff':
-                $data = $this->staffReport;
-                $export = new \App\Exports\StaffReportExport($data, $this->staffReportTotal);
-                break;
-            case 'payments':
-                $data = $this->paymentsReport;
-                $export = new \App\Exports\PaymentsReportExport($data, $this->paymentsReportTotal);
-                break;
-            case 'attendance':
-                $data = $this->attendanceReport;
-                $export = new \App\Exports\AttendanceReportExport($data, $this->attendanceReportTotal);
-                break;
-            default:
-                return;
-        }
-
-        return Excel::download($export, $filename);
-    }
-
-    // Example report functions
-    public function getSalesReport($start = null, $end = null)
-    {
-        $query = \App\Models\Sale::with('items', 'customer', 'payments')->orderBy('created_at', 'desc');
-        if ($start) $query->whereDate('created_at', '>=', $start);
-        if ($end) $query->whereDate('created_at', '<=', $end);
-        return $query->limit(50)->get();
-    }
-
-    public function getSalaryReport($start = null, $end = null)
-    {
-        $query = DB::table('salaries')
-            ->join('users', 'salaries.user_id', '=', 'users.id')
-            ->select('users.name', 'salaries.net_salary', 'salaries.salary_month', 'salaries.payment_status')
-            ->orderBy('salaries.salary_month', 'desc');
-        if ($start) $query->whereDate('salaries.salary_month', '>=', $start);
-        if ($end) $query->whereDate('salaries.salary_month', '<=', $end);
-        return $query->limit(50)->get();
-    }
-
-    public function getInventoryReport($start = null, $end = null)
-    {
-        $query = DB::table('product_details')
-            ->join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
-            ->join('brand_lists', 'product_details.brand_id', '=', 'brand_lists.id')
-            ->select('product_details.name', 'product_details.model', 'brand_lists.brand_name as brand', 'product_stocks.*')
-            ->orderBy('product_stocks.available_stock', 'desc');
-        // Inventory may not have a date, so skip date filter or add if you have a date column
-        return $query->get();
-    }
-
-    public function getStaffReport($start = null, $end = null)
-    {
-        $query = DB::table('users')
-            ->where('role', 'staff')
-            ->leftJoin('staff_sales', 'users.id', '=', 'staff_sales.staff_id')
-            ->select('users.name', 'users.email', DB::raw('SUM(staff_sales.sold_value) as total_sales'))
-            ->groupBy('users.id', 'users.name', 'users.email');
-        // Staff sales may have a date column, add filter if available
-        return $query->get();
-    }
-
-    public function getPaymentsReport($start = null, $end = null)
-    {
-        $query = \App\Models\Payment::with('sale')->orderBy('payment_date', 'desc');
-        if ($start) $query->whereDate('payment_date', '>=', $start);
-        if ($end) $query->whereDate('payment_date', '<=', $end);
-        return $query->limit(50)->get();
-    }
-
-    public function getAttendanceReport($start = null, $end = null)
-    {
-        $query = DB::table('attendances')
-            ->join('users', 'attendances.user_id', '=', 'users.id')
-            ->select('users.name', 'attendances.date', 'attendances.check_in', 'attendances.check_out', 'attendances.status')
-            ->orderBy('attendances.date', 'desc');
-        if ($start) $query->whereDate('attendances.date', '>=', $start);
-        if ($end) $query->whereDate('attendances.date', '<=', $end);
-        return $query->limit(50)->get();
-    }
-
     public function render()
     {
-        return view('livewire.admin.admin-dashboard', [
-            'salesReportTotal' => $this->salesReportTotal,
-            'salaryReportTotal' => $this->salaryReportTotal,
-            'inventoryReportTotal' => $this->inventoryReportTotal,
-            'staffReportTotal' => $this->staffReportTotal,
-            'paymentsReportTotal' => $this->paymentsReportTotal,
-            'attendanceReportTotal' => $this->attendanceReportTotal,
-            'monthlySalesData' => $this->monthlySalesData,
-            'monthlyRevenueData' => $this->monthlyRevenueData,
-            'invoiceStatusData' => $this->invoiceStatusData,
-            'paymentTrendsData' => $this->paymentTrendsData,
-            'topPerformingMonths' => $this->topPerformingMonths,
-        ]);
+        return view('livewire.admin.admin-dashboard');
     }
 }

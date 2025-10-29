@@ -47,7 +47,13 @@ use App\Livewire\Admin\LoanManage;
 use App\Livewire\Admin\Quotation;
 use App\Livewire\Admin\SalesApproval;
 use App\Livewire\Admin\SupplierManage;
-
+use App\Livewire\Admin\Reports;
+use App\Livewire\Admin\Analytics;
+use App\Livewire\Admin\QuotationSystem;
+use App\Livewire\Admin\QuotationList;
+use App\Livewire\Admin\SalesSystem;
+use App\Livewire\Admin\SalesList;
+use App\Livewire\Admin\PosSales;
 
 
 use App\Models\Setting as ModelsSetting;
@@ -99,6 +105,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/Product-stock-details', ProductStockDetails::class)->name('Product-stock-details');
         Route::get('/staff-stock-details', StaffStockDetails::class)->name('staff-stock-details');
         
+        
         Route::get('/staff-due-details', StaffDueDetails::class)->name('staff-due-details');
         Route::get('/customer-sale-details', CustomerSaleDetails::class)->name('customer-sale-details');
        
@@ -109,7 +116,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/staff-attendance', StaffAttendance::class)->name('staff-attendance');
         Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
         Route::get('/loan-management', LoanManage::class)->name('loan-management');
-        
+        Route::get('/sales-system', SalesSystem::class)->name('sales-system');
+        Route::get('/pos-sales', PosSales::class)->name('pos-sales');
 
         Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
         Route::get('/quotation', Quotation::class)->name('quotation');
@@ -118,6 +126,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/income', Income::class)->name('income');
 
         Route::get('/systemsetting', Settings::class)->name('systemsetting');
+        Route::get('/reports', Reports::class)->name('reports');
+        Route::get('/analytics', Analytics::class)->name('analytics');
+        Route::get('/quotation-system', QuotationSystem::class)->name('quotation-system');
+        Route::get('/quotation-list', QuotationList::class)->name('quotation-list');
+        Route::get('/sales-list', SalesList::class)->name('sales-list');
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
         

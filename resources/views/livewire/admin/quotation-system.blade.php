@@ -4,11 +4,11 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-    <h3 class="fw-bold text-dark mb-2">
-        <i class="bi bi-credit-card-2-front text-primary me-2"></i> Store Billing
-    </h3>
-    <p class="text-muted">Process store sales with flexible payment options</p>
-</div>
+                    <h3 class="fw-bold text-dark mb-2">
+                        <i class="bi bi-file-earmark-text text-primary me-2"></i> Create Quotation
+                    </h3>
+                    <p class="text-muted">Quickly create professional quotations for customers</p>
+                </div>
             </div>
         </div>
     </div>
@@ -36,7 +36,7 @@
     @endif
 
     <div class="row">
-        {{-- Customer Information --}}
+        {{-- Customer Information (Full Width) --}}
         <div class="col-12 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -60,6 +60,11 @@
                                 @endforeach
                             </select>
                             <div class="form-text">Select existing customer</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Valid Until *</label>
+                            <input type="date" class="form-control" wire:model="validUntil">
                         </div>
                     </div>
                 </div>
@@ -98,8 +103,7 @@
                                     </p>
                                 </div>
                                 <button class="btn btn-sm btn-primary"
-                                    wire:click="addToCart({{ json_encode($product) }})"
-                                    {{ $product['stock'] <= 0 ? 'disabled' : '' }}>
+                                    wire:click="addToCart({{ json_encode($product) }})">
                                     <i class="bi bi-plus"></i> Add
                                 </button>
                             </div>
@@ -115,12 +119,12 @@
             </div>
         </div>
 
-        {{-- Sale Items Table --}}
+        {{-- Quotation Items Table --}}
         <div class="col-md-12 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
-                        <i class="bi bi-cart me-2"></i>Sale Items
+                        <i class="bi bi-cart me-2"></i>Quotation Items
                     </h5>
                     <span class="badge bg-primary">{{ count($cart) }} items</span>
                 </div>
@@ -149,9 +153,6 @@
                                             <div class="text-muted small">
                                                 {{ $item['code'] }} | {{ $item['model'] }}
                                             </div>
-                                            <div class="text-info small">
-                                                Stock: {{ $item['stock'] }}
-                                            </div>
                                         </div>
                                     </td>
                                     <td class="fw-bold">
@@ -163,7 +164,7 @@
                                                 wire:click="decrementQuantity({{ $index }})">-</button>
                                             <input type="number" class="form-control text-center"
                                                 wire:change="updateQuantity({{ $index }}, $event.target.value)"
-                                                value="{{ $item['quantity'] }}" min="1" max="{{ $item['stock'] }}">
+                                                value="{{ $item['quantity'] }}" min="1">
                                             <button class="btn btn-outline-secondary" type="button"
                                                 wire:click="incrementQuantity({{ $index }})">+</button>
                                         </div>
@@ -199,6 +200,7 @@
                                     <td></td>
                                 </tr>
                                
+
                                 {{-- Additional Discount Section --}}
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold align-middle">
@@ -271,112 +273,32 @@
             </div>
         </div>
 
-        {{-- Payment Information Card --}}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-credit-card me-2"></i>Payment Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Payment Method *</label>
-                            <select class="form-select" wire:model.live="paymentMethod">
-                                <option value="cash">Cash</option>
-                                <option value="credit">Credit</option>
-                                <option value="cheque">Cheque</option>
-                            </select>
+        {{-- Notes and Terms & Conditions --}}
+       
+                
+                <div class="col-md-12 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="bi bi-list-check me-2"></i>Terms & Conditions
+                            </h5>
                         </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label">Paid Amount *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rs.</span>
-                                <input type="number" class="form-control" 
-                                    wire:model.live="paidAmount"
-                                    min="0" 
-                                    max="{{ $grandTotal }}" 
-                                    step="0.01"
-                                    placeholder="0.00">
-                            </div>
-                            <div class="form-text">
-                                Enter the amount being paid now. Remaining amount will be marked as due.
-                            </div>
+                        <div class="card-body">
+                            <textarea class="form-control" wire:model="termsConditions" rows="6"
+                                placeholder="Enter terms and conditions for the quotation..."></textarea>
                         </div>
-
-                        {{-- Payment Summary --}}
-                        <div class="col-md-12">
-                            <div class="border rounded p-3 bg-light">
-                                <h6 class="mb-3">Payment Summary</h6>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Grand Total:</span>
-                                    <span class="fw-bold">Rs.{{ number_format($grandTotal, 2) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Paid Amount:</span>
-                                    <span class="fw-bold text-success">Rs.{{ number_format($paidAmount, 2) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Due Amount:</span>
-                                    <span class="fw-bold {{ $dueAmount > 0 ? 'text-warning' : 'text-success' }}">
-                                        Rs.{{ number_format($dueAmount, 2) }}
-                                    </span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span>Status:</span>
-                                    <span class="badge bg-{{ $paymentStatus === 'paid' ? 'success' : ($paymentStatus === 'partial' ? 'warning' : 'danger') }}">
-                                        {{ ucfirst($paymentStatus) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if($paymentMethod === 'credit')
-                        <div class="col-md-12">
-                            <div class="alert alert-warning small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Credit payment selected. The full amount will be marked as due.
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($paymentMethod !== 'credit' && $paidAmount < $grandTotal && $paidAmount > 0)
-                        <div class="col-md-12">
-                            <div class="alert alert-info small">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Partial payment. Remaining Rs.{{ number_format($dueAmount, 2) }} will be marked as due.
-                            </div>
-                        </div>
-                        @endif
                     </div>
                 </div>
-            </div>
-        </div>
+          
+        
 
-        {{-- Notes Card --}}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-chat-text me-2"></i>Notes
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <textarea class="form-control" wire:model="notes" rows="8"
-                        placeholder="Add any notes for this sale..."></textarea>
-                </div>
-            </div>
-        </div>
-
-        {{-- Create Sale Button --}}
+        {{-- Create Quotation Button --}}
         <div class="col-12">
             <div class="card">
                 <div class="card-body text-center">
-                    <button class="btn btn-success btn-lg px-5" wire:click="createSale"
+                    <button class="btn btn-primary btn-lg px-5" wire:click="createQuotation"
                         {{ count($cart) == 0 ? 'disabled' : '' }}>
-                        <i class="bi bi-cart-check me-2"></i>Complete Sale
+                        <i class="bi bi-file-earmark-plus me-2"></i>Create Quotation
                     </button>
                 </div>
             </div>
@@ -444,171 +366,148 @@
     </div>
     @endif
 
-    {{-- Sale Preview Modal --}}
-    @if($showSaleModal && $createdSale)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-cart-check me-2"></i>
-                        Sale Completed Successfully! - {{ $createdSale->invoice_number }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
-                </div>
+   {{-- Quotation Preview Modal --}}
+@if($showQuotationModal && $createdQuotation)
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    Quotation Preview - {{ $createdQuotation->quotation_number }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
+            </div>
 
-                <div class="modal-body p-0">
-                    {{-- Sale Preview --}}
-                    <div class="sale-preview p-4">
-                        {{-- Header --}}
-                        <div class="header text-center mb-4">
-                            <h2 class="text-success mb-1">USN AUTO PARTS</h2>
-                            <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="mb-1">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
-                        </div>
+            <div class="modal-body p-0">
+                {{-- Quotation Preview --}}
+                <div class="quotation-preview p-4">
+                    {{-- Header --}}
+                    <div class="header text-center mb-4">
+                        <h2 class="text-success mb-1">USN AUTO PARTS</h2>
+                        <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                        <p class="mb-1">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+                    </div>
 
-                        {{-- Customer & Sale Details --}}
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Customer Information</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-1"><strong>{{ $createdSale->customer->name }}</strong></p>
-                                        <p class="mb-1">{{ $createdSale->customer->address }}</p>
-                                        <p class="mb-1">Tel: {{ $createdSale->customer->phone }}</p>
-                                        @if($createdSale->customer->email)
-                                        <p class="mb-0">Email: {{ $createdSale->customer->email }}</p>
-                                        @endif
-                                    </div>
+                    {{-- Customer & Quotation Details --}}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Customer Information</h6>
                                 </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Sale Details</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-1"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
-                                        <p class="mb-1"><strong>Invoice No:</strong> {{ $createdSale->invoice_number }}</p>
-                                        <p class="mb-1"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-                                        <p class="mb-1"><strong>Payment Status:</strong> 
-                                            <span class="badge bg-{{ $createdSale->payment_status == 'paid' ? 'success' : ($createdSale->payment_status == 'partial' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($createdSale->payment_status) }}
-                                            </span>
-                                        </p>
-                                        <p class="mb-0"><strong>Payment Method:</strong> 
-                                            {{ ucfirst($createdSale->payment_type) }}
-                                        </p>
-                                    </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>{{ $createdQuotation->customer_name }}</strong></p>
+                                    <p class="mb-1">{{ $createdQuotation->customer_address }}</p>
+                                    <p class="mb-1">Tel: {{ $createdQuotation->customer_phone }}</p>
+                                    @if($createdQuotation->customer_email)
+                                    <p class="mb-0">Email: {{ $createdQuotation->customer_email }}</p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Items Table --}}
-                        <div class="table-responsive mb-4">
-                            <table class="table table-bordered">
-                                <thead class="table-primary">
-                                    <tr>
-                                        <th width="40">#</th>
-                                        <th>Item Code</th>
-                                        <th>Description</th>
-                                        <th width="80">Qty</th>
-                                        <th width="120">Unit Price </th>
-                                        <th width="120">Discount </th>
-                                        <th width="120">Subtotal </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($createdSale->items as $index => $item)
-                                    <tr>
-                                        <td>{{ $index + 1 }}</td>
-                                        <td>{{ $item->product_code }}</td>
-                                        <td>{{ $item->product_name }}</td>
-                                        <td class="text-center">{{ $item->quantity }}</td>
-                                        <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
-                                        <td class="text-end">{{ number_format($item->discount_per_unit ?? 0, 2) }}</td>
-                                        <td class="text-end">{{ number_format($item->total, 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Quotation Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-1"><strong>Quotation No:</strong> {{ $createdQuotation->quotation_number }}</p>
+                                    <p class="mb-1"><strong>Date:</strong> {{ $createdQuotation->quotation_date->format('d/m/Y') }}</p>
+                                    <p class="mb-1"><strong>Valid Until:</strong> {{ \Carbon\Carbon::parse($createdQuotation->valid_until)->format('d/m/Y') }}</p>
 
-                                {{-- Totals Section --}}
-                                <tfoot class="table-light">
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold">Subtotal:</td>
-                                        <td class="text-end fw-bold">{{ number_format($createdSale->subtotal, 2) }}</td>
-                                    </tr>
-
-                                    @if($createdSale->discount_amount > 0)
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold text-danger">Total Discount:</td>
-                                        <td class="text-end fw-bold text-danger">- {{ number_format($createdSale->discount_amount, 2) }}</td>
-                                    </tr>
-                                    @endif
-
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold fs-5">Grand Total:</td>
-                                        <td class="text-end fw-bold fs-5 text-primary">
-                                            {{ number_format($createdSale->total_amount, 2) }}
-                                        </td>
-                                    </tr>
-
-                                    @if($createdSale->paid_amount > 0)
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold text-success">Paid Amount:</td>
-                                        <td class="text-end fw-bold text-success">
-                                            {{ number_format($createdSale->paid_amount, 2) }}
-                                        </td>
-                                    </tr>
-                                    @endif
-
-                                    @if($createdSale->due_amount > 0)
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold text-warning">Due Amount:</td>
-                                        <td class="text-end fw-bold text-warning">
-                                            {{ number_format($createdSale->due_amount, 2) }}
-                                        </td>
-                                    </tr>
-                                    @endif
-
-                                </tfoot>
-                            </table>
-                        </div>
-
-                        {{-- Notes --}}
-                        @if($createdSale->notes)
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Notes</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-0">{!! nl2br(e($createdSale->notes)) !!}</p>
-                                    </div>
                                 </div>
                             </div>
                         </div>
-                        @endif
+                    </div>
+
+                    {{-- Items Table --}}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <thead class="table-primary">
+                                <tr>
+                                    <th width="40">#</th>
+                                    <th>Item Code</th>
+                                    <th>Description</th>
+                                    <th width="80">Qty</th>
+                                    <th width="120">Unit Price (LKR)</th>
+                                    <th width="120">Discount (LKR)</th>
+                                    <th width="120">Subtotal (LKR)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($createdQuotation->items as $index => $item)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $item['product_code'] }}</td>
+                                    <td>{{ $item['product_name'] }}</td>
+                                    <td class="text-center">{{ $item['quantity'] }}</td>
+                                    <td class="text-end">{{ number_format($item['unit_price'], 2) }}</td>
+                                    <td class="text-end">{{ number_format($item['discount_per_unit'] ?? 0, 2) }}</td>
+                                    <td class="text-end">{{ number_format($item['total'], 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+
+                            {{-- Totals Section --}}
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="6" class="text-end fw-bold">Subtotal:</td>
+                                    <td class="text-end fw-bold">{{ number_format($createdQuotation->subtotal, 2) }}</td>
+                                </tr>
+
+                                @php
+                                    $totalDiscount = $createdQuotation->discount_amount + $createdQuotation->additional_discount;
+                                @endphp
+
+                                @if($totalDiscount > 0)
+                                <tr>
+                                    <td colspan="6" class="text-end fw-bold text-danger">Total Discount:</td>
+                                    <td class="text-end fw-bold text-danger">- {{ number_format($totalDiscount, 2) }}</td>
+                                </tr>
+                                @endif
+
+                                <tr>
+                                    <td colspan="6" class="text-end fw-bold fs-5">Grand Total:</td>
+                                    <td class="text-end fw-bold fs-5 text-primary">
+                                        {{ number_format($createdQuotation->total_amount, 2) }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {{-- Terms & Conditions --}}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0">Terms & Conditions</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="mb-0">{!! nl2br(e($createdQuotation->terms_conditions)) !!}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                {{-- Footer Buttons --}}
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewSale">
-                        <i class="bi bi-plus-circle me-2"></i>Create New Sale
-                    </button>
-                    <button type="button" class="btn btn-success" wire:click="downloadInvoice">
-                        <i class="bi bi-download me-2"></i>Download Invoice
-                    </button>
-                </div>
+            {{-- Footer Buttons --}}
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewQuotation">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Quotation
+                </button>
+                <button type="button" class="btn btn-success me-2" wire:click="downloadQuotation">
+                    <i class="bi bi-download me-2"></i>Download Quotation
+</button>
             </div>
         </div>
     </div>
-    @endif
+</div>
+@endif
+
 </div>
 
 @push('styles')
@@ -660,24 +559,24 @@
         backdrop-filter: blur(2px);
     }
 
-    /* Sale Preview Styles */
-    .sale-preview {
+    /* Quotation Preview Styles */
+    .quotation-preview {
         background: white;
         font-family: 'Segoe UI', Arial, sans-serif;
     }
 
-    .sale-preview .header {
+    .quotation-preview .header {
         border-bottom: 2px solid #057642ff;
         padding-bottom: 1rem;
     }
 
-    .sale-preview table th {
+    .quotation-preview table th {
         background-color: #038d4fff;
         color: white;
         border: none;
     }
 
-    .sale-preview table td {
+    .quotation-preview table td {
         border: 1px solid #dee2e6;
     }
 
@@ -685,6 +584,21 @@
     .text-danger.form-control:focus {
         border-color: #dc3545;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+
+    /* Quick discount buttons */
+    .btn-outline-secondary:hover {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* Animation for cart actions */
+    .btn {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
     }
 
     /* Responsive adjustments */
@@ -706,9 +620,23 @@
         }
     }
 
-    /* Stock warning */
-    .text-info small {
-        font-size: 0.75rem;
+    /* Loading states */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Success message styling */
+    .alert-success {
+        border-left: 4px solid #198754;
+    }
+
+    .alert-danger {
+        border-left: 4px solid #dc3545;
+    }
+
+    .alert-info {
+        border-left: 4px solid #0dcaf0;
     }
 </style>
 @endpush
@@ -733,6 +661,13 @@
                 e.preventDefault();
             }
         }
+    });
+
+    // Additional discount input handling
+    document.addEventListener('livewire:initialized', () => {
+        Livewire.on('additionalDiscountUpdated', (value) => {
+            // Additional discount validation can be handled here if needed
+        });
     });
 </script>
 @endpush

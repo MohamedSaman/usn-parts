@@ -4,11 +4,11 @@
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-    <h3 class="fw-bold text-dark mb-2">
-        <i class="bi bi-credit-card-2-front text-primary me-2"></i> Store Billing
-    </h3>
-    <p class="text-muted">Process store sales with flexible payment options</p>
-</div>
+                    <h3 class="fw-bold text-dark mb-2">
+                        <i class="bi bi-cart-check text-primary me-2"></i> Create Sale
+                    </h3>
+                    <p class="text-muted">Process customer sales and generate invoices</p>
+                </div>
             </div>
         </div>
     </div>
@@ -271,92 +271,8 @@
             </div>
         </div>
 
-        {{-- Payment Information Card --}}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-credit-card me-2"></i>Payment Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Payment Method *</label>
-                            <select class="form-select" wire:model.live="paymentMethod">
-                                <option value="cash">Cash</option>
-                                <option value="credit">Credit</option>
-                                <option value="cheque">Cheque</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label">Paid Amount *</label>
-                            <div class="input-group">
-                                <span class="input-group-text">Rs.</span>
-                                <input type="number" class="form-control" 
-                                    wire:model.live="paidAmount"
-                                    min="0" 
-                                    max="{{ $grandTotal }}" 
-                                    step="0.01"
-                                    placeholder="0.00">
-                            </div>
-                            <div class="form-text">
-                                Enter the amount being paid now. Remaining amount will be marked as due.
-                            </div>
-                        </div>
-
-                        {{-- Payment Summary --}}
-                        <div class="col-md-12">
-                            <div class="border rounded p-3 bg-light">
-                                <h6 class="mb-3">Payment Summary</h6>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Grand Total:</span>
-                                    <span class="fw-bold">Rs.{{ number_format($grandTotal, 2) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Paid Amount:</span>
-                                    <span class="fw-bold text-success">Rs.{{ number_format($paidAmount, 2) }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Due Amount:</span>
-                                    <span class="fw-bold {{ $dueAmount > 0 ? 'text-warning' : 'text-success' }}">
-                                        Rs.{{ number_format($dueAmount, 2) }}
-                                    </span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span>Status:</span>
-                                    <span class="badge bg-{{ $paymentStatus === 'paid' ? 'success' : ($paymentStatus === 'partial' ? 'warning' : 'danger') }}">
-                                        {{ ucfirst($paymentStatus) }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if($paymentMethod === 'credit')
-                        <div class="col-md-12">
-                            <div class="alert alert-warning small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Credit payment selected. The full amount will be marked as due.
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($paymentMethod !== 'credit' && $paidAmount < $grandTotal && $paidAmount > 0)
-                        <div class="col-md-12">
-                            <div class="alert alert-info small">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Partial payment. Remaining Rs.{{ number_format($dueAmount, 2) }} will be marked as due.
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Notes Card --}}
-        <div class="col-md-6 mb-4">
+        {{-- Notes --}}
+        <div class="col-md-12 mb-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -364,7 +280,7 @@
                     </h5>
                 </div>
                 <div class="card-body">
-                    <textarea class="form-control" wire:model="notes" rows="8"
+                    <textarea class="form-control" wire:model="notes" rows="3"
                         placeholder="Add any notes for this sale..."></textarea>
                 </div>
             </div>
@@ -494,14 +410,7 @@
                                         <p class="mb-1"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
                                         <p class="mb-1"><strong>Invoice No:</strong> {{ $createdSale->invoice_number }}</p>
                                         <p class="mb-1"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-                                        <p class="mb-1"><strong>Payment Status:</strong> 
-                                            <span class="badge bg-{{ $createdSale->payment_status == 'paid' ? 'success' : ($createdSale->payment_status == 'partial' ? 'warning' : 'danger') }}">
-                                                {{ ucfirst($createdSale->payment_status) }}
-                                            </span>
-                                        </p>
-                                        <p class="mb-0"><strong>Payment Method:</strong> 
-                                            {{ ucfirst($createdSale->payment_type) }}
-                                        </p>
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -555,24 +464,6 @@
                                             {{ number_format($createdSale->total_amount, 2) }}
                                         </td>
                                     </tr>
-
-                                    @if($createdSale->paid_amount > 0)
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold text-success">Paid Amount:</td>
-                                        <td class="text-end fw-bold text-success">
-                                            {{ number_format($createdSale->paid_amount, 2) }}
-                                        </td>
-                                    </tr>
-                                    @endif
-
-                                    @if($createdSale->due_amount > 0)
-                                    <tr>
-                                        <td colspan="6" class="text-end fw-bold text-warning">Due Amount:</td>
-                                        <td class="text-end fw-bold text-warning">
-                                            {{ number_format($createdSale->due_amount, 2) }}
-                                        </td>
-                                    </tr>
-                                    @endif
 
                                 </tfoot>
                             </table>
