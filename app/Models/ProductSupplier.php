@@ -11,4 +11,13 @@ class ProductSupplier extends Model
     use HasFactory;
 
     protected $fillable = ['name', 'businessname', 'contact', 'address', 'email', 'phone', 'status', 'notes'];
+
+    public function detail()
+    {
+        return $this->hasOne(ProductDetail::class, 'code');
+    }
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class, 'supplier_id');
+    }
 }

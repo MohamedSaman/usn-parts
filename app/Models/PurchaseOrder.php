@@ -25,5 +25,11 @@ class PurchaseOrder extends Model
     public function items()
     {
         return $this->hasMany(PurchaseOrderItem::class, 'order_id');
+
     }
+    public function detail()
+{
+    return $this->hasOne(ProductDetail::class, 'code');
+}
+
 }

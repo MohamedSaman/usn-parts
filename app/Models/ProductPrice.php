@@ -31,4 +31,9 @@ class ProductPrice extends Model
         }
         return 0;
     }
+    public function detail()
+{
+    return $this->hasOne(ProductDetail::class, 'code');
+}
+
 }

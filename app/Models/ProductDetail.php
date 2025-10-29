@@ -52,4 +52,9 @@ class ProductDetail extends Model
     {
         return $this->hasMany(ReturnsProduct::class, 'product_id');
     }
+    public function detail()
+{
+    return $this->hasOne(ProductDetail::class, 'code');
+}
+
 }
