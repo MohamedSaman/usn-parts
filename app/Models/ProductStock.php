@@ -29,4 +29,9 @@ class ProductStock extends Model
         $this->available_stock = $this->available_stock;
         $this->save();
     }
+    public function detail()
+{
+    return $this->hasOne(ProductDetail::class, 'code');
+}
+
 }

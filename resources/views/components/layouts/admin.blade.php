@@ -776,7 +776,7 @@
                         <ul class="nav flex-column ms-3">
                            
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.quotation') }}">
+                                <a class="nav-link py-2" href="{{ route('admin.purchase-order-list') }}">
                                     <i class="bi bi-journal-bookmark"></i> <span>Purchase Order</span>
                                 </a>
                             </li>

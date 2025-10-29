@@ -26,5 +26,9 @@ class PurchaseOrderItem extends Model
     {
         return $this->belongsTo(ProductDetail::class, 'product_id');
     }
-    
+   public function detail()
+{
+    return $this->hasOne(ProductDetail::class, 'code');
+}
+
 }

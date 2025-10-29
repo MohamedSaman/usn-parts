@@ -33,12 +33,22 @@ class GRN extends Component
 
     public function loadPurchaseOrders()
     {
+        // Show both complete and received orders in the table
         $this->purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
             ->with(['supplier', 'items.product'])
             ->latest()
             ->get();
     }
 
+    // Add this method to get counts for both statuses
+    public function getOrderCounts()
+    {
+        return [
+            'complete' => PurchaseOrder::where('status', 'complete')->count(),
+            'received' => PurchaseOrder::where('status', 'received')->count(),
+            'total' => PurchaseOrder::whereIn('status', ['complete', 'received'])->count()
+        ];
+    }
     public function viewGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
@@ -216,9 +226,13 @@ class GRN extends Component
     {
         if (!$this->selectedPO || empty($this->grnItems)) return;
 
+        $receivedItemsCount = 0;
+        $totalItemsCount = 0;
+
         foreach ($this->grnItems as $item) {
             // Skip items that are marked as not received
             if (strtolower($item['status'] ?? '') === 'notreceived') {
+                $totalItemsCount++;
                 continue;
             }
 
@@ -229,6 +243,8 @@ class GRN extends Component
             if (!$productId) {
                 continue;
             }
+
+            $totalItemsCount++;
 
             if (isset($item['id'])) {
                 // Update existing order item
@@ -248,7 +264,7 @@ class GRN extends Component
                         if ($delta > 0) {
                             $this->updateProductStock($productId, $delta);
                         }
-                        // If negative delta, do not adjust stock here (manual adjustment needed)
+                        $receivedItemsCount++;
                     }
                 }
             } else {
@@ -265,13 +281,24 @@ class GRN extends Component
                 // Update stock for new received item
                 if ($receivedQty > 0) {
                     $this->updateProductStock($productId, $receivedQty);
+                    $receivedItemsCount++;
                 }
             }
         }
 
-        // Update order received date and status
+        // Update order received date and status based on received items
         $this->selectedPO->received_date = now();
-        $this->selectedPO->status = 'received';
+
+        // Determine overall order status
+        if ($receivedItemsCount > 0 && $receivedItemsCount === $totalItemsCount) {
+            // All items received - mark as fully received
+            $this->selectedPO->status = 'received';
+        } elseif ($receivedItemsCount > 0) {
+            // Some items received but not all - keep as complete (partial receipt)
+            $this->selectedPO->status = 'complete';
+        }
+        // If no items received, status remains as it was
+
         $this->selectedPO->save();
 
         $this->dispatch('alert', ['message' => 'GRN processed successfully! Stock updated.']);

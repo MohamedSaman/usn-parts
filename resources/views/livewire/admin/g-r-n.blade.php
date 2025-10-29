@@ -21,7 +21,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Awaiting Receipt</p>
-                                <h4 class="fw-bold mb-0">{{ $purchaseOrders->where('status', 'complete')->count() }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -36,13 +36,15 @@
                                 <i class="bi bi-archive-fill text-success fs-4"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <p class="text-muted mb-1">Fully Received Orders</p>
-                                <h4 class="fw-bold mb-0">{{ $purchaseOrders->whereNotNull('received_date')->count() }}</h4>
+                                <p class="text-muted mb-1">Fully Received</p>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+        
         </div>
 
         <!-- Purchase Orders Table -->
@@ -63,30 +65,46 @@
                                 <th class="ps-4">PO Number</th>
                                 <th>Supplier</th>
                                 <th>Order Date</th>
+                                <th>Status</th>
+                                
                                 <th class="text-end pe-4">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($purchaseOrders as $po)
+                            @php
+                            // Calculate GRN progress
+                            $totalItems = $po->items->count();
+                            $receivedItems = $po->items->where('status', 'received')->count();
+                            $notReceivedItems = $po->items->where('status', 'notreceived')->count();
+
+                            $progressPercentage = $totalItems > 0 ? ($receivedItems / $totalItems) * 100 : 0;
+                            @endphp
                             <tr>
                                 <td class="ps-4">
                                     <span class="fw-medium text-dark">{{ $po->order_code }}</span>
                                 </td>
                                 <td>{{ $po->supplier->name }}</td>
                                 <td>{{ $po->order_date }}</td>
+                                <td>
+                                    @if($po->status == 'complete')
+                                    <span class="badge bg-warning">Awaiting Receipt</span>
+                                    @elseif($po->status == 'received')
+                                    <span class="badge bg-success">Fully Received</span>
+                                    @elseif($po->status == 'pending')
+                                    <span class="badge bg-secondary">Pending</span>
+                                    @else
+                                    <span class="badge bg-info">{{ ucfirst($po->status) }}</span>
+                                    @endif
+                                </td>
+                                
                                 <td class="text-end pe-4">
-                                    @if($po->status === 'complete')
-                                    <button class="btn btn-primary btn-sm"
-                                        wire:click="openGRN({{ $po->id }})">
-                                        <i class="bi bi-check-lg me-1"></i> Process GRN
-                                    </button>
-                                    @elseif($po->status === 'received')
                                     <button class="btn btn-link text-info p-0"
                                         wire:click="viewGRN({{ $po->id }})"
                                         title="View GRN Details">
                                         <i class="bi bi-eye fs-5"></i>
                                     </button>
-                                    @endif
+
                                 </td>
                             </tr>
                             @endforeach
@@ -97,112 +115,7 @@
         </div>
     </div>
 
-    <!-- GRN Modal -->
-    <div wire:ignore.self class="modal fade" id="grnModal" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-clipboard-check text-primary me-2"></i> Create GRN for {{ $selectedPO?->order_code }}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    @if($selectedPO)
-                    <p><strong>Supplier:</strong> {{ $selectedPO->supplier->name }}</p>
 
-                    <h5>Received Items</h5>
-                    <div class="table-responsive">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th style="width: 100px;">Ordered Qty</th>
-                                    <th style="width: 100px;">Received Qty</th>
-                                    <th style="width: 100px;">Supllier Price</th>
-                                    <th style="width: 100px;">Discount</th>
-                                    <th>Total</th>
-                                    <th style="width: 120px;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($grnItems as $index => $item)
-                                <tr wire:key="item-{{ $index }}"
-                                    class="
-                                        @if(strtolower($item['status'] ?? '') === 'received') table-success
-                                        @elseif(strtolower($item['status'] ?? '') === 'notreceived') table-danger
-                                        @endif
-                                    ">
-                                    <td class="position-relative">
-                                        <input type="text" class="form-control product-search"
-                                            wire:model.live="grnItems.{{ $index }}.name"
-                                            placeholder="Search by name or code...">
-                                        @if(isset($searchResults[$index]) && count($searchResults[$index]) > 0)
-                                        <ul class="list-group position-absolute z-10 shadow-lg mt-1" style="min-width: 350px; max-width: 450px; left: 0;">
-                                            @foreach($searchResults[$index] as $product)
-                                            <li class="list-group-item list-group-item-action p-2" 
-                                                wire:click="selectProduct({{ $index }}, {{ $product->id }})"
-                                                style="cursor: pointer;">
-                                                <div class="d-flex align-items-center">
-                                                    <img src="{{ $product->image }}"
-                                                         alt="{{ $product->name }}" 
-                                                         class="me-2"
-                                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-                                                    <div class="flex-grow-1">
-                                                        <div class="fw-semibold text-dark">{{ $product->name }}</div>
-                                                        <small class="text-muted">
-                                                            Code: <span class="badge bg-secondary">{{ $product->code }}</span>
-                                                            | Stock: <span class="badge {{ ($product->stock->total_stock ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
-                                                                {{ $product->stock->total_stock ?? 0 }} units
-                                                            </span>
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            @endforeach
-                                        </ul>
-                                        @endif
-                                    </td>
-                                    <td>{{ $item['ordered_qty'] ?? 0 }}</td>
-                                    <td><input type="number" class="form-control" wire:model="grnItems.{{ $index }}.received_qty"></td>
-                                    <td><input type="text" class="form-control" wire:model="grnItems.{{ $index }}.unit_price"></td>
-                                    <td><input type="text" class="form-control" wire:model="grnItems.{{ $index }}.discount"></td>
-                                    
-                                    <td>{{ ($item['received_qty'] ?? 0) * ($item['unit_price'] ?? 0) - ($item['discount'] ?? 0) }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-danger me-1 p-2"
-                                            wire:click="deleteGRNItem({{ $index }})"
-                                            title="Mark as Not Received">
-                                            <i class="bi bi-x-circle"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-success p-2"
-                                            wire:click="correctGRNItem({{ $index }})"
-                                            title="Mark as Received">
-                                            <i class="bi bi-check-circle"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                @endforeach
-
-
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-3">
-                        <button class="btn btn-success" wire:click="addNewRow">
-                            <i class="bi bi-plus-circle"></i> Add New Item
-                        </button>
-                    </div>
-                    @endif
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary" wire:click="saveGRN">Save GRN</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- View GRN Details Modal -->
     <div wire:ignore.self class="modal fade" id="viewGrnModal" tabindex="-1">
@@ -223,7 +136,7 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Received Date:</strong> {{ $selectedPO->received_date ?? 'N/A' }}</p>
-                            <p><strong>Status:</strong> 
+                            <p><strong>Status:</strong>
                                 <span class="badge bg-success">{{ ucfirst($selectedPO->status) }}</span>
                             </p>
                         </div>
@@ -253,9 +166,9 @@
                                     <td>{{ $item['name'] }}</td>
                                     <td>{{ $item['ordered_qty'] ?? 0 }}</td>
                                     <td>{{ $item['received_qty'] ?? 0 }}</td>
-                                    <td>${{ number_format($item['unit_price'] ?? 0, 2) }}</td>
-                                    <td>${{ number_format($item['discount'] ?? 0, 2) }}</td>
-                                    <td>${{ number_format(($item['received_qty'] ?? 0) * ($item['unit_price'] ?? 0) - ($item['discount'] ?? 0), 2) }}</td>
+                                    <td>Rs. {{ number_format($item['unit_price'] ?? 0, 2) }}</td>
+                                    <td>Rs. {{ number_format($item['discount'] ?? 0, 2) }}</td>
+                                    <td>Rs. {{ number_format(($item['received_qty'] ?? 0) * ($item['unit_price'] ?? 0) - ($item['discount'] ?? 0), 2) }}</td>
                                     <td>
                                         <span class="badge 
                                             @if(strtolower($item['status'] ?? '') === 'received') bg-success
@@ -289,20 +202,20 @@
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
-        
+
         .summary-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
-        
+
         .summary-card.awaiting {
             border-left-color: #ffc107;
         }
-        
+
         .summary-card.received {
             border-left-color: #28a745;
         }
-        
+
         .icon-container {
             width: 50px;
             height: 50px;
@@ -311,26 +224,26 @@
             align-items: center;
             justify-content: center;
         }
-        
+
         .card {
             border: none;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             transition: all 0.3s ease;
         }
-        
+
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
         }
-        
+
         .card-header {
             background-color: white;
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             border-radius: 12px 12px 0 0 !important;
             padding: 1.25rem 1.5rem;
         }
-        
+
         .table th {
             border-top: none;
             font-weight: 600;
@@ -339,50 +252,56 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .table td {
             vertical-align: middle;
             padding: 1rem 0.75rem;
         }
-        
+
+        .summary-card.total {
+            border-left-color: #4361ee;
+        }
+
         .btn-link {
             text-decoration: none;
             transition: all 0.2s ease;
         }
-        
+
         .btn-link:hover {
             transform: scale(1.1);
         }
-        
+
         .modal-content {
             border: none;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
-        
-        .form-control, .form-select {
+
+        .form-control,
+        .form-select {
             border-radius: 8px;
             padding: 0.75rem 1rem;
             border: 1px solid #e2e8f0;
         }
-        
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
             border-color: #4361ee;
         }
-        
+
         .btn {
             border-radius: 8px;
             font-weight: 500;
             padding: 0.75rem 1.5rem;
             transition: all 0.3s ease;
         }
-        
+
         .btn-primary {
             background-color: #4361ee;
             border-color: #4361ee;
         }
-        
+
         .btn-primary:hover {
             background-color: #3f37c9;
             border-color: #3f37c9;

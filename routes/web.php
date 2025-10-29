@@ -47,6 +47,7 @@ use App\Livewire\Admin\LoanManage;
 use App\Livewire\Admin\Quotation;
 use App\Livewire\Admin\SalesApproval;
 use App\Livewire\Admin\SupplierManage;
+<<<<<<< Updated upstream
 use App\Livewire\Admin\Reports;
 use App\Livewire\Admin\Analytics;
 use App\Livewire\Admin\QuotationSystem;
@@ -54,6 +55,10 @@ use App\Livewire\Admin\QuotationList;
 use App\Livewire\Admin\SalesSystem;
 use App\Livewire\Admin\SalesList;
 use App\Livewire\Admin\PosSales;
+=======
+use App\Livewire\Admin\PurchaseOrderList;
+
+>>>>>>> Stashed changes
 
 
 use App\Models\Setting as ModelsSetting;
@@ -133,6 +138,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/sales-list', SalesList::class)->name('sales-list');
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
+        Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
+
         
 
     });
