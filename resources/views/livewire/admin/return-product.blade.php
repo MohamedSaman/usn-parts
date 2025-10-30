@@ -188,12 +188,12 @@
                                             wire:model.lazy="returnItems.{{ $index }}.return_qty">
                                         <input type="hidden" wire:model="returnItems.{{ $index }}.product_id" value="{{ $item->product->id }}">
                                         <input type="hidden" wire:model="returnItems.{{ $index }}.name" value="{{ $item->product->name }}">
-                                        <input type="hidden" wire:model="returnItems.{{ $index }}.unit_price" value="{{ $item->unit_price }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.unit_price" value="{{ ($item->unit_price - ($item->discount_per_unit ?? 0)) }}">
                                         <input type="hidden" wire:model="returnItems.{{ $index }}.max_qty" value="{{ $item->quantity }}">
                                     </td>
-                                    <td>${{ number_format($item->unit_price, 2) }}</td>
+                                    <td>${{ number_format($item->unit_price - ($item->discount_per_unit ?? 0), 2) }}</td>
                                     <td>
-                                        ${{ isset($returnItems[$index]['return_qty']) ? number_format($returnItems[$index]['return_qty'] * $item->unit_price, 2) : '0.00' }}
+                                        ${{ isset($returnItems[$index]['return_qty']) ? number_format($returnItems[$index]['return_qty'] * ($item->unit_price - ($item->discount_per_unit ?? 0)), 2) : '0.00' }}
                                     </td>
                                 </tr>
                                 @endforeach

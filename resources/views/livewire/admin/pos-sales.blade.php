@@ -227,12 +227,17 @@ use App\Models\Sale;
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableInvoice">
                 {{-- ==================== HEADER ==================== --}}
-                <div class="modal-header text-center">
+                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #0d6efd, #0056b3); color: #fff;">
                     <div class="w-100">
-                        <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid mb-2" style="max-height:60px;">
+                        <img src="{{ asset('images/USN.png') }}" alt="Logo"
+                             class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
+                        <p class="mb-0 small" style="opacity: 0.9;">
+                            IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS. SPECIALIST IN ART BRAND
+                        </p>
                     </div>
-                    <button type="button" class="btn-close btn-close-white text-end closebtn" wire:click="closeModals"></button>
+                    <button type="button" class="btn-close btn-close-white closebtn"
+                            wire:click="closeModals"></button>
                 </div>
                 @if($selectedSale)
                 <div class="modal-body">
@@ -491,8 +496,13 @@ use App\Models\Sale;
         background-color: #f8f9fa;
     }
 
+            .closebtn { top:3%; right:3%; position:absolute; }
+
+
     .btn-group-sm>.btn {
         padding: 0.25rem 0.5rem;
+                
+
     }
 
     .modal-header {

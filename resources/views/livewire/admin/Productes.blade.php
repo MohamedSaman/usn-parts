@@ -348,52 +348,44 @@
                                         @if ($products->count() > 0)
                                         @foreach ($products as $product)
                                         <tr>
-                                            <td class="ps-4">
+                                            <td class="ps-4" wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
                                             </td>
-                                            <td>
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->product_name }}</span>
                                             </td>
-                                            <td>
+                                            <td     wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->code }}</span>
                                             </td>
-                                            <td>
+                                            <td   wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->brand }}</span>
                                             </td>
-                                            <td>
+                                            <td   wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->model }}</span>
                                             </td>
-                                            <td>
+                                            <td  wire:click="viewProductDetails({{ $product->id }})">
                                                 @if ($product->available_stock > 0)
                                                 <span class="badge bg-success">In Stock</span>
                                                 @else
                                                 <span class="badge bg-danger">Out of Stock</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <span class="fw-bold text-dark">${{ number_format($product->supplier_price, 2) }}</span>
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
+                                                <span class="fw-bold text-dark">Rs.{{ number_format($product->supplier_price, 2) }}</span>
                                             </td>
-                                            <td>
-                                                <span class="fw-bold text-dark">${{ number_format($product->selling_price, 2) }}</span>
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
+                                                <span class="fw-bold text-dark">Rs.{{ number_format($product->selling_price, 2) }}</span>
                                             </td>
-                                            <td>
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
                                                 @if ($product->status == 'active')
                                                 <span class="badge bg-success">Active</span>
                                                 @else
                                                 <span class="badge bg-danger">Inactive</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end pe-2">
+                                            <td class="text-end pe-1">
                                                 <div class="action-btns">
-                                                    <button class="btn action-btn view" title="View Details"
-                                                        wire:click="viewProductDetails({{ $product->id }})"
-                                                        wire:loading.attr="disabled">
-                                                        <i class="bi bi-eye" wire:loading.class="d-none"
-                                                            wire:target="viewProductDetails({{ $product->id }})"></i>
-                                                        <span wire:loading wire:target="viewProductDetails({{ $product->id }})">
-                                                            <i class="spinner-border spinner-border-sm"></i>
-                                                        </span>
-                                                    </button>
+                                                
                                                     <button class="btn action-btn edit" title="Edit"
                                                         wire:click="editProduct({{ $product->id }})"
                                                         wire:loading.attr="disabled">
@@ -438,124 +430,330 @@
                 </div>
             </div>
 
-            <!-- View Product Modal -->
-            <div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
-                aria-labelledby="viewProductModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title fw-bold">
-                                <i class="bi bi-eye text-primary me-2"></i> Product Details
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            @if($viewProduct)
-                            <div class="row g-0">
-                                <!-- Product Image Section -->
-                                <div class="col-md-4 d-flex flex-column align-items-center justify-content-center p-3 border-end">
-                                    <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
-                                        alt="Product Image" class="img-fluid rounded shadow mb-3"
-                                        style="width: 200px; height: 200px; object-fit: cover;">
-                                    <span class="fw-bold fs-5">{{ $viewProduct->name }}</span>
-                                    <span class="text-muted">{{ $viewProduct->code }}</span>
-                                </div>
+           <!-- View Product Modal -->
+<div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
+    aria-labelledby="viewProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <!-- Modern Header with Gradient -->
+            <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
+                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem;">
+                <h5 class="modal-title fw-bold d-flex align-items-center">
+                    <i class="bi bi-box-seam me-2 fs-4"></i> 
+                    <span>Product Details</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                @if($viewProduct)
+                <div class="row g-0">
+                    <!-- Left Side - Product Image & Quick Info -->
+                    <div class="col-lg-4 bg-light border-end">
+                        <div class="p-4 text-center">
+                            <!-- Product Image -->
+                            <div class="product-image-container mb-4 position-relative">
+                                <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
+                                    alt="Product Image" 
+                                    class="img-fluid rounded-3 shadow-sm product-image"
+                                    style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
                                 
-                                <!-- Product Details Section -->
-                                <div class="col-md-8 p-3">
-                                    <!-- Basic Information -->
-                                    <div class="mb-3 pb-2 border-bottom">
-                                        <h6 class="fw-bold text-primary mb-2">
-                                            <i class="bi bi-info-circle me-1"></i> Basic Information
-                                        </h6>
-                                        <div class="row mb-1">
-                                            <div class="col-4 text-muted">Product Name:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->name }}</div>
-                                            <div class="col-4 text-muted">Code:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->code }}</div>
-                                            <div class="col-4 text-muted">Model:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->model ?? '-' }}</div>
-                                            <div class="col-4 text-muted">Brand:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->brand ?? '-' }}</div>
-                                            <div class="col-4 text-muted">Category:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->category ?? '-' }}</div>
-                                            <div class="col-4 text-muted">Barcode:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->barcode ?? '-' }}</div>
+                                <!-- Status Badge Overlay -->
+                                <div class="position-absolute top-0 end-0 m-3">
+                                    @if($viewProduct->status == 'active')
+                                    <span class="badge bg-success shadow-sm px-3 py-2">
+                                        <i class="bi bi-check-circle me-1"></i>Active
+                                    </span>
+                                    @else
+                                    <span class="badge bg-danger shadow-sm px-3 py-2">
+                                        <i class="bi bi-x-circle me-1"></i>Inactive
+                                    </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Product Title & Code -->
+                            <h4 class="fw-bold text-dark mb-1">{{ $viewProduct->name }}</h4>
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-upc-scan me-1"></i>
+                                <span class="font-monospace">{{ $viewProduct->code }}</span>
+                            </p>
+
+                            <!-- Quick Stats Cards -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <div class="card border-0 shadow-sm bg-white">
+                                        <div class="card-body p-3">
+                                            <div class="text-primary mb-1">
+                                                <i class="bi bi-box-seam fs-4"></i>
+                                            </div>
+                                            <h5 class="fw-bold mb-0">{{ $viewProduct->stock->available_stock ?? 0 }}</h5>
+                                            <small class="text-muted">In Stock</small>
                                         </div>
                                     </div>
-
-                                    <!-- Pricing Information -->
-                                    <div class="mb-3 pb-2 border-bottom">
-                                        <h6 class="fw-bold text-primary mb-2">
-                                            <i class="bi bi-currency-dollar me-1"></i> Pricing Information
-                                        </h6>
-                                        <div class="row mb-1">
-                                            <div class="col-4 text-muted">Supplier Price:</div>
-                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->supplier_price ?? 0, 2) }}</div>
-                                            <div class="col-4 text-muted">Selling Price:</div>
-                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->selling_price ?? 0, 2) }}</div>
-                                            <div class="col-4 text-muted">Discount Price:</div>
-                                            <div class="col-8 fw-medium">${{ number_format($viewProduct->price->discount_price ?? 0, 2) }}</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Stock Information -->
-                                    <div class="mb-3 pb-2 border-bottom">
-                                        <h6 class="fw-bold text-primary mb-2">
-                                            <i class="bi bi-box-seam me-1"></i> Stock Information
-                                        </h6>
-                                        <div class="row mb-1">
-                                            <div class="col-4 text-muted">Available Stock:</div>
-                                            <div class="col-8">
-                                                <span class="fw-medium">{{ $viewProduct->stock->available_stock ?? 0 }}</span>
-                                                @if(($viewProduct->stock->available_stock ?? 0) > 0)
-                                                <span class="badge bg-success ms-2">In Stock</span>
-                                                @else
-                                                <span class="badge bg-danger ms-2">Out of Stock</span>
-                                                @endif
+                                </div>
+                                <div class="col-6">
+                                    <div class="card border-0 shadow-sm bg-white">
+                                        <div class="card-body p-3">
+                                            <div class="text-success mb-1">
+                                                <i class="bi bi-currency-dollar fs-4"></i>
                                             </div>
-                                            <div class="col-4 text-muted">Damage Stock:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->stock->damage_stock ?? 0 }}</div>
-                                            <div class="col-4 text-muted">Total Stock:</div>
-                                            <div class="col-8 fw-medium">{{ $viewProduct->stock->total_stock ?? 0 }}</div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Status & Description -->
-                                    <div class="mb-3">
-                                        <h6 class="fw-bold text-primary mb-2">
-                                            <i class="bi bi-card-text me-1"></i> Additional Information
-                                        </h6>
-                                        <div class="row mb-1">
-                                            <div class="col-4 text-muted">Status:</div>
-                                            <div class="col-8">
-                                                @if($viewProduct->status == 'active')
-                                                <span class="badge bg-success">Active</span>
-                                                @elseif($viewProduct->status == 'inactive')
-                                                <span class="badge bg-danger">Inactive</span>
-                                                @else
-                                                <span class="badge bg-secondary">{{ $viewProduct->status }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="col-4 text-muted">Description:</div>
-                                            <div class="col-8">
-                                                <p class="mb-0">{{ $viewProduct->description ?? 'No description available' }}</p>
-                                            </div>
+                                            <h5 class="fw-bold mb-0">Rs.{{ number_format($viewProduct->price->selling_price ?? 0, 2) }}</h5>
+                                            <small class="text-muted">Selling Price</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Stock Status Alert -->
+                            @if(($viewProduct->stock->available_stock ?? 0) > 0)
+                            <div class="alert alert-success border-0 shadow-sm mb-0" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>Available</strong> - Ready to sell
+                            </div>
                             @else
-                            <div class="text-center py-4">
-                                <i class="bi bi-exclamation-circle text-muted fs-1"></i>
-                                <p class="text-muted mt-2">Product details not found.</p>
+                            <div class="alert alert-danger border-0 shadow-sm mb-0" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Out of Stock</strong>
                             </div>
                             @endif
                         </div>
+                    </div>
 
+                    <!-- Right Side - Detailed Information -->
+                    <div class="col-lg-8">
+                        <div class="p-4">
+                            <!-- Basic Information -->
+                            <div class="info-section mb-4">
+                                <div class="section-header d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-circle me-3" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-info-circle-fill"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-dark">Basic Information</h6>
+                                </div>
+                                <div class="info-grid">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="info-item p-3 bg-light rounded-3">
+                                                <small class="text-muted d-block mb-1">Product Name</small>
+                                                <span class="fw-semibold text-dark">{{ $viewProduct->name }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item p-3 bg-light rounded-3">
+                                                <small class="text-muted d-block mb-1">Product Code</small>
+                                                <span class="fw-semibold text-dark font-monospace">{{ $viewProduct->code }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item p-3 bg-light rounded-3">
+                                                <small class="text-muted d-block mb-1">Model</small>
+                                                <span class="fw-semibold text-dark">{{ $viewProduct->model ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-item p-3 bg-light rounded-3">
+                                                <small class="text-muted d-block mb-1">Brand</small>
+                                                <span class="fw-semibold text-dark">{{ $viewProduct->brand ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div class="info-item p-3 bg-light rounded-3">
+                                                <small class="text-muted d-block mb-1">Category</small>
+                                                <span class="fw-semibold text-dark">{{ $viewProduct->category ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                           
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pricing Information -->
+                            <div class="info-section mb-4">
+                                <div class="section-header d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle me-3" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-currency-dollar"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-dark">Pricing Information</h6>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="price-card text-center p-3 border rounded-3 h-100">
+                                            <small class="text-muted d-block mb-2">Supplier Price</small>
+                                            <h4 class="fw-bold text-secondary mb-0">
+                                                Rs.{{ number_format($viewProduct->price->supplier_price ?? 0, 2) }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="price-card text-center p-3 border border-success rounded-3 bg-success bg-opacity-10 h-100">
+                                            <small class="text-success d-block mb-2 fw-semibold">Selling Price</small>
+                                            <h4 class="fw-bold text-success mb-0">
+                                                Rs.{{ number_format($viewProduct->price->selling_price ?? 0, 2) }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="price-card text-center p-3 border rounded-3 h-100">
+                                            <small class="text-muted d-block mb-2">Discount Price</small>
+                                            <h4 class="fw-bold text-danger mb-0">
+                                                Rs.{{ number_format($viewProduct->price->discount_price ?? 0, 2) }}
+                                            </h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Stock Information -->
+                            <div class="info-section mb-4">
+                                <div class="section-header d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle me-3" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-boxes"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-dark">Stock Information</h6>
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="stock-card p-3 border rounded-3 text-center">
+                                            <i class="bi bi-box-seam text-success fs-3 mb-2"></i>
+                                            <h5 class="fw-bold mb-1">{{ $viewProduct->stock->available_stock ?? 0 }}</h5>
+                                            <small class="text-muted">Available Stock</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="stock-card p-3 border rounded-3 text-center">
+                                            <i class="bi bi-exclamation-triangle text-danger fs-3 mb-2"></i>
+                                            <h5 class="fw-bold mb-1">{{ $viewProduct->stock->damage_stock ?? 0 }}</h5>
+                                            <small class="text-muted">Damaged Stock</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="stock-card p-3 border rounded-3 text-center">
+                                            <i class="bi bi-stack text-primary fs-3 mb-2"></i>
+                                            <h5 class="fw-bold mb-1">{{ $viewProduct->stock->total_stock ?? 0 }}</h5>
+                                            <small class="text-muted">Total Stock</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            @if($viewProduct->description)
+                            <div class="info-section">
+                                <div class="section-header d-flex align-items-center mb-3">
+                                    <div class="icon-box bg-info bg-opacity-10 text-info rounded-circle me-3" 
+                                         style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-card-text"></i>
+                                    </div>
+                                    <h6 class="fw-bold mb-0 text-dark">Description</h6>
+                                </div>
+                                <div class="p-3 bg-light rounded-3">
+                                    <p class="mb-0 text-muted">{{ $viewProduct->description }}</p>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
+                @else
+                <div class="text-center py-5">
+                    <i class="bi bi-exclamation-circle text-muted" style="font-size: 4rem;"></i>
+                    <p class="text-muted mt-3 fs-5">Product details not found.</p>
+                </div>
+                @endif
             </div>
+
+            <!-- Footer -->
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Enhancements */
+#viewProductModal .modal-content {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+#viewProductModal .product-image {
+    transition: transform 0.3s ease;
+}
+
+#viewProductModal .product-image:hover {
+    transform: scale(1.05);
+}
+
+#viewProductModal .info-section {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#viewProductModal .info-item,
+#viewProductModal .price-card,
+#viewProductModal .stock-card {
+    transition: all 0.3s ease;
+}
+
+#viewProductModal .info-item:hover,
+#viewProductModal .price-card:hover,
+#viewProductModal .stock-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+#viewProductModal .section-header {
+    position: relative;
+}
+
+#viewProductModal .section-header::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, #1536c7ff, #2143ebff);
+    border-radius: 2px;
+}
+
+#viewProductModal .badge {
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+
+#viewProductModal .icon-box i {
+    font-size: 1.25rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991px) {
+    #viewProductModal .col-lg-4 {
+        border-bottom: 1px solid #dee2e6;
+        border-right: none;
+    }
+}
+</style
 
             <!-- Create Product Modal -->
             <div wire:ignore.self class="modal fade" id="createProductModal" tabindex="-1"
@@ -683,13 +881,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="barcode" class="form-label fw-semibold">Barcode:</label>
-                                                <input type="text" class="form-control" id="barcode" wire:model="barcode">
-                                                @error('barcode')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
+                                            
                                         </div>
                                     </div>
                                     <div class="row">
@@ -719,7 +911,7 @@
                                             <div class="mb-3">
                                                 <label for="supplier_price" class="form-label fw-semibold">Supplier Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="supplier_price" wire:model="supplier_price">
                                                 </div>
                                                 @error('supplier_price')
@@ -731,7 +923,7 @@
                                             <div class="mb-3">
                                                 <label for="selling_price" class="form-label fw-semibold">Selling Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="selling_price" wire:model="selling_price">
                                                 </div>
                                                 @error('selling_price')
@@ -743,7 +935,7 @@
                                             <div class="mb-3">
                                                 <label for="discount_price" class="form-label fw-semibold">Discount Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="discount_price" wire:model="discount_price">
                                                 </div>
                                                 @error('discount_price')
@@ -907,13 +1099,7 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editBarcode" class="form-label fw-semibold">Barcode:</label>
-                                                <input type="text" class="form-control" id="editBarcode" wire:model="editBarcode">
-                                                @error('editBarcode')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
+                                           
                                         </div>
                                     </div>
                                     <div class="row">
@@ -943,7 +1129,7 @@
                                             <div class="mb-3">
                                                 <label for="editSupplierPrice" class="form-label fw-semibold">Supplier Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="editSupplierPrice" wire:model="editSupplierPrice">
                                                 </div>
                                                 @error('editSupplierPrice')
@@ -955,7 +1141,7 @@
                                             <div class="mb-3">
                                                 <label for="editSellingPrice" class="form-label fw-semibold">Selling Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="editSellingPrice" wire:model="editSellingPrice">
                                                 </div>
                                                 @error('editSellingPrice')
@@ -967,7 +1153,7 @@
                                             <div class="mb-3">
                                                 <label for="editDiscountPrice" class="form-label fw-semibold">Discount Price:</label>
                                                 <div class="input-group">
-                                                    <span class="input-group-text">$</span>
+                                                    <span class="input-group-text">Rs.</span>
                                                     <input type="number" step="0.01" class="form-control" id="editDiscountPrice" wire:model="editDiscountPrice">
                                                 </div>
                                                 @error('editDiscountPrice')

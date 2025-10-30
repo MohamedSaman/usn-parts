@@ -10,6 +10,7 @@ use App\Models\Sale;
 use App\Models\Customer;
 use App\Models\SaleItem;
 use App\Models\ProductStock;
+use App\Models\ReturnsProduct;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -26,6 +27,7 @@ class SalesList extends Component
     public $showViewModal = false;
     public $showEditModal = false;
     public $showDeleteModal = false;
+    public $showReturnModal = false;
 
     // Edit form properties
     public $editSaleId;
@@ -35,6 +37,10 @@ class SalesList extends Component
     public $editDueAmount;
     public $editPaidAmount;
     public $editPayBalanceAmount = 0;
+
+    // Return properties
+    public $returnItems = [];
+    public $totalReturnValue = 0;
 
     public function mount()
     {
@@ -88,6 +94,144 @@ class SalesList extends Component
 
             $this->showEditModal = true;
             $this->dispatch('showModal', 'editModal');
+        }
+    }
+
+    // Return Product Functionality
+    public function returnSale($saleId)
+    {
+        $this->selectedSale = Sale::with(['items.product', 'customer'])
+            ->where('sale_type', 'admin')
+            ->find($saleId);
+
+        if ($this->selectedSale) {
+            // Initialize return items from sale items
+            $this->returnItems = [];
+            foreach ($this->selectedSale->items as $item) {
+                $this->returnItems[] = [
+                    'product_id' => $item->product_id,
+                    'name' => $item->product->name,
+                    'unit_price' => $item->unit_price,
+                    'max_qty' => $item->quantity,
+                    'return_qty' => 0,
+                ];
+            }
+            
+            $this->showReturnModal = true;
+            $this->dispatch('showModal', 'returnModal');
+        }
+    }
+
+    public function updatedReturnItems()
+    {
+        $this->calculateTotalReturnValue();
+    }
+
+    private function calculateTotalReturnValue()
+    {
+        $this->totalReturnValue = collect($this->returnItems)->sum(
+            fn($item) => $item['return_qty'] * $item['unit_price']
+        );
+    }
+
+    public function removeFromReturn($index)
+    {
+        unset($this->returnItems[$index]);
+        $this->returnItems = array_values($this->returnItems);
+        $this->calculateTotalReturnValue();
+    }
+
+    public function clearReturnCart()
+    {
+        $this->returnItems = [];
+        $this->totalReturnValue = 0;
+    }
+
+    public function processReturn()
+    {
+        $this->calculateTotalReturnValue();
+
+        if (empty($this->returnItems) || !$this->selectedSale) {
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Please select items for return.']);
+            return;
+        }
+
+        // Check if at least one item has a return quantity > 0
+        $hasReturnItems = false;
+        foreach ($this->returnItems as $item) {
+            if (isset($item['return_qty']) && $item['return_qty'] > 0) {
+                if ($item['return_qty'] > $item['max_qty']) {
+                    $this->dispatch('showToast', ['type' => 'error', 'message' => 'Invalid return quantity for ' . $item['name']]);
+                    return;
+                }
+                $hasReturnItems = true;
+            }
+        }
+
+        if (!$hasReturnItems) {
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Please enter at least one return quantity.']);
+            return;
+        }
+
+        $this->confirmReturn();
+    }
+
+    public function confirmReturn()
+    {
+        try {
+            DB::transaction(function () {
+                // Filter only items with return_qty > 0
+                $itemsToReturn = array_filter($this->returnItems, function ($item) {
+                    return isset($item['return_qty']) && $item['return_qty'] > 0;
+                });
+
+                foreach ($itemsToReturn as $item) {
+                    ReturnsProduct::create([
+                        'sale_id' => $this->selectedSale->id,
+                        'product_id' => $item['product_id'],
+                        'return_quantity' => $item['return_qty'],
+                        'selling_price' => $item['unit_price'],
+                        'total_amount' => $item['return_qty'] * $item['unit_price'],
+                        'notes' => 'Customer return processed via system',
+                    ]);
+
+                    // Update stock (increase available stock)
+                    $this->updateProductStock($item['product_id'], $item['return_qty']);
+                }
+            });
+
+            $this->showReturnModal = false;
+            $this->clearReturnCart();
+            $this->dispatch('hideModal', 'returnModal');
+            $this->dispatch('showToast', ['type' => 'success', 'message' => 'Return processed successfully!']);
+            
+            // Refresh the selected sale to show updated returns
+            if ($this->selectedSale) {
+                $this->selectedSale->refresh();
+            }
+            
+        } catch (\Exception $e) {
+            $this->dispatch('showToast', ['type' => 'error', 'message' => 'Error processing return: ' . $e->getMessage()]);
+        }
+    }
+
+    private function updateProductStock($productId, $quantity)
+    {
+        $stock = ProductStock::where('product_id', $productId)->first();
+
+        if ($stock) {
+            $stock->available_stock += $quantity;
+            $stock->total_stock += $quantity;
+            $stock->save();
+        } else {
+            ProductStock::create([
+                'product_id' => $productId,
+                'available_stock' => $quantity,
+                'damage_stock' => 0,
+                'total_stock' => $quantity,
+                'sold_count' => 0,
+                'restocked_quantity' => 0,
+            ]);
         }
     }
 
@@ -273,12 +417,15 @@ class SalesList extends Component
         $this->showViewModal = false;
         $this->showEditModal = false;
         $this->showDeleteModal = false;
+        $this->showReturnModal = false;
         $this->selectedSale = null;
         $this->resetEditForm();
+        $this->clearReturnCart();
 
         $this->dispatch('hideModal', 'viewModal');
         $this->dispatch('hideModal', 'editModal');
         $this->dispatch('hideModal', 'deleteModal');
+        $this->dispatch('hideModal', 'returnModal');
     }
 
     private function resetEditForm()
@@ -294,8 +441,8 @@ class SalesList extends Component
 
     public function getSalesProperty()
     {
-        return Sale::with(['customer', 'user', 'items'])
-            ->where('sale_type', 'admin') // Only admin sales
+        return Sale::with(['customer', 'user', 'items', 'returns'])
+            ->where('sale_type', 'admin')
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')

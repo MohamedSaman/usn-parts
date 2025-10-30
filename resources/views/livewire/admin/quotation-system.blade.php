@@ -37,7 +37,7 @@
 
     <div class="row">
         {{-- Customer Information (Full Width) --}}
-        <div class="col-12 mb-4">
+        <div class="col-6 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -72,7 +72,7 @@
         </div>
 
         {{-- Add Products Card --}}
-        <div class="col-md-12 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
