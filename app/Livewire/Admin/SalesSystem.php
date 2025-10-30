@@ -76,7 +76,7 @@ class SalesSystem extends Component
 
     public function getSubtotalAfterItemDiscountsProperty()
     {
-        return $this->subtotal - $this->totalDiscount;
+        return $this->subtotal;
     }
 
     public function getAdditionalDiscountAmountProperty()
@@ -237,7 +237,6 @@ class SalesSystem extends Component
         
         $this->search = '';
         $this->searchResults = [];
-        session()->flash('message', 'Product added to sale!');
     }
 
     // Update Quantity
@@ -467,7 +466,7 @@ class SalesSystem extends Component
         $this->resetExcept(['customers']);
         $this->loadCustomers();
         $this->showSaleModal = false;
-        session()->flash('message', 'Ready to create new sale!');
+        
     }
 
     public function render()

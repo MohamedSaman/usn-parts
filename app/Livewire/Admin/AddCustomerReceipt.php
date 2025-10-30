@@ -83,9 +83,9 @@ class AddCustomerReceipt extends Component
 
         $this->customerSales = Sale::with(['items', 'payments'])
             ->where('customer_id', $this->selectedCustomer->id)
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->where('payment_status', 'pending')
-                      ->orWhere('payment_status', 'partial');
+                    ->orWhere('payment_status', 'partial');
             })
             ->where('due_amount', '>', 0)
             ->orderBy('created_at', 'asc')
@@ -93,7 +93,7 @@ class AddCustomerReceipt extends Component
             ->map(function ($sale) {
                 $paidAmount = $sale->total_amount - $sale->due_amount;
                 $remainingDue = $sale->due_amount;
-                
+
                 return [
                     'id' => $sale->id,
                     'invoice_number' => $sale->invoice_number,
@@ -122,7 +122,7 @@ class AddCustomerReceipt extends Component
     private function initializeAllocations()
     {
         $this->allocations = [];
-        
+
         foreach ($this->customerSales as $sale) {
             $this->allocations[$sale['id']] = [
                 'sale_id' => $sale['id'],
@@ -132,7 +132,7 @@ class AddCustomerReceipt extends Component
                 'is_fully_paid' => false
             ];
         }
-        
+
         $this->calculatePaymentTotals();
     }
 
@@ -144,21 +144,21 @@ class AddCustomerReceipt extends Component
     private function calculatePaymentTotals()
     {
         $this->totalPaymentAmount = 0;
-        
+
         foreach ($this->allocations as $saleId => $allocation) {
             $paymentAmount = floatval($allocation['payment_amount'] ?? 0);
             $dueAmount = floatval($allocation['due_amount'] ?? 0);
-            
+
             // Validate payment amount doesn't exceed due amount
             if ($paymentAmount > $dueAmount) {
                 $paymentAmount = $dueAmount;
                 $this->allocations[$saleId]['payment_amount'] = $dueAmount;
             }
-            
+
             $this->totalPaymentAmount += $paymentAmount;
-            
+
             // Update fully paid status
-            $this->allocations[$saleId]['is_fully_paid'] = 
+            $this->allocations[$saleId]['is_fully_paid'] =
                 abs($paymentAmount - $dueAmount) < 0.01;
         }
 
@@ -189,11 +189,11 @@ class AddCustomerReceipt extends Component
         foreach ($this->allocations as $saleId => $allocation) {
             $currentPayment = floatval($allocation['payment_amount']);
             $dueAmount = floatval($allocation['due_amount']);
-            
+
             if ($currentPayment < $dueAmount) {
                 $remainingForThisSale = $dueAmount - $currentPayment;
                 $amountToAllocate = min($this->remainingAmount, $remainingForThisSale);
-                
+
                 $this->allocations[$saleId]['payment_amount'] = $currentPayment + $amountToAllocate;
                 $this->calculatePaymentTotals();
                 break;
@@ -206,11 +206,28 @@ class AddCustomerReceipt extends Component
         if ($this->totalPaymentAmount <= 0) {
             $this->dispatch('show-toast', [
                 'type' => 'error',
-                'message' => 'Please allocate payment amounts to at least one sale.'
+                'message' => 'Please enter a payment amount greater than zero.'
             ]);
             return;
         }
 
+        // Allocate the entered amount to oldest due invoices
+        $remaining = $this->totalPaymentAmount;
+        foreach ($this->customerSales as $sale) {
+            $saleId = $sale['id'];
+            $due = $sale['due_amount'];
+            if ($remaining <= 0) {
+                $this->allocations[$saleId]['payment_amount'] = 0;
+            } elseif ($remaining >= $due) {
+                $this->allocations[$saleId]['payment_amount'] = $due;
+                $remaining -= $due;
+            } else {
+                $this->allocations[$saleId]['payment_amount'] = $remaining;
+                $remaining = 0;
+            }
+        }
+
+        $this->calculatePaymentTotals();
         $this->showPaymentModal = true;
     }
 
@@ -237,85 +254,63 @@ class AddCustomerReceipt extends Component
         $this->showViewModal = true;
     }
 
-    public function closeViewModal()
-    {
-        $this->showViewModal = false;
-        $this->selectedSale = null;
-    }
-
-    public function openReceiptModal()
-    {
-        $this->showReceiptModal = true;
-    }
-
-    public function closeReceiptModal()
-    {
-        $this->showReceiptModal = false;
-        $this->latestPayment = null;
-        $this->paymentSuccess = false;
-    }
-
     public function processPayment()
     {
-        $this->validate();
+        // Only validate the payment amount and payment details
+        $this->validate([
+            'paymentData.payment_date' => 'required|date',
+            'paymentData.payment_method' => 'required|in:cash,card,bank_transfer,cheque',
+            'paymentData.reference_number' => 'nullable|string|max:100',
+            'paymentData.notes' => 'nullable|string|max:500',
+            'totalPaymentAmount' => 'required|numeric|min:1',
+        ]);
 
         try {
             DB::transaction(function () {
+                $remaining = $this->totalPaymentAmount;
                 $totalPaid = 0;
                 $paymentRecords = [];
 
-                foreach ($this->allocations as $allocation) {
-                    $paymentAmount = floatval($allocation['payment_amount']);
-                    
-                    if ($paymentAmount > 0) {
-                        $sale = Sale::find($allocation['sale_id']);
-                        
-                        if ($sale) {
-                            // Create payment record
-                            $payment = Payment::create([
-                                'sale_id' => $sale->id,
-                                'customer_id' => $this->selectedCustomer->id,
-                                'amount' => $paymentAmount,
-                                'payment_date' => $this->paymentData['payment_date'],
-                                'payment_method' => $this->paymentData['payment_method'],
-                                'reference_number' => $this->paymentData['reference_number'],
-                                'notes' => $this->paymentData['notes'],
-                                'received_by' => Auth::id(),
-                                'status' => 'completed'
-                            ]);
+                foreach ($this->customerSales as $sale) {
+                    $saleId = $sale['id'];
+                    $due = $sale['due_amount'];
+                    $pay = min($due, $remaining);
+                    if ($pay <= 0) continue;
 
-                            $paymentRecords[] = $payment;
-                            $this->latestPayment = $payment; // Store the latest payment for receipt
+                    // Create payment record
+                    $payment = Payment::create([
+                        'sale_id' => $saleId,
+                        'amount' => $pay,
+                        'payment_method' => $this->paymentData['payment_method'],
+                        'payment_reference' => $this->paymentData['reference_number'],
+                        'payment_date' => $this->paymentData['payment_date'],
+                        'status' => 'paid',
+                        'is_completed' => 1,
+                        'notes' => $this->paymentData['notes'] ?? null,
+                    ]);
+                    $paymentRecords[] = $payment;
 
-                            // Update sale payment status
-                            $newDueAmount = $sale->due_amount - $paymentAmount;
-                            
-                            $paymentStatus = 'partial';
-                            if ($newDueAmount <= 0) {
-                                $paymentStatus = 'paid';
-                                $newDueAmount = 0;
-                            }
-
-                            $sale->update([
-                                'due_amount' => $newDueAmount,
-                                'payment_status' => $paymentStatus
-                            ]);
-
-                            $totalPaid += $paymentAmount;
+                    // Update sale due amount and status
+                    $saleModel = \App\Models\Sale::find($saleId);
+                    if ($saleModel) {
+                        $newDue = $saleModel->due_amount - $pay;
+                        $saleModel->due_amount = max(0, $newDue);
+                        if ($saleModel->due_amount <= 0.01) {
+                            $saleModel->payment_status = 'paid';
+                            $saleModel->due_amount = 0;
+                        } else {
+                            $saleModel->payment_status = 'partial';
                         }
+                        $saleModel->save();
                     }
+
+                    $totalPaid += $pay;
+                    $remaining -= $pay;
+                    if ($remaining <= 0) break;
                 }
 
-                // Log the transaction
-                activity()
-                    ->causedBy(Auth::user())
-                    ->performedOn($this->selectedCustomer)
-                    ->withProperties([
-                        'total_paid' => $totalPaid,
-                        'payment_method' => $this->paymentData['payment_method'],
-                        'payments_count' => count($paymentRecords)
-                    ])
-                    ->log('Customer payment received');
+                // Log the transaction (optional)
+                // activity()->causedBy(Auth::user())->log('Customer payment processed');
 
                 // Show success and open receipt
                 $this->paymentSuccess = true;
@@ -332,7 +327,6 @@ class AddCustomerReceipt extends Component
                     'message' => "Payment of Rs." . number_format($totalPaid, 2) . " processed successfully!"
                 ]);
             });
-
         } catch (\Exception $e) {
             $this->dispatch('show-toast', [
                 'type' => 'error',
@@ -340,6 +334,7 @@ class AddCustomerReceipt extends Component
             ]);
         }
     }
+
 
     public function downloadReceipt()
     {
@@ -354,7 +349,7 @@ class AddCustomerReceipt extends Component
         try {
             $payment = $this->latestPayment;
             $sale = Sale::with(['customer', 'items'])->find($payment->sale_id);
-            
+
             $receiptData = [
                 'payment' => $payment,
                 'sale' => $sale,
@@ -364,20 +359,19 @@ class AddCustomerReceipt extends Component
             ];
 
             $pdf = PDF::loadView('admin.receipts.payment-receipt', $receiptData);
-            
+
             $pdf->setPaper('a4', 'portrait');
             $pdf->setOption('dpi', 150);
             $pdf->setOption('defaultFont', 'sans-serif');
-            
+
             $filename = 'payment-receipt-' . $payment->id . '-' . date('Y-m-d') . '.pdf';
-            
+
             return response()->streamDownload(
                 function () use ($pdf) {
                     echo $pdf->output();
                 },
                 $filename
             );
-            
         } catch (\Exception $e) {
             $this->dispatch('show-toast', [
                 'type' => 'error',
@@ -388,25 +382,25 @@ class AddCustomerReceipt extends Component
 
     public function getCustomersProperty()
     {
-        return Customer::with(['sales' => function($query) {
+        return Customer::with(['sales' => function ($query) {
+            $query->where('due_amount', '>', 0)
+                ->where(function ($q) {
+                    $q->where('payment_status', 'pending')
+                        ->orWhere('payment_status', 'partial');
+                });
+        }])
+            ->whereHas('sales', function ($query) {
                 $query->where('due_amount', '>', 0)
-                      ->where(function($q) {
-                          $q->where('payment_status', 'pending')
+                    ->where(function ($q) {
+                        $q->where('payment_status', 'pending')
                             ->orWhere('payment_status', 'partial');
-                      });
-            }])
-            ->whereHas('sales', function($query) {
-                $query->where('due_amount', '>', 0)
-                      ->where(function($q) {
-                          $q->where('payment_status', 'pending')
-                            ->orWhere('payment_status', 'partial');
-                      });
+                    });
             })
-            ->when($this->search, function($query) {
-                $query->where(function($q) {
+            ->when($this->search, function ($query) {
+                $query->where(function ($q) {
                     $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('phone', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                        ->orWhere('phone', 'like', '%' . $this->search . '%')
+                        ->orWhere('email', 'like', '%' . $this->search . '%');
                 });
             })
             ->orderBy('name')

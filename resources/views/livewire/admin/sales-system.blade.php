@@ -1,17 +1,5 @@
 <div class="container-fluid py-3">
-    {{-- Header --}}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="fw-bold text-dark mb-2">
-                        <i class="bi bi-cart-check text-primary me-2"></i> Create Sale
-                    </h3>
-                    <p class="text-muted">Process customer sales and generate invoices</p>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     {{-- Flash Messages --}}
     @if (session()->has('success'))
@@ -37,7 +25,7 @@
 
     <div class="row">
         {{-- Customer Information --}}
-        <div class="col-12 mb-4">
+        <div class="col-6 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -49,7 +37,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label">Select Customer *</label>
                             <select class="form-select" wire:model.live="customerId">
                                 <option value="">-- Select Customer --</option>
@@ -67,7 +55,7 @@
         </div>
 
         {{-- Add Products Card --}}
-        <div class="col-md-12 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -193,12 +181,8 @@
                                     <td class="fw-bold">Rs.{{ number_format($subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
-                                <tr>
-                                    <td colspan="5" class="text-end fw-bold text-danger">Total Item Discount:</td>
-                                    <td class="fw-bold text-danger">- Rs.{{ number_format($totalDiscount, 2) }}</td>
-                                    <td></td>
-                                </tr>
-                               
+
+
                                 {{-- Additional Discount Section --}}
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold align-middle">
@@ -217,7 +201,7 @@
                                                 wire:model.live="additionalDiscount"
                                                 min="0"
                                                 step="{{ $additionalDiscountType === 'percentage' ? '1' : '0.01' }}"
-                                                @if($additionalDiscountType==='percentage') max="100" @endif
+                                                @if($additionalDiscountType==='percentage' ) max="100" @endif
                                                 placeholder="0{{ $additionalDiscountType === 'percentage' ? '' : '.00' }}">
 
                                             <span class="input-group-text">
@@ -245,12 +229,12 @@
                                     <td></td>
                                 </tr>
 
-                                {{-- Grand Total --}}
+                                {{-- Grand Total
                                 <tr>
                                     <td colspan="5" class="text-end fw-bold fs-5">Grand Total:</td>
                                     <td class="fw-bold fs-5 text-primary">Rs.{{ number_format($grandTotal, 2) }}</td>
                                     <td></td>
-                                </tr>
+                                </tr> --}}
                             </tfoot>
                         </table>
                     </div>
@@ -272,7 +256,7 @@
         </div>
 
         {{-- Notes --}}
-        <div class="col-md-12 mb-4">
+        <div class="col-md-6">
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -287,9 +271,13 @@
         </div>
 
         {{-- Create Sale Button --}}
-        <div class="col-12">
+        <div class="col-6">
             <div class="card">
                 <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="fw-bold fs-5">Grand Total</div>
+                        <div class="fw-bold fs-5 text-primary">Rs.{{ number_format($grandTotal, 2) }}</div>
+                    </div>
                     <button class="btn btn-success btn-lg px-5" wire:click="createSale"
                         {{ count($cart) == 0 ? 'disabled' : '' }}>
                         <i class="bi bi-cart-check me-2"></i>Complete Sale
@@ -363,14 +351,14 @@
     {{-- Sale Preview Modal --}}
     @if($showSaleModal && $createdSale)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title">
                         <i class="bi bi-cart-check me-2"></i>
                         Sale Completed Successfully! - {{ $createdSale->invoice_number }}
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="createNewSale"></button>
                 </div>
 
                 <div class="modal-body p-0">
@@ -410,7 +398,7 @@
                                         <p class="mb-1"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
                                         <p class="mb-1"><strong>Invoice No:</strong> {{ $createdSale->invoice_number }}</p>
                                         <p class="mb-1"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-                                       
+
                                     </div>
                                 </div>
                             </div>

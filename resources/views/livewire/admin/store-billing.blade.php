@@ -1,17 +1,4 @@
 <div class="container-fluid py-3">
-    {{-- Header --}}
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-    <h3 class="fw-bold text-dark mb-2">
-        <i class="bi bi-credit-card-2-front text-primary me-2"></i> Store Billing
-    </h3>
-    <p class="text-muted">Process store sales with flexible payment options</p>
-</div>
-            </div>
-        </div>
-    </div>
 
     {{-- Flash Messages --}}
     @if (session()->has('success'))
@@ -37,7 +24,7 @@
 
     <div class="row">
         {{-- Customer Information --}}
-        <div class="col-12 mb-4">
+        <div class="col-6 mb-4">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -49,7 +36,7 @@
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <label class="form-label">Select Customer *</label>
                             <select class="form-select" wire:model.live="customerId">
                                 <option value="">-- Select Customer --</option>
@@ -67,7 +54,7 @@
         </div>
 
         {{-- Add Products Card --}}
-        <div class="col-md-12 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title mb-0">
@@ -193,11 +180,6 @@
                                     <td class="fw-bold">Rs.{{ number_format($subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
-                                <tr>
-                                    <td colspan="5" class="text-end fw-bold text-danger">Total Item Discount:</td>
-                                    <td class="fw-bold text-danger">- Rs.{{ number_format($totalDiscount, 2) }}</td>
-                                    <td></td>
-                                </tr>
                                
                                 {{-- Additional Discount Section --}}
                                 <tr>
@@ -285,28 +267,165 @@
                             <label class="form-label">Payment Method *</label>
                             <select class="form-select" wire:model.live="paymentMethod">
                                 <option value="cash">Cash</option>
-                                <option value="credit">Credit</option>
                                 <option value="cheque">Cheque</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="credit">Credit (Pay Later)</option>
                             </select>
                         </div>
 
+                        {{-- Cash Payment Fields --}}
+                        @if($paymentMethod === 'cash')
                         <div class="col-md-12">
-                            <label class="form-label">Paid Amount *</label>
+                            <label class="form-label">Cash Amount *</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rs.</span>
                                 <input type="number" class="form-control" 
-                                    wire:model.live="paidAmount"
+                                    wire:model.live="cashAmount"
                                     min="0" 
-                                    max="{{ $grandTotal }}" 
                                     step="0.01"
                                     placeholder="0.00">
                             </div>
                             <div class="form-text">
-                                Enter the amount being paid now. Remaining amount will be marked as due.
+                                Enter the cash amount received
                             </div>
                         </div>
+                        @endif
+
+                        {{-- Cheque Payment Fields --}}
+                        @if($paymentMethod === 'cheque')
+                        <div class="col-md-12">
+                            <div class="card bg-light">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Add Cheque Details</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Cheque Number *</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                wire:model="tempChequeNumber"
+                                                placeholder="Enter cheque number">
+                                            @error('tempChequeNumber') <span class="text-danger small">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Bank Name *</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                wire:model="tempBankName"
+                                                placeholder="Enter bank name">
+                                            @error('tempBankName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Cheque Date *</label>
+                                            <input type="date" class="form-control form-control-sm" 
+                                                wire:model="tempChequeDate">
+                                            @error('tempChequeDate') <span class="text-danger small">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small">Cheque Amount *</label>
+                                            <input type="number" class="form-control form-control-sm" 
+                                                wire:model="tempChequeAmount"
+                                                min="0" step="0.01"
+                                                placeholder="0.00">
+                                            @error('tempChequeAmount') <span class="text-danger small">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div class="col-12">
+                                            <button type="button" class="btn btn-sm btn-primary w-100" 
+                                                wire:click="addCheque">
+                                                <i class="bi bi-plus-circle me-1"></i> Add Cheque
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Cheques List --}}
+                            @if(count($cheques) > 0)
+                            <div class="mt-3">
+                                <h6 class="mb-2">Added Cheques ({{ count($cheques) }})</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Cheque No</th>
+                                                <th>Bank</th>
+                                                <th>Date</th>
+                                                <th>Amount</th>
+                                                <th width="50">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($cheques as $index => $cheque)
+                                            <tr>
+                                                <td>{{ $cheque['number'] }}</td>
+                                                <td>{{ $cheque['bank_name'] }}</td>
+                                                <td>{{ date('d/m/Y', strtotime($cheque['date'])) }}</td>
+                                                <td class="fw-bold">Rs.{{ number_format($cheque['amount'], 2) }}</td>
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        wire:click="removeCheque({{ $index }})">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                        <tfoot class="table-light">
+                                            <tr>
+                                                <td colspan="3" class="text-end fw-bold">Total:</td>
+                                                <td colspan="2" class="fw-bold text-success">
+                                                    Rs.{{ number_format(collect($cheques)->sum('amount'), 2) }}
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Bank Transfer Fields --}}
+                        @if($paymentMethod === 'bank_transfer')
+                        <div class="col-md-12">
+                            <label class="form-label">Bank Transfer Amount *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rs.</span>
+                                <input type="number" class="form-control" 
+                                    wire:model.live="bankTransferAmount"
+                                    min="0" 
+                                    step="0.01"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Transfer Receipt (Optional)</label>
+                            <input type="file" class="form-control" 
+                                wire:model="bankTransferFile"
+                                accept="image/*,application/pdf">
+                            <div class="form-text">Upload transfer receipt or proof</div>
+                            @if($bankTransferFile)
+                            <div class="mt-2">
+                                <span class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i> File selected: {{ $bankTransferFile->getClientOriginalName() }}
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Credit Payment Info --}}
+                        @if($paymentMethod === 'credit')
+                        <div class="col-md-12">
+                            <div class="alert alert-warning mb-0">
+                                <i class="bi bi-exclamation-triangle me-2"></i>
+                                <strong>Credit Sale</strong>
+                                <p class="mb-0 mt-2">The full amount of Rs.{{ number_format($grandTotal, 2) }} will be marked as due. Customer can pay later.</p>
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- Payment Summary --}}
+                        @if($paymentMethod !== 'credit')
                         <div class="col-md-12">
                             <div class="border rounded p-3 bg-light">
                                 <h6 class="mb-3">Payment Summary</h6>
@@ -316,7 +435,7 @@
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Paid Amount:</span>
-                                    <span class="fw-bold text-success">Rs.{{ number_format($paidAmount, 2) }}</span>
+                                    <span class="fw-bold text-success">Rs.{{ number_format($totalPaidAmount, 2) }}</span>
                                 </div>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Due Amount:</span>
@@ -333,22 +452,14 @@
                             </div>
                         </div>
 
-                        @if($paymentMethod === 'credit')
+                        @if($totalPaidAmount < $grandTotal && $totalPaidAmount > 0)
                         <div class="col-md-12">
-                            <div class="alert alert-warning small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                Credit payment selected. The full amount will be marked as due.
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($paymentMethod !== 'credit' && $paidAmount < $grandTotal && $paidAmount > 0)
-                        <div class="col-md-12">
-                            <div class="alert alert-info small">
+                            <div class="alert alert-info small mb-0">
                                 <i class="bi bi-info-circle me-1"></i>
                                 Partial payment. Remaining Rs.{{ number_format($dueAmount, 2) }} will be marked as due.
                             </div>
                         </div>
+                        @endif
                         @endif
                     </div>
                 </div>
@@ -374,7 +485,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body text-center">
-                    <button class="btn btn-success btn-lg px-5" wire:click="createSale"
+                    <button class="btn btn-success btn-lg px-5" wire:click="validateAndCreateSale"
                         {{ count($cart) == 0 ? 'disabled' : '' }}>
                         <i class="bi bi-cart-check me-2"></i>Complete Sale
                     </button>
@@ -444,17 +555,62 @@
     </div>
     @endif
 
+    {{-- Payment Confirmation Modal --}}
+    @if($showPaymentConfirmModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Partial Payment Confirmation
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-3">
+                        <h6 class="alert-heading">Payment Amount Less Than Grand Total</h6>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Grand Total:</strong>
+                            <span>Rs.{{ number_format($grandTotal, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Paid Amount:</strong>
+                            <span class="text-success">Rs.{{ number_format($totalPaidAmount, 2) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <strong>Due Amount:</strong>
+                            <span class="text-danger">Rs.{{ number_format($pendingDueAmount, 2) }}</span>
+                        </div>
+                    </div>
+                    <p class="mb-0">
+                        The due amount of <strong class="text-danger">Rs.{{ number_format($pendingDueAmount, 2) }}</strong> 
+                        will be added to the customer's account. Do you want to proceed?
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="cancelSaleConfirmation">
+                        <i class="bi bi-x-circle me-2"></i>Cancel
+                    </button>
+                    <button type="button" class="btn btn-warning" wire:click="confirmSaleWithDue">
+                        <i class="bi bi-check-circle me-2"></i>Yes, Proceed with Due
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Sale Preview Modal --}}
     @if($showSaleModal && $createdSale)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title">
                         <i class="bi bi-cart-check me-2"></i>
                         Sale Completed Successfully! - {{ $createdSale->invoice_number }}
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="createNewSale"></button>
                 </div>
 
                 <div class="modal-body p-0">
@@ -500,7 +656,7 @@
                                             </span>
                                         </p>
                                         <p class="mb-0"><strong>Payment Method:</strong> 
-                                            {{ ucfirst($createdSale->payment_type) }}
+                                            {{ ucfirst($paymentMethod) }}
                                         </p>
                                     </div>
                                 </div>
@@ -516,9 +672,9 @@
                                         <th>Item Code</th>
                                         <th>Description</th>
                                         <th width="80">Qty</th>
-                                        <th width="120">Unit Price </th>
-                                        <th width="120">Discount </th>
-                                        <th width="120">Subtotal </th>
+                                        <th width="120">Unit Price</th>
+                                        <th width="120">Discount</th>
+                                        <th width="120">Subtotal</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -556,11 +712,11 @@
                                         </td>
                                     </tr>
 
-                                    @if($createdSale->paid_amount > 0)
+                                    @if($createdSale->payments->count() > 0)
                                     <tr>
                                         <td colspan="6" class="text-end fw-bold text-success">Paid Amount:</td>
                                         <td class="text-end fw-bold text-success">
-                                            {{ number_format($createdSale->paid_amount, 2) }}
+                                            {{ number_format($createdSale->payments->sum('amount'), 2) }}
                                         </td>
                                     </tr>
                                     @endif
@@ -577,6 +733,32 @@
                                 </tfoot>
                             </table>
                         </div>
+
+                        {{-- Payment Details --}}
+                        @if($createdSale->payments->count() > 0)
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0">Payment Details</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        @foreach($createdSale->payments as $payment)
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span><strong>Payment Method:</strong> {{ ucfirst($payment->payment_method) }}</span>
+                                            <span><strong>Amount:</strong> Rs.{{ number_format($payment->amount, 2) }}</span>
+                                        </div>
+                                        @if($payment->payment_reference)
+                                        <div class="mb-2">
+                                            <strong>Reference:</strong> {{ $payment->payment_reference }}
+                                        </div>
+                                        @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- Notes --}}
                         @if($createdSale->notes)
@@ -687,6 +869,12 @@
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
 
+    /* Cheque table styling */
+    .table-sm td, .table-sm th {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 768px) {
         .table-responsive {
@@ -709,6 +897,12 @@
     /* Stock warning */
     .text-info small {
         font-size: 0.75rem;
+    }
+
+    /* Loading state for file upload */
+    input[type="file"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>
 @endpush

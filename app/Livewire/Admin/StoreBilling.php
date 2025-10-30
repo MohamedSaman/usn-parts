@@ -5,18 +5,24 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\WithFileUploads;
 use App\Models\Customer;
 use App\Models\ProductDetail;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Payment;
+use App\Models\Cheque;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.layouts.admin')]
 #[Title('Store Billing')]
 class StoreBilling extends Component
 {
+    use WithFileUploads;
+
     // Basic Properties
     public $search = '';
     public $searchResults = [];
@@ -41,8 +47,22 @@ class StoreBilling extends Component
     public $notes = '';
     
     // Payment Properties
-    public $paymentMethod = 'cash'; // 'cash', 'credit', 'cheque' - for display only
+    public $paymentMethod = 'cash'; // 'cash', 'credit', 'cheque', 'bank_transfer'
     public $paidAmount = 0;
+    
+    // Cash Payment
+    public $cashAmount = 0;
+    
+    // Cheque Payment
+    public $cheques = [];
+    public $tempChequeNumber = '';
+    public $tempBankName = '';
+    public $tempChequeDate = '';
+    public $tempChequeAmount = 0;
+    
+    // Bank Transfer Payment
+    public $bankTransferFile = null;
+    public $bankTransferAmount = 0;
     
     // Discount Properties
     public $additionalDiscount = 0;
@@ -51,12 +71,15 @@ class StoreBilling extends Component
     // Modals
     public $showSaleModal = false;
     public $showCustomerModal = false;
+    public $showPaymentConfirmModal = false;
     public $lastSaleId = null;
     public $createdSale = null;
+    public $pendingDueAmount = 0;
 
     public function mount()
     {
         $this->loadCustomers();
+        $this->tempChequeDate = now()->format('Y-m-d');
     }
 
     // Load customers for dropdown
@@ -80,7 +103,7 @@ class StoreBilling extends Component
 
     public function getSubtotalAfterItemDiscountsProperty()
     {
-        return $this->subtotal - $this->totalDiscount;
+        return $this->subtotal;
     }
 
     public function getAdditionalDiscountAmountProperty()
@@ -101,16 +124,34 @@ class StoreBilling extends Component
         return $this->subtotalAfterItemDiscounts - $this->additionalDiscountAmount;
     }
 
+    public function getTotalPaidAmountProperty()
+    {
+        $total = 0;
+        
+        if ($this->paymentMethod === 'cash') {
+            $total = $this->cashAmount;
+        } elseif ($this->paymentMethod === 'cheque') {
+            $total = collect($this->cheques)->sum('amount');
+        } elseif ($this->paymentMethod === 'bank_transfer') {
+            $total = $this->bankTransferAmount;
+        }
+        
+        return $total;
+    }
+
     public function getDueAmountProperty()
     {
-        return max(0, $this->grandTotal - $this->paidAmount);
+        if ($this->paymentMethod === 'credit') {
+            return $this->grandTotal;
+        }
+        return max(0, $this->grandTotal - $this->totalPaidAmount);
     }
 
     public function getPaymentStatusProperty()
     {
-        if ($this->paidAmount <= 0) {
+        if ($this->paymentMethod === 'credit' || $this->totalPaidAmount <= 0) {
             return 'pending';
-        } elseif ($this->paidAmount >= $this->grandTotal) {
+        } elseif ($this->totalPaidAmount >= $this->grandTotal) {
             return 'paid';
         } else {
             return 'partial';
@@ -120,7 +161,10 @@ class StoreBilling extends Component
     // Determine payment_type for database (must be 'full' or 'partial')
     public function getDatabasePaymentTypeProperty()
     {
-        if ($this->paidAmount >= $this->grandTotal) {
+        if ($this->paymentMethod === 'credit') {
+            return 'partial';
+        }
+        if ($this->totalPaidAmount >= $this->grandTotal) {
             return 'full';
         } else {
             return 'partial';
@@ -143,30 +187,57 @@ class StoreBilling extends Component
     // When payment method changes
     public function updatedPaymentMethod($value)
     {
-        if ($value === 'credit') {
-            $this->paidAmount = 0;
-        } else {
-            $this->paidAmount = $this->grandTotal;
+        // Reset all payment fields
+        $this->cashAmount = 0;
+        $this->cheques = [];
+        $this->bankTransferFile = null;
+        $this->bankTransferAmount = 0;
+        
+        if ($value === 'cash') {
+            $this->cashAmount = $this->grandTotal;
+        } elseif ($value === 'bank_transfer') {
+            $this->bankTransferAmount = $this->grandTotal;
         }
     }
 
-    // When paid amount changes
-    public function updatedPaidAmount($value)
+    // Add Cheque
+    public function addCheque()
     {
-        if ($value === '') {
-            $this->paidAmount = 0;
-            return;
-        }
+        $this->validate([
+            'tempChequeNumber' => 'required|string|max:50',
+            'tempBankName' => 'required|string|max:100',
+            'tempChequeDate' => 'required|date',
+            'tempChequeAmount' => 'required|numeric|min:0.01',
+        ], [
+            'tempChequeNumber.required' => 'Cheque number is required',
+            'tempBankName.required' => 'Bank name is required',
+            'tempChequeDate.required' => 'Cheque date is required',
+            'tempChequeAmount.required' => 'Cheque amount is required',
+            'tempChequeAmount.min' => 'Cheque amount must be greater than 0',
+        ]);
 
-        if ($value < 0) {
-            $this->paidAmount = 0;
-            return;
-        }
+        $this->cheques[] = [
+            'number' => $this->tempChequeNumber,
+            'bank_name' => $this->tempBankName,
+            'date' => $this->tempChequeDate,
+            'amount' => $this->tempChequeAmount,
+        ];
 
-        if ($value > $this->grandTotal) {
-            $this->paidAmount = $this->grandTotal;
-            return;
-        }
+        // Reset temporary fields
+        $this->tempChequeNumber = '';
+        $this->tempBankName = '';
+        $this->tempChequeDate = now()->format('Y-m-d');
+        $this->tempChequeAmount = 0;
+
+        session()->flash('message', 'Cheque added successfully!');
+    }
+
+    // Remove Cheque
+    public function removeCheque($index)
+    {
+        unset($this->cheques[$index]);
+        $this->cheques = array_values($this->cheques);
+        session()->flash('message', 'Cheque removed!');
     }
 
     // Reset customer fields
@@ -255,7 +326,6 @@ class StoreBilling extends Component
     // Add to Cart
     public function addToCart($product)
     {
-        // Check stock availability
         if (($product['stock'] ?? 0) <= 0) {
             session()->flash('error', 'Product is out of stock!');
             return;
@@ -264,7 +334,6 @@ class StoreBilling extends Component
         $existing = collect($this->cart)->firstWhere('id', $product['id']);
         
         if ($existing) {
-            // Check if adding more exceeds stock
             if (($existing['quantity'] + 1) > $product['stock']) {
                 session()->flash('error', 'Not enough stock available!');
                 return;
@@ -303,7 +372,6 @@ class StoreBilling extends Component
     {
         if ($quantity < 1) $quantity = 1;
         
-        // Check stock availability
         $productStock = $this->cart[$index]['stock'];
         if ($quantity > $productStock) {
             session()->flash('error', 'Not enough stock available! Maximum: ' . $productStock);
@@ -364,9 +432,18 @@ class StoreBilling extends Component
         $this->cart = [];
         $this->additionalDiscount = 0;
         $this->additionalDiscountType = 'fixed';
-        $this->paidAmount = 0;
-        $this->paymentMethod = 'cash';
+        $this->resetPaymentFields();
         session()->flash('message', 'Cart cleared!');
+    }
+
+    // Reset payment fields
+    public function resetPaymentFields()
+    {
+        $this->cashAmount = 0;
+        $this->cheques = [];
+        $this->bankTransferFile = null;
+        $this->bankTransferAmount = 0;
+        $this->paymentMethod = 'cash';
     }
 
     // Update additional discount
@@ -405,8 +482,8 @@ class StoreBilling extends Component
         session()->flash('message', 'Additional discount removed!');
     }
 
-    // Create Sale
-    public function createSale()
+    // Validate Payment Before Creating Sale
+    public function validateAndCreateSale()
     {
         if (empty($this->cart)) {
             session()->flash('error', 'Please add at least one product to the sale.');
@@ -418,22 +495,67 @@ class StoreBilling extends Component
             return;
         }
 
+        // Validate payment method specific fields
+        if ($this->paymentMethod === 'cash') {
+            if ($this->cashAmount <= 0) {
+                session()->flash('error', 'Please enter cash amount.');
+                return;
+            }
+        } elseif ($this->paymentMethod === 'cheque') {
+            if (empty($this->cheques)) {
+                session()->flash('error', 'Please add at least one cheque.');
+                return;
+            }
+        } elseif ($this->paymentMethod === 'bank_transfer') {
+            if ($this->bankTransferAmount <= 0) {
+                session()->flash('error', 'Please enter bank transfer amount.');
+                return;
+            }
+        }
+
+        // Check if payment amount matches grand total (except for credit)
+        if ($this->paymentMethod !== 'credit') {
+            if ($this->totalPaidAmount < $this->grandTotal) {
+                // Show confirmation modal for due amount
+                $this->pendingDueAmount = $this->grandTotal - $this->totalPaidAmount;
+                $this->showPaymentConfirmModal = true;
+                return;
+            }
+        }
+
+        // Proceed to create sale
+        $this->createSale();
+    }
+
+    // Confirm and Create Sale with Due Amount
+    public function confirmSaleWithDue()
+    {
+        $this->showPaymentConfirmModal = false;
+        $this->createSale();
+    }
+
+    // Cancel Sale Confirmation
+    public function cancelSaleConfirmation()
+    {
+        $this->showPaymentConfirmModal = false;
+        $this->pendingDueAmount = 0;
+    }
+
+    // Create Sale
+    public function createSale()
+    {
         try {
             DB::beginTransaction();
 
             // Get customer data
-            if ($this->selectedCustomer) {
-                $customer = $this->selectedCustomer;
-            } else {
-                $customer = Customer::find($this->customerId);
-            }
+            $customer = $this->selectedCustomer ?? Customer::find($this->customerId);
 
             if (!$customer) {
                 session()->flash('error', 'Customer not found.');
                 return;
             }
 
-            // Create sale - use database-compatible payment_type
+            // Create sale
             $sale = Sale::create([
                 'sale_id' => Sale::generateSaleId(),
                 'invoice_number' => Sale::generateInvoiceNumber(),
@@ -442,7 +564,7 @@ class StoreBilling extends Component
                 'subtotal' => $this->subtotal,
                 'discount_amount' => $this->totalDiscount + $this->additionalDiscountAmount,
                 'total_amount' => $this->grandTotal,
-                'payment_type' => $this->databasePaymentType, // Use computed property
+                'payment_type' => $this->databasePaymentType,
                 'payment_status' => $this->paymentStatus,
                 'due_amount' => $this->dueAmount,
                 'notes' => $this->notes,
@@ -474,10 +596,57 @@ class StoreBilling extends Component
                 }
             }
 
+            // Create Payment Record
+            if ($this->paymentMethod !== 'credit' && $this->totalPaidAmount > 0) {
+                $payment = Payment::create([
+                    'sale_id' => $sale->id,
+                    'amount' => $this->totalPaidAmount,
+                    'payment_method' => $this->paymentMethod,
+                    'payment_date' => now(),
+                    'is_completed' => true,
+                    'status' =>  'paid',
+                ]);
+
+                // Handle payment method specific data
+                if ($this->paymentMethod === 'cash') {
+                    $payment->update([
+                        'payment_reference' => 'CASH-' . now()->format('YmdHis'),
+                    ]);
+                } elseif ($this->paymentMethod === 'cheque') {
+                    // Create cheque records
+                    foreach ($this->cheques as $cheque) {
+                        Cheque::create([
+                            'cheque_number' => $cheque['number'],
+                            'cheque_date' => $cheque['date'],
+                            'bank_name' => $cheque['bank_name'],
+                            'cheque_amount' => $cheque['amount'],
+                            'status' => 'pending',
+                            'customer_id' => $customer->id,
+                            'payment_id' => $payment->id,
+                        ]);
+                    }
+                    
+                    $payment->update([
+                        'payment_reference' => 'CHQ-' . collect($this->cheques)->pluck('number')->implode(','),
+                        'bank_name' => collect($this->cheques)->pluck('bank_name')->unique()->implode(', '),
+                    ]);
+                } elseif ($this->paymentMethod === 'bank_transfer') {
+                    $attachmentPath = null;
+                    if ($this->bankTransferFile) {
+                        $attachmentPath = $this->bankTransferFile->store('bank_transfers', 'public');
+                    }
+                    
+                    $payment->update([
+                        'payment_reference' => 'BANK-' . now()->format('YmdHis'),
+                        'due_payment_attachment' => $attachmentPath,
+                    ]);
+                }
+            }
+
             DB::commit();
 
             $this->lastSaleId = $sale->id;
-            $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);
+            $this->createdSale = Sale::with(['customer', 'items', 'payments'])->find($sale->id);
             $this->showSaleModal = true;
             
             $statusMessage = 'Sale created successfully! Payment status: ' . ucfirst($this->paymentStatus);
@@ -532,7 +701,6 @@ class StoreBilling extends Component
         $this->resetExcept(['customers']);
         $this->loadCustomers();
         $this->showSaleModal = false;
-        session()->flash('message', 'Ready to create new sale!');
     }
 
     public function render()
@@ -545,7 +713,8 @@ class StoreBilling extends Component
             'grandTotal' => $this->grandTotal,
             'dueAmount' => $this->dueAmount,
             'paymentStatus' => $this->paymentStatus,
-            'databasePaymentType' => $this->databasePaymentType
+            'databasePaymentType' => $this->databasePaymentType,
+            'totalPaidAmount' => $this->totalPaidAmount,
         ]);
     }
 }
