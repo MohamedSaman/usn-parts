@@ -134,15 +134,9 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/sales-list', SalesList::class)->name('sales-list');
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
-<<<<<<< Updated upstream
         Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
         Route::get('/return-list', ReturnList::class)->name('return-list');
-
-        
-=======
         Route::get('/add-customer-receipt', AddCustomerReceipt::class)->name('add-customer-receipt');
-        Route::get('/list-customer-receipt', ListCustomerReceipt::class)->name('list-customer-receipt');
->>>>>>> Stashed changes
 
     });
     Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])
