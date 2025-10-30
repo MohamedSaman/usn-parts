@@ -870,12 +870,12 @@
                     <div class="collapse" id="paymentSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.add-customer-receipt') }}">
                                     <i class="bi bi-person-plus"></i> <span>Add Customer Receipt</span>
                                 </a>
                             </li>
                              <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.customer-sale-details') }}">
+                                <a class="nav-link py-2" href="{{ route('admin.list-customer-receipt') }}">
                                     <i class="bi bi-people-fill"></i> <span>List Customer Receipt</span>
                                 </a>
                             </li>
