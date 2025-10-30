@@ -59,6 +59,7 @@ use App\Models\Setting as ModelsSetting;
 use App\Livewire\Admin\Settings;
 use App\Livewire\Admin\Expenses;
 use App\Livewire\Admin\Income;
+use App\Livewire\Admin\ReturnList;
 use App\Livewire\Admin\ReturnProduct;
 
 
@@ -132,6 +133,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/settings', Settings::class)->name('settings');
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
         Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
+        Route::get('/return-list', ReturnList::class)->name('return-list');
 
         
 

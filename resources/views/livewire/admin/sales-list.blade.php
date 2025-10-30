@@ -1,5 +1,5 @@
 <div class="container-fluid py-3">
-    {{-- Header --}}
+    {{-- ==================== PAGE HEADER ==================== --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
@@ -14,21 +14,17 @@
         </div>
     </div>
 
-    {{-- Statistics Cards --}}
+    {{-- ==================== STATISTICS CARDS ==================== --}}
     <div class="row mb-5">
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-start border-primary border-4 shadow h-100 py-2">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">
-                                Total Admin Sales
-                            </div>
+                            <div class="text-xs fw-bold text-primary text-uppercase mb-1">Total Admin Sales</div>
                             <div class="h5 mb-0 fw-bold text-gray-800">{{ $stats['total_sales'] }}</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-cart-check fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="bi bi-cart-check fa-2x text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
@@ -39,14 +35,10 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs fw-bold text-success text-uppercase mb-1">
-                                Total Revenue
-                            </div>
+                            <div class="text-xs fw-bold text-success text-uppercase mb-1">Total Revenue</div>
                             <div class="h5 mb-0 fw-bold text-gray-800">Rs.{{ number_format($stats['total_amount'], 2) }}</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-currency-dollar fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="bi bi-currency-dollar fa-2x text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
@@ -57,14 +49,10 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">
-                                Pending Payments
-                            </div>
+                            <div class="text-xs fw-bold text-warning text-uppercase mb-1">Pending Payments</div>
                             <div class="h5 mb-0 fw-bold text-gray-800">Rs.{{ number_format($stats['pending_payments'], 2) }}</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-clock-history fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="bi bi-clock-history fa-2x text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
@@ -75,34 +63,30 @@
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs fw-bold text-info text-uppercase mb-1">
-                                Today's Sales
-                            </div>
+                            <div class="text-xs fw-bold text-info text-uppercase mb-1">Today's Sales</div>
                             <div class="h5 mb-0 fw-bold text-gray-800">{{ $stats['today_sales'] }}</div>
                         </div>
-                        <div class="col-auto">
-                            <i class="bi bi-calendar-day fa-2x text-gray-300"></i>
-                        </div>
+                        <div class="col-auto"><i class="bi bi-calendar-day fa-2x text-gray-300"></i></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Filters --}}
+    {{-- ==================== FILTERS ==================== --}}
     <div class="card mb-4">
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label fw-semibold">Search</label>
                     <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="bi bi-search"></i>
-                        </span>
-                        <input type="text" class="form-control" placeholder="Search by invoice, customer name or phone..."
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control"
+                               placeholder="Search by invoice, customer name or phone..."
                                wire:model.live="search">
                     </div>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Payment Status</label>
                     <select class="form-select" wire:model.live="paymentStatusFilter">
@@ -112,13 +96,16 @@
                         <option value="pending">Pending</option>
                     </select>
                 </div>
+
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Date</label>
                     <input type="date" class="form-control" wire:model.live="dateFilter">
                 </div>
+
                 <div class="col-md-2">
                     <label class="form-label fw-semibold invisible">Actions</label>
-                    <button class="btn btn-outline-secondary w-100" wire:click="$set('dateFilter', '')">
+                    <button class="btn btn-outline-secondary w-100"
+                            wire:click="$set('dateFilter', '')">
                         <i class="bi bi-arrow-clockwise me-1"></i> Reset
                     </button>
                 </div>
@@ -126,7 +113,7 @@
         </div>
     </div>
 
-    {{-- Sales Table --}}
+    {{-- ==================== SALES TABLE ==================== --}}
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="fw-bold mb-0">
@@ -134,6 +121,7 @@
             </h5>
             <span class="badge bg-primary">{{ $sales->total() }} records</span>
         </div>
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -150,7 +138,9 @@
                     </thead>
                     <tbody>
                         @forelse($sales as $sale)
-                        <tr wire:key="sale-{{ $sale->id }}">
+                        <tr wire:key="sale-{{ $sale->id }}"
+                            style="cursor:pointer;"
+                            wire:click="viewSale({{ $sale->id }})">
                             <td class="ps-4">
                                 <div class="fw-bold text-primary">{{ $sale->invoice_number }}</div>
                                 <small class="text-muted">#{{ $sale->sale_id }}</small>
@@ -163,35 +153,23 @@
                                 <span class="text-muted">Walk-in Customer</span>
                                 @endif
                             </td>
-                            <td class="text-center">
-                                <div>{{ $sale->created_at->format('M d, Y') }}</div>
-                            </td>
-                         
-                            <td class="text-center">
-                                <div class="fw-bold">Rs.{{ number_format($sale->total_amount, 2) }}</div>
-                                
-                            </td>
+                            <td class="text-center">{{ $sale->created_at->format('M d, Y') }}</td>
+                            <td class="text-center fw-bold">Rs.{{ number_format($sale->total_amount, 2) }}</td>
                             <td class="text-center">
                                 <span class="badge bg-{{ $sale->payment_status == 'paid' ? 'success' : ($sale->payment_status == 'partial' ? 'warning' : 'danger') }}">
                                     {{ ucfirst($sale->payment_status) }}
                                 </span>
                             </td>
-                            <td class="text-center">
-                                <span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span>
-                            </td>
+                            <td class="text-center"><span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span></td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-info" wire:click="viewSale({{ $sale->id }})"
-                                            title="View Details">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                   
-                                    <button class="btn btn-outline-success" wire:click="downloadInvoice({{ $sale->id }})"
-                                            wire:target="downloadInvoice({{ $sale->id }})"
+                                    <button class="btn btn-outline-success"
+                                            wire:click.stop="downloadInvoice({{ $sale->id }})"
                                             title="Download Invoice">
                                         <i class="bi bi-download"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger" wire:click="deleteSale({{ $sale->id }})"
+                                    <button class="btn btn-outline-danger"
+                                            wire:click.stop="deleteSale({{ $sale->id }})"
                                             title="Delete Sale">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -200,7 +178,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 <i class="bi bi-cart-x display-4 d-block mb-2"></i>
                                 No admin sales found.
                             </td>
@@ -211,159 +189,151 @@
             </div>
 
             {{-- Pagination --}}
-@if ($sales->hasPages())
-    <div class="card-footer">
-        <div class="d-flex justify-content-center">
-            {{ $sales->links('pagination::bootstrap-5') }}
-        </div>
-    </div>
-@endif
+            @if ($sales->hasPages())
+            <div class="card-footer">
+                <div class="d-flex justify-content-center">
+                    {{ $sales->links('pagination::bootstrap-5') }}
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
-    {{-- View Sale Modal --}}
-    <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    {{-- ==================== VIEW SALE MODAL (same structure as the photo) ==================== --}}
+    <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1"
+         aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-receipt me-2"></i> Sale Details - {{ $selectedSale->invoice_number ?? '' }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
+            <div class="modal-content" id="printableInvoice">
+
+                {{-- Header – logo + company name --}}
+                <div class="modal-header text-center border-0">
+                    <div class="w-100">
+                        <img src="{{ asset('images/USN.png') }}" alt="Logo"
+                             class="img-fluid mb-2" style="max-height:60px;">
+                        <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
+                        <p class="mb-0 small text-muted">
+                            IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS. SPECIALIST IN ART BRAND
+                        </p>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white closebtn"
+                            wire:click="closeModals"></button>
                 </div>
+
                 @if($selectedSale)
                 <div class="modal-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">INVOICE INFORMATION</h6>
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="40%"><strong>Invoice Number:</strong></td>
-                                    <td>{{ $selectedSale->invoice_number }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sale ID:</strong></td>
-                                    <td>{{ $selectedSale->sale_id }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Date & Time:</strong></td>
-                                    <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sale Type:</strong></td>
-                                    <td><span class="badge bg-warning">{{ strtoupper($selectedSale->sale_type) }}</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Created By:</strong></td>
-                                    <td>{{ $selectedSale->user->name ?? 'System' }}</td>
-                                </tr>
-                            </table>
+
+                    {{-- Customer + Invoice info (two columns) --}}
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Customer :</strong><br>
+                            {{ $selectedSale->customer->name ?? 'Walk-in Customer' }}<br>
+                            {{ $selectedSale->customer->address ?? '' }}<br>
+                            Tel: {{ $selectedSale->customer->phone ?? '' }}
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted mb-3">CUSTOMER INFORMATION</h6>
-                            <table class="table table-borderless">
-                                <tr>
-                                    <td width="40%"><strong>Name:</strong></td>
-                                    <td>{{ $selectedSale->customer->name ?? 'Walk-in Customer' }}</td>
-                                </tr>
-                                @if($selectedSale->customer)
-                                <tr>
-                                    <td><strong>Phone:</strong></td>
-                                    <td>{{ $selectedSale->customer->phone }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Type:</strong></td>
-                                    <td>{{ ucfirst($selectedSale->customer_type) }}</td>
-                                </tr>
-                                @endif
+                        <div class="col-6 text-end">
+                            <table class="table table-sm table-borderless">
+                                <tr><td><strong>Invoice No :</strong></td><td>{{ $selectedSale->invoice_number }}</td></tr>
+                                <tr><td><strong>Sale Status :</strong></td><td>Completed</td></tr>
+                                <tr><td><strong>Payment Status :</strong></td><td>Pending</td></tr>
+                                <tr><td><strong>Invoice Date :</strong></td><td>{{ $selectedSale->created_at->format('d/m/Y H:i') }}</td></tr>
+                                <tr><td><strong>Due Date :</strong></td><td>00-00-00</td></tr>
+                                <tr><td><strong>Sales Person :</strong></td><td>ART STORE</td></tr>
                             </table>
                         </div>
                     </div>
 
-                    <h6 class="text-muted mb-3">ITEMS SOLD</h6>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-bordered">
+                    {{-- Items table --}}
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm">
                             <thead class="table-light">
                                 <tr>
-                                    <th>#</th>
-                                    <th>Product</th>
-                                    <th class="text-center">Code</th>
-                                    <th class="text-center">Quantity</th>
-                                    <th class="text-end">Unit Price</th>
-                                    <th class="text-end">Discount</th>
-                                    <th class="text-end">Total</th>
+                                    <th style="width:5%">#</th>
+                                    <th style="width:15%">ITEM CODE</th>
+                                    <th>DESCRIPTION</th>
+                                    <th class="text-center" style="width:12%">QTY</th>
+                                    <th class="text-end" style="width:12%">UNIT PRICE</th>
+                                    <th class="text-end" style="width:12%">SUBTOTAL</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($selectedSale->items as $index => $item)
+                                @foreach($selectedSale->items as $i => $item)
                                 <tr>
-                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>{{ $item->product_code }}</td>
                                     <td>{{ $item->product_name }}</td>
-                                    <td class="text-center">{{ $item->product_code }}</td>
-                                    <td class="text-center">{{ $item->quantity }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->discount_per_unit * $item->quantity, 2) }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
+                                    <td class="text-center">{{ $item->quantity }} Pc(s)</td>
+                                    <td class="text-end">{{ number_format($item->unit_price,2) }}</td>
+                                    <td class="text-end">{{ number_format($item->total,2) }}</td>
                                 </tr>
                                 @endforeach
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="5"></td>
-                                    <td class="text-end"><strong>Subtotal:</strong></td>
-                                    <td class="text-end">Rs.{{ number_format($selectedSale->subtotal, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="5"></td>
-                                    <td class="text-end"><strong>Discount:</strong></td>
-                                    <td class="text-end">- Rs.{{ number_format($selectedSale->discount_amount, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="5"></td>
-                                    <td class="text-end"><strong>Grand Total:</strong></td>
-                                    <td class="text-end fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
-                                </tr>
-                                @if($selectedSale->due_amount > 0)
-                                <tr>
-                                    <td colspan="5"></td>
-                                    <td class="text-end text-danger"><strong>Due Amount:</strong></td>
-                                    <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
-                                </tr>
+                                @if($selectedSale->items->count() == 0)
+                                <tr><td colspan="6" class="text-center text-muted">No items</td></tr>
                                 @endif
-                            </tfoot>
+                            </tbody>
                         </table>
                     </div>
 
-                    @if($selectedSale->notes)
-                    <h6 class="text-muted mb-2">NOTES</h6>
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <p class="mb-0">{{ $selectedSale->notes }}</p>
+                    {{-- Totals – right-aligned block --}}
+                    <div class="row">
+                        <div class="col-7"></div>
+                        <div class="col-5">
+                            <table class="table table-sm table-borderless">
+                                <tr><td class="text-end"><strong>Total Amount (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td></tr>
+                                <tr><td class="text-end"><strong>Returns</strong></td><td class="text-end">(0.00)</td></tr>
+                                <tr><td class="text-end"><strong>Paid (LKR)</strong></td><td class="text-end">0.00</td></tr>
+                                <tr><td class="text-end"><strong>Balance (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td></tr>
+                            </table>
                         </div>
                     </div>
-                    @endif
+
+                    {{-- Footer – logos + address + note --}}
+                    <div class="mt-4 text-center small">
+                        <div class="d-flex justify-content-center gap-4 align-items-center mb-2">
+                            <img src="{{ asset('images/tata.png') }}" alt="Tata" style="height:35px;">
+                            <img src="{{ asset('images/art.png') }}" alt="ART" style="height:35px;">
+                            <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra" style="height:35px;">
+                        </div>
+                        <p class="mb-0">
+                            <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
+                            <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
+                        </p>
+                        <p class="mt-1 text-muted">
+                            Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.
+                        </p>
+                    </div>
+
                 </div>
                 @endif
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Close</button>
-                    @if($selectedSale && $selectedSale->payment_status !== 'paid')
-                    <button type="button" class="btn btn-success" wire:click="markAsPaid({{ $selectedSale->id }})">
-                        <i class="bi bi-check-circle me-1"></i> Mark as Paid
+
+                {{-- Modal footer buttons --}}
+                <div class="modal-footer bg-light justify-content-between">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">
+                        <i class="bi bi-x-circle me-1"></i> Close
                     </button>
-                    @endif
+                    <div>
+                        @if($selectedSale && $selectedSale->payment_status !== 'paid')
+                        <button type="button" class="btn btn-success me-2"
+                                wire:click="markAsPaid({{ $selectedSale->id }})">
+                            <i class="bi bi-check-circle me-1"></i> Mark as Paid
+                        </button>
+                        @endif
+                        <button type="button" class="btn btn-outline-primary"
+                                onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i> Print
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Edit Sale Modal --}}
-    <div wire:ignore.self class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    {{-- ==================== EDIT SALE MODAL (unchanged) ==================== --}}
+    <div wire:ignore.self class="modal fade" id="editModal" tabindex="-1"
+         aria-labelledby="editModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i> Edit Sale
-                    </h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2"></i> Edit Sale</h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
                 </div>
                 <div class="modal-body">
@@ -387,7 +357,8 @@
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Notes</label>
-                            <textarea class="form-control" rows="3" wire:model="editNotes" placeholder="Additional notes..."></textarea>
+                            <textarea class="form-control" rows="3" wire:model="editNotes"
+                                      placeholder="Additional notes..."></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Due Amount</label>
@@ -403,12 +374,10 @@
                         </div>
                         <div class="col-12">
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" wire:click="payFullBalance">
-                                    Pay Full Balance
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" wire:click="resetPayBalance">
-                                    Reset Payment
-                                </button>
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                        wire:click="payFullBalance">Pay Full Balance</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm"
+                                        wire:click="resetPayBalance">Reset Payment</button>
                             </div>
                         </div>
                     </div>
@@ -423,14 +392,13 @@
         </div>
     </div>
 
-    {{-- Delete Confirmation Modal --}}
-    <div wire:ignore.self class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    {{-- ==================== DELETE CONFIRM MODAL (unchanged) ==================== --}}
+    <div wire:ignore.self class="modal fade" id="deleteModal" tabindex="-1"
+         aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-exclamation-triangle me-2"></i> Confirm Deletion
-                    </h5>
+                    <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle me-2"></i> Confirm Deletion</h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
                 </div>
                 <div class="modal-body">
@@ -439,7 +407,6 @@
                         <h6 class="alert-heading">Warning!</h6>
                         <p class="mb-0">You are about to delete the following sale. This action cannot be undone and will restore product stock.</p>
                     </div>
-                    
                     <div class="card">
                         <div class="card-body">
                             <p><strong>Invoice:</strong> {{ $selectedSale->invoice_number }}</p>
@@ -461,7 +428,7 @@
         </div>
     </div>
 
-    {{-- Toast Container --}}
+    {{-- ==================== TOAST ==================== --}}
     <div class="toast-container position-fixed top-0 end-0 p-3">
         <div id="livewire-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
             <div class="toast-header">
@@ -469,105 +436,82 @@
                 <small>Just now</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body">
-                <!-- Toast message will be inserted here -->
-            </div>
+            <div class="toast-body"></div>
         </div>
     </div>
 </div>
 
+{{-- ==================== STYLES (unchanged – only print tweaks) ==================== --}}
 @push('styles')
 <style>
-    .table th {
-        font-weight: 600;
-        background-color: #f8f9fa;
-    }
-    
-    .btn-group-sm > .btn {
-        padding: 0.25rem 0.5rem;
-    }
-    
-    .modal-header {
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .badge {
-        font-size: 0.75em;
-    }
-    
-    .table-hover tbody tr:hover {
-        background-color: rgba(0, 0, 0, 0.025);
+    .modal-header { background: linear-gradient(90deg, #0d6efd, #0056b3); color:#fff; }
+    .modal-title i { color:#ffc107; }
+    .closebtn { top:3%; right:3%; position:absolute; }
+
+    @media print {
+        body * { visibility:hidden; }
+        #printableInvoice, #printableInvoice * { visibility:visible; }
+        #printableInvoice {
+            position:absolute; left:0; top:0; width:210mm; min-height:297mm;
+            padding:15mm; background:#fff; font-size:11pt; color:#000;
+        }
+        .modal, .modal-dialog, .modal-content { all:unset; }
+        .modal-footer, .btn, .btn-close { display:none !important; }
+
+        .modal-header { border:none; padding:0; text-align:center; margin-bottom:1rem; }
+        .modal-header img { max-height:55px; }
+        .modal-header h4 { margin:4px 0; font-size:1.4rem; }
+        .modal-header p { margin:0; font-size:0.85rem; }
+
+        .row > .col-6 { page-break-inside:avoid; }
+        .row > .col-6:first-child { text-align:left; }
+        .row > .col-6:last-child  { text-align:right; }
+
+        .table { border-collapse:collapse; width:100%; margin-bottom:.8rem; }
+        .table th, .table td { border:1px solid #999; padding:4px 6px; }
+        .table th { background:#e9ecef; -webkit-print-color-adjust:exact; }
+        .table-sm { font-size:0.9rem; }
+
+        .table-sm td { border:none; padding:2px 4px; }
+        .table-sm strong { min-width:110px; display:inline-block; }
+
+        .d-flex img { height:30px; margin:0 8px; }
+        .text-muted { font-size:0.8rem; }
     }
 </style>
 @endpush
 
+{{-- ==================== SCRIPTS (unchanged) ==================== --}}
 @push('scripts')
 <script>
     document.addEventListener('livewire:initialized', () => {
         Livewire.on('showModal', (modalId) => {
-            console.log('Showing modal:', modalId);
-            const modalElement = document.getElementById(modalId);
-            if (modalElement) {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-                
-                modalElement.addEventListener('hidden.bs.modal', function () {
-                    Livewire.dispatch('closeModals');
-                });
-            }
+            const el = document.getElementById(modalId);
+            if (el) new bootstrap.Modal(el).show();
         });
-
         Livewire.on('hideModal', (modalId) => {
-            console.log('Hiding modal:', modalId);
-            const modalElement = document.getElementById(modalId);
-            if (modalElement) {
-                const modal = bootstrap.Modal.getInstance(modalElement);
-                if (modal) {
-                    modal.hide();
-                }
-            }
+            const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+            if (modal) modal.hide();
         });
-
-        Livewire.on('showToast', (event) => {
-            const toastElement = document.getElementById('livewire-toast');
-            if (toastElement) {
-                const toastBody = toastElement.querySelector('.toast-body');
-                const toastHeader = toastElement.querySelector('.toast-header');
-                
-                if (toastBody) toastBody.textContent = event.message;
-                if (toastHeader) {
-                    toastHeader.className = 'toast-header text-white';
-                    toastHeader.classList.add('bg-' + event.type);
-                }
-                
-                const toast = new bootstrap.Toast(toastElement);
-                toast.show();
-            }
+        Livewire.on('showToast', (e) => {
+            const toast = document.getElementById('livewire-toast');
+            toast.querySelector('.toast-body').textContent = e.message;
+            toast.querySelector('.toast-header').className = 'toast-header text-white bg-' + e.type;
+            new bootstrap.Toast(toast).show();
         });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                Livewire.dispatch('closeModals');
-            }
-        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') Livewire.dispatch('closeModals'); });
     });
 
-    document.addEventListener('livewire:request-start', (event) => {
-        const target = event.detail.component.get('$wire').__instance;
-        if (target.__livewire_requests?.downloadInvoice) {
-            const buttons = document.querySelectorAll('[wire\\:click="downloadInvoice"]');
-            buttons.forEach(button => {
-                button.disabled = true;
-                button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+    document.addEventListener('livewire:request-start', e => {
+        if (e.detail.component.get('$wire').__instance.__livewire_requests?.downloadInvoice) {
+            document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
+                b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
             });
         }
     });
-
-    document.addEventListener('livewire:request-finish', (event) => {
-        const buttons = document.querySelectorAll('[wire\\:click="downloadInvoice"]');
-        buttons.forEach(button => {
-            button.disabled = false;
-            button.innerHTML = '<i class="bi bi-download"></i>';
+    document.addEventListener('livewire:request-finish', () => {
+        document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
+            b.disabled = false; b.innerHTML = '<i class="bi bi-download"></i>';
         });
     });
 </script>

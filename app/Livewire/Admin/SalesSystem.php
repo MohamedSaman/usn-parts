@@ -166,6 +166,7 @@ class SalesSystem extends Component
             session()->flash('error', 'Failed to create customer: ' . $e->getMessage());
         }
     }
+    
 
     // Search Products
     public function updatedSearch()

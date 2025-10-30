@@ -58,10 +58,17 @@ class PosSales extends Component
 
     public function viewSale($saleId)
     {
-        $this->selectedSale = Sale::with(['customer', 'items', 'user'])
+        $this->selectedSale = Sale::with([
+            'customer',
+            'items',
+            'user',
+            'returns' => function ($q) {
+                $q->with('product');
+            }
+        ])
             ->where('sale_type', 'pos')
             ->find($saleId);
-            
+
         $this->showViewModal = true;
         $this->dispatch('showModal', 'viewModal');
     }
@@ -69,7 +76,7 @@ class PosSales extends Component
     public function editSale($saleId)
     {
         $sale = Sale::with(['customer'])->find($saleId);
-        
+
         if ($sale) {
             $this->editSaleId = $sale->id;
             $this->editCustomerId = $sale->customer_id;
@@ -78,7 +85,7 @@ class PosSales extends Component
             $this->editDueAmount = $sale->due_amount;
             $this->editPaidAmount = $sale->total_amount - $sale->due_amount;
             $this->editPayBalanceAmount = 0;
-            
+
             $this->showEditModal = true;
             $this->dispatch('showModal', 'editModal');
         }
@@ -113,22 +120,22 @@ class PosSales extends Component
             if ($sale) {
                 $value = floatval($value);
                 $maxPayable = $sale->due_amount;
-                
+
                 // Ensure pay balance doesn't exceed due amount
                 if ($value > $maxPayable) {
                     $this->editPayBalanceAmount = $maxPayable;
                     $value = $maxPayable;
                 }
-                
+
                 if ($value < 0) {
                     $this->editPayBalanceAmount = 0;
                     $value = 0;
                 }
-                
+
                 // Calculate new amounts
                 $this->editPaidAmount = $sale->total_amount - $sale->due_amount + $value;
                 $this->editDueAmount = $sale->due_amount - $value;
-                
+
                 // Auto-update payment status based on amounts
                 if ($this->editDueAmount <= 0) {
                     $this->editPaymentStatus = 'paid';
@@ -152,18 +159,18 @@ class PosSales extends Component
 
         try {
             $sale = Sale::find($this->editSaleId);
-            
+
             if ($sale) {
                 // Ensure paid amount + due amount equals total amount
                 $totalAmount = $sale->total_amount;
                 $paidAmount = $this->editPaidAmount;
                 $dueAmount = $this->editDueAmount;
-                
+
                 // If amounts don't match, adjust due amount
                 if (($paidAmount + $dueAmount) != $totalAmount) {
                     $dueAmount = $totalAmount - $paidAmount;
                 }
-                
+
                 $sale->update([
                     'customer_id' => $this->editCustomerId,
                     'payment_status' => $this->editPaymentStatus,
@@ -214,7 +221,7 @@ class PosSales extends Component
             DB::transaction(function () {
                 // Get sale items to restore stock
                 $saleItems = SaleItem::where('sale_id', $this->selectedSale->id)->get();
-                
+
                 // Restore stock
                 foreach ($saleItems as $item) {
                     $productStock = ProductStock::where('product_id', $item->product_id)->first();
@@ -230,7 +237,7 @@ class PosSales extends Component
                 // Delete related records
                 \App\Models\Payment::where('sale_id', $this->selectedSale->id)->delete();
                 SaleItem::where('sale_id', $this->selectedSale->id)->delete();
-                
+
                 // Delete the sale
                 $this->selectedSale->delete();
             });
@@ -239,7 +246,6 @@ class PosSales extends Component
             $this->selectedSale = null;
             $this->dispatch('hideModal', 'deleteModal');
             $this->dispatch('showToast', ['type' => 'success', 'message' => 'Sale deleted successfully!']);
-            
         } catch (\Exception $e) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Error deleting sale: ' . $e->getMessage()]);
         }
@@ -248,7 +254,7 @@ class PosSales extends Component
     public function downloadInvoice($saleId)
     {
         $sale = Sale::with(['customer', 'items'])->find($saleId);
-        
+
         if (!$sale) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Sale not found.']);
             return;
@@ -258,20 +264,19 @@ class PosSales extends Component
             // Calculate paid amount for the invoice
             $sale->paid_amount = $sale->total_amount - $sale->due_amount;
             $sale->balance_amount = $sale->due_amount;
-            
+
             $pdf = PDF::loadView('admin.sales.invoice', compact('sale'));
-            
+
             $pdf->setPaper('a4', 'portrait');
             $pdf->setOption('dpi', 150);
             $pdf->setOption('defaultFont', 'sans-serif');
-            
+
             return response()->streamDownload(
                 function () use ($pdf) {
                     echo $pdf->output();
                 },
                 'invoice-' . $sale->invoice_number . '.pdf'
             );
-            
         } catch (\Exception $e) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Failed to generate PDF: ' . $e->getMessage()]);
         }
@@ -284,7 +289,7 @@ class PosSales extends Component
         $this->showDeleteModal = false;
         $this->selectedSale = null;
         $this->resetEditForm();
-        
+
         // Hide all modals
         $this->dispatch('hideModal', 'viewModal');
         $this->dispatch('hideModal', 'editModal');
@@ -309,11 +314,11 @@ class PosSales extends Component
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('invoice_number', 'like', '%' . $this->search . '%')
-                      ->orWhere('sale_id', 'like', '%' . $this->search . '%')
-                      ->orWhereHas('customer', function ($customerQuery) {
-                          $customerQuery->where('name', 'like', '%' . $this->search . '%')
-                                       ->orWhere('phone', 'like', '%' . $this->search . '%');
-                      });
+                        ->orWhere('sale_id', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('customer', function ($customerQuery) {
+                            $customerQuery->where('name', 'like', '%' . $this->search . '%')
+                                ->orWhere('phone', 'like', '%' . $this->search . '%');
+                        });
                 });
             })
             ->when($this->paymentStatusFilter !== 'all', function ($query) {
@@ -330,7 +335,7 @@ class PosSales extends Component
     {
         $totalSales = Sale::where('sale_type', 'pos');
         $todaySales = Sale::where('sale_type', 'pos')->whereDate('created_at', today());
-        
+
         return [
             'total_sales' => $totalSales->count(),
             'total_amount' => $totalSales->sum('total_amount'),
@@ -352,14 +357,14 @@ class PosSales extends Component
     {
         try {
             $sale = Sale::find($saleId);
-            
+
             if ($sale) {
                 $sale->update([
                     'payment_status' => 'paid',
                     'due_amount' => 0,
                     'payment_type' => 'full'
                 ]);
-                
+
                 $this->dispatch('showToast', ['type' => 'success', 'message' => 'Sale marked as paid successfully!']);
             }
         } catch (\Exception $e) {
@@ -372,14 +377,14 @@ class PosSales extends Component
     {
         try {
             $sale = Sale::find($saleId);
-            
+
             if ($sale) {
                 $sale->update([
                     'payment_status' => 'pending',
                     'due_amount' => $sale->total_amount,
                     'payment_type' => 'partial'
                 ]);
-                
+
                 $this->dispatch('showToast', ['type' => 'success', 'message' => 'Sale marked as pending successfully!']);
             }
         } catch (\Exception $e) {

@@ -1,5 +1,6 @@
 <div>
 
+
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -16,17 +17,14 @@
     </div>
 
     <!-- Customer Search and Invoice Selection -->
-    <div class="row g-4 mb-4">
+    <div class="row mb-4">
         <!-- Customer Search -->
         <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-1">
-                            <i class="bi bi-person-search text-primary me-2"></i> Customer Search
-                        </h5>
-                        <p class="text-muted small mb-0">Find customer to process returns</p>
-                    </div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-person-search text-primary me-2"></i> Customer Search
+                    </h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
@@ -96,14 +94,11 @@
 
         <!-- Customer Invoices -->
         <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-1">
-                            <i class="bi bi-receipt text-info me-2"></i> Recent Invoices
-                        </h5>
-                        <p class="text-muted small mb-0">Latest 5 invoices for selected customer</p>
-                    </div>
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center border-bottom">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-receipt text-info me-2"></i> Recent Invoices
+                    </h5>
                     <button class="btn btn-info btn-sm" wire:click="loadCustomerInvoices">
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
@@ -131,12 +126,12 @@
                                         <span class="fw-bold text-dark">${{ number_format($invoice->total_amount, 2) }}</span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <button class="btn btn-sm btn-success"
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-success"
                                                 wire:click="selectInvoiceForReturn({{ $invoice->id }})">
                                                 <i class="bi bi-check-circle me-1"></i> Select
                                             </button>
-                                            <button class="btn btn-sm btn-outline-info"
+                                            <button class="btn btn-outline-info"
                                                 wire:click="viewInvoice({{ $invoice->id }})">
                                                 <i class="bi bi-eye me-1"></i> View
                                             </button>
@@ -160,18 +155,18 @@
 
     @if($showReturnSection && $selectedInvoice)
     <!-- Invoice Items for Return -->
-    <div class="row g-4 mb-4">
+    <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="fw-bold text-dark mb-1">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="fw-bold mb-0">
                         <i class="bi bi-receipt text-info me-2"></i> Invoice #{{ $selectedInvoice->invoice_number }} Items
                     </h5>
                     <p class="text-muted small mb-0">Select return quantity for each item below</p>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle">
+                        <table class="table table-bordered align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Product</th>
@@ -225,11 +220,11 @@
     <div wire:ignore.self class="modal fade" id="returnModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-warning text-white">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-arrow-return-left text-warning me-2"></i> Process Product Return
+                        <i class="bi bi-arrow-return-left me-2"></i> Process Product Return
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row mb-3">
@@ -279,11 +274,11 @@
     <div wire:ignore.self class="modal fade" id="invoiceModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-info text-white">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-receipt text-info me-2"></i> Invoice Details
+                        <i class="bi bi-receipt me-2"></i> Invoice Details
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     @if($invoiceModalData)
@@ -335,40 +330,6 @@
 
 @push('styles')
 <style>
-    .summary-card {
-        border-left: 4px solid;
-        transition: all 0.3s ease;
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
-
-    .summary-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-    }
-
-    .summary-card.pending {
-        border-left-color: #ffc107;
-    }
-
-    .summary-card.processed {
-        border-left-color: #28a745;
-    }
-
-    .summary-card.total {
-        border-left-color: #4361ee;
-    }
-
-    .icon-container {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
     .card {
         border: none;
         border-radius: 12px;
@@ -377,13 +338,13 @@
     }
 
     .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
     }
 
     .card-header {
         background-color: white;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid #dee2e6;
         border-radius: 12px 12px 0 0 !important;
         padding: 1.25rem 1.5rem;
     }
@@ -399,84 +360,23 @@
 
     .table td {
         vertical-align: middle;
-        padding: 1rem 0.75rem;
+        padding: 0.25rem 0.75rem;
     }
 
-    .btn-link {
-        text-decoration: none;
-        transition: all 0.2s ease;
+    .btn-group-sm>.btn {
+        padding: 0.25rem 0.5rem;
     }
 
-    .btn-link:hover {
-        transform: scale(1.1);
+    .modal-header {
+        border-bottom: 1px solid #dee2e6;
     }
 
-    .modal-content {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    .badge {
+        font-size: 0.75em;
     }
 
-    .form-control,
-    .form-select {
-        border-radius: 8px;
-        padding: 0.75rem 1rem;
-        border: 1px solid #e2e8f0;
-    }
-
-    .form-control:focus,
-    .form-select:focus {
-        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
-        border-color: #4361ee;
-    }
-
-    .btn {
-        border-radius: 8px;
-        font-weight: 500;
-        padding: 0.75rem 1.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary {
-        background-color: #4361ee;
-        border-color: #4361ee;
-    }
-
-    .btn-primary:hover {
-        background-color: #3f37c9;
-        border-color: #3f37c9;
-        transform: translateY(-2px);
-    }
-
-    .btn-info {
-        background-color: #4895ef;
-        border-color: #4895ef;
-    }
-
-    .btn-warning {
-        background-color: #f72585;
-        border-color: #f72585;
-    }
-
-    .btn-success {
-        background-color: #4cc9f0;
-        border-color: #4cc9f0;
-    }
-
-    .product-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e9ecef;
-    }
-
-    .product-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-        border-color: #28a745;
-    }
-
-    .form-control-lg {
-        font-size: 1.1rem;
-        padding: 1rem 1.25rem;
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.025);
     }
 </style>
 @endpush

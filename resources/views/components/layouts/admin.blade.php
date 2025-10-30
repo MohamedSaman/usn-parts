@@ -796,12 +796,18 @@
                     <div class="collapse" id="returnSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="">
+                                <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
+                                    <i class="bi bi-wallet2"></i> <span>Add Return</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link py-2" href="{{ route('admin.return-list') }}">
                                     <i class="bi bi-wallet2"></i> <span>List Return</span>
                                 </a>
                             </li>
                         </ul>
                     </div>
+                    
                 </li>
                 {{-- // cheque / banks --}}
                  <li class="nav-item">
