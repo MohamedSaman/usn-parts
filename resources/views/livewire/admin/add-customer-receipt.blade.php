@@ -1,4 +1,21 @@
 <div class="container-fluid py-4">
+    {{-- Flash Messages --}}
+    @if (session()->has('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle me-2"></i>
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if (session()->has('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -158,7 +175,7 @@
                                     <th class="text-end">Paid Amount</th>
                                     <th class="text-end">Due Amount</th>
                                     <th class="text-center">Status</th>
-                                    <th class="text-center">Actions</th>
+                                    <th class="text-center pe-4">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -177,7 +194,7 @@
                                             {{ ucfirst($sale['payment_status']) }}
                                         </span>
                                     </td>
-                                    <td class="text-center">
+                                    <td class="text-center pe-4">
                                         <button class="btn btn-outline-info btn-sm"
                                             wire:click="viewSale({{ $sale['id'] }})"
                                             title="View Invoice Details">
@@ -189,9 +206,9 @@
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <td colspan="5" class="text-end fw-bold">Total Due:</td>
+                                    <td colspan="4" class="text-end fw-bold ps-4">Total Due:</td>
                                     <td class="text-end fw-bold text-danger">Rs.{{ number_format($totalDueAmount, 2) }}</td>
-                                    <td></td>
+                                    <td colspan="2" class="pe-4"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -211,23 +228,88 @@
                 <div class="card-body">
                     {{-- Show total due at the top --}}
                     <div class="alert alert-info mb-4">
-                        <div class="d-flex justify-content-between">
-                            <span>Total Due Amount</span>
-                            <span class="fw-bold">Rs.{{ number_format($totalDueAmount, 2) }}</span>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Total Due Amount:</span>
+                            <span class="fw-bold fs-5">Rs.{{ number_format($totalDueAmount, 2) }}</span>
                         </div>
                     </div>
 
-                    {{-- Add Amount Field --}}
+                    {{-- Payment Amount Field --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Enter Payment Amount</label>
-                        <input type="number" min="1" max="{{ $totalDueAmount }}" step="0.01" class="form-control form-control-lg" wire:model.lazy="totalPaymentAmount" placeholder="Enter amount to pay">
+                        <label class="form-label fw-semibold">Enter Payment Amount <span class="text-danger">*</span></label>
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text">Rs.</span>
+                            <input
+                                type="number"
+                                min="0.01"
+                                max="{{ $totalDueAmount }}"
+                                step="0.01"
+                                class="form-control"
+                                wire:model.live="totalPaymentAmount"
+                                placeholder="0.00">
+                        </div>
+                        <small class="text-muted">Maximum: Rs.{{ number_format($totalDueAmount, 2) }}</small>
+                        @error('totalPaymentAmount')
+                        <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
+
+                    {{-- Remaining Amount Display --}}
+                    @if($totalPaymentAmount > 0)
+                    <div class="alert alert-{{ $remainingAmount > 0 ? 'warning' : 'success' }} mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold">Remaining Due:</span>
+                            <span class="fw-bold">Rs.{{ number_format($remainingAmount, 2) }}</span>
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Process Payment Button --}}
                     <div class="d-grid mt-3">
-                        <button class="btn btn-success btn-lg" wire:click="openPaymentModal" @if($totalPaymentAmount <=0) disabled @endif>
-                            <i class="bi bi-cash-coin me-1"></i> Process Payment - Rs.{{ number_format($totalPaymentAmount, 2) }}
+                        <button
+                            class="btn btn-success btn-lg"
+                            wire:click="openPaymentModal"
+                            @if($totalPaymentAmount <=0 || $totalPaymentAmount> $totalDueAmount) disabled @endif>
+                            <i class="bi bi-cash-coin me-2"></i>
+                            Process Payment
+                            @if($totalPaymentAmount > 0)
+                            <span class="ms-1">(Rs.{{ number_format($totalPaymentAmount, 2) }})</span>
+                            @endif
                         </button>
+                    </div>
+
+                    {{-- Quick Payment Options --}}
+                    <div class="mt-3">
+                        <small class="text-muted d-block mb-2">Quick Options:</small>
+                        <div class="d-grid gap-2">
+                            <button
+                                class="btn btn-outline-primary btn-sm"
+                                wire:click="$set('totalPaymentAmount', {{ $totalDueAmount }})">
+                                Pay Full Amount (Rs.{{ number_format($totalDueAmount, 2) }})
+                            </button>
+                            @if($totalDueAmount >= 10000)
+                            <button
+                                class="btn btn-outline-secondary btn-sm"
+                                wire:click="$set('totalPaymentAmount', {{ min(10000, $totalDueAmount) }})">
+                                Pay Rs.1,000
+                            </button>
+                            @endif
+                            @if($totalDueAmount >= 50000)
+                            <button
+                                class="btn btn-outline-secondary btn-sm"
+                                wire:click="$set('totalPaymentAmount', {{ min(50000, $totalDueAmount) }})">
+                                Pay Rs.5,0000
+                            </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Payment Note --}}
+                    <div class="alert alert-light border mt-3 mb-0">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Payment will be automatically allocated to oldest invoices first.
+                        </small>
                     </div>
                 </div>
             </div>
@@ -235,353 +317,524 @@
     </div>
     @endif
 
-{{-- View Sale Modal --}}
-@if($showViewModal && $selectedSale)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-eye me-2"></i> Invoice Details - {{ $selectedSale->invoice_number }}
-                </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeViewModal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="text-muted mb-3">INVOICE INFORMATION</h6>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td width="40%"><strong>Invoice Number:</strong></td>
-                                <td>{{ $selectedSale->invoice_number }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Sale ID:</strong></td>
-                                <td>{{ $selectedSale->sale_id }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Date & Time:</strong></td>
-                                <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Total Amount:</strong></td>
-                                <td class="fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Due Amount:</strong></td>
-                                <td class="fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Payment Status:</strong></td>
-                                <td>
-                                    <span class="badge bg-{{ $selectedSale->payment_status == 'paid' ? 'success' : ($selectedSale->payment_status == 'partial' ? 'warning' : 'danger') }}">
-                                        {{ ucfirst($selectedSale->payment_status) }}
-                                    </span>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted mb-3">CUSTOMER INFORMATION</h6>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td width="40%"><strong>Name:</strong></td>
-                                <td>{{ $selectedSale->customer->name ?? 'Walk-in Customer' }}</td>
-                            </tr>
-                            @if($selectedSale->customer)
-                            <tr>
-                                <td><strong>Phone:</strong></td>
-                                <td>{{ $selectedSale->customer->phone }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Type:</strong></td>
-                                <td>{{ ucfirst($selectedSale->customer_type) }}</td>
-                            </tr>
-                            @endif
-                        </table>
-                    </div>
+    {{-- View Sale Modal --}}
+    @if($showViewModal && $selectedSale)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye me-2"></i> Invoice Details - {{ $selectedSale->invoice_number }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeViewModal"></button>
                 </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">INVOICE INFORMATION</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Invoice Number:</strong></td>
+                                    <td>{{ $selectedSale->invoice_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sale ID:</strong></td>
+                                    <td>{{ $selectedSale->sale_id }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date & Time:</strong></td>
+                                    <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Total Amount:</strong></td>
+                                    <td class="fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Due Amount:</strong></td>
+                                    <td class="fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Status:</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ $selectedSale->payment_status == 'paid' ? 'success' : ($selectedSale->payment_status == 'partial' ? 'warning' : 'danger') }}">
+                                            {{ ucfirst($selectedSale->payment_status) }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">CUSTOMER INFORMATION</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Name:</strong></td>
+                                    <td>{{ $selectedSale->customer->name ?? 'Walk-in Customer' }}</td>
+                                </tr>
+                                @if($selectedSale->customer)
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ $selectedSale->customer->phone }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>{{ ucfirst($selectedSale->customer_type) }}</td>
+                                </tr>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
 
-                <h6 class="text-muted mb-3">ITEMS SOLD</h6>
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th class="text-center">Code</th>
-                                <th class="text-center">Quantity</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($selectedSale->items as $index => $item)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $item->product_name }}</td>
-                                <td class="text-center">{{ $item->product_code }}</td>
-                                <td class="text-center">{{ $item->quantity }}</td>
-                                <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                                <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                    <h6 class="text-muted mb-3">ITEMS SOLD</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Code</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedSale->items as $index => $item)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $item->product_name }}</td>
+                                    <td class="text-center">{{ $item->product_code }}</td>
+                                    <td class="text-center">{{ $item->quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" wire:click="closeViewModal">Close</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeViewModal">Close</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 
-{{-- Payment Modal --}}
-@if($showPaymentModal)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-credit-card me-2"></i> Confirm Payment
-                </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closePaymentModal"></button>
-            </div>
-            <div class="modal-body">
-                {{-- Customer Info --}}
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="text-muted mb-3">CUSTOMER INFORMATION</h6>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td width="40%"><strong>Name:</strong></td>
-                                <td>{{ $selectedCustomer?->name }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Phone:</strong></td>
-                                <td>{{ $selectedCustomer?->phone }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Type:</strong></td>
-                                <td>{{ ucfirst($selectedCustomer?->type) }}</td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-muted mb-3">PAYMENT SUMMARY</h6>
-                        <table class="table table-borderless">
-                            <tr>
-                                <td width="50%"><strong>Total Due:</strong></td>
-                                <td class="text-end">Rs.{{ number_format($totalDueAmount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Amount Paid:</strong></td>
-                                <td class="text-end text-success fw-bold">Rs.{{ number_format($totalPaymentAmount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Remaining Due:</strong></td>
-                                <td class="text-end text-danger">Rs.{{ number_format($remainingAmount, 2) }}</td>
-                            </tr>
-                        </table>
-                    </div>
+    {{-- Payment Modal --}}
+    @if($showPaymentModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-credit-card me-2"></i> Confirm Payment
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closePaymentModal"></button>
                 </div>
+                <div class="modal-body">
+                    {{-- Customer Info --}}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">CUSTOMER INFORMATION</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Name:</strong></td>
+                                    <td>{{ $selectedCustomer?->name }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Phone:</strong></td>
+                                    <td>{{ $selectedCustomer?->phone }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Type:</strong></td>
+                                    <td>{{ ucfirst($selectedCustomer?->type ?? 'N/A') }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">PAYMENT SUMMARY</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="50%"><strong>Total Due:</strong></td>
+                                    <td class="text-end">Rs.{{ number_format($totalDueAmount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Amount Paid:</strong></td>
+                                    <td class="text-end text-success fw-bold">Rs.{{ number_format($totalPaymentAmount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Remaining Due:</strong></td>
+                                    <td class="text-end text-danger">Rs.{{ number_format($remainingAmount, 2) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
 
-                {{-- Payment Details Form --}}
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Payment Date</label>
-                        <input type="date" class="form-control" wire:model="paymentData.payment_date">
-                        @error('paymentData.payment_date') <span class="text-danger small">{{ $message }}</span> @enderror
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Payment Method</label>
-                        <select class="form-select" wire:model="paymentData.payment_method">
-                            <option value="cash">Cash</option>
-                            <option value="card">Credit/Debit Card</option>
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cheque">Cheque</option>
-                        </select>
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold">Reference Number</label>
-                        <input type="text" class="form-control" wire:model="paymentData.reference_number"
-                            placeholder="Enter reference number if any...">
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label fw-semibold">Notes</label>
-                        <textarea class="form-control" rows="3" wire:model="paymentData.notes"
-                            placeholder="Additional payment notes..."></textarea>
-                    </div>
-                </div>
-
-                {{-- Allocation Breakdown --}}
-                <h6 class="text-muted mt-4 mb-3">PAYMENT ALLOCATION BREAKDOWN</h6>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Invoice</th>
-                                <th class="text-end">Due Amount</th>
-                                <th class="text-end">Payment Amount</th>
-                                <th class="text-end">Remaining</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($allocations as $allocation)
-                            @if($allocation['payment_amount'] > 0)
-                            <tr>
-                                <td class="fw-bold">{{ $allocation['invoice_number'] }}</td>
-                                <td class="text-end">Rs.{{ number_format($allocation['due_amount'], 2) }}</td>
-                                <td class="text-end text-success fw-bold">Rs.{{ number_format($allocation['payment_amount'], 2) }}</td>
-                                <td class="text-end text-danger">Rs.{{ number_format($allocation['due_amount'] - $allocation['payment_amount'], 2) }}</td>
-                                <td>
-                                    <span class="badge bg-{{ $allocation['is_fully_paid'] ? 'success' : 'warning' }}">
-                                        {{ $allocation['is_fully_paid'] ? 'Fully Paid' : 'Partial Payment' }}
-                                    </span>
-                                </td>
-                            </tr>
-                            @endif
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancel</button>
-                <button type="button" class="btn btn-success" wire:click="processPayment">
-                    <i class="bi bi-check-circle me-1"></i> Confirm Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-@endif
-
-{{-- Receipt Modal --}}
-@if($showReceiptModal && $latestPayment)
-<div class="modal fade show d-block" tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-check-circle me-2"></i> Payment Successful!
-                </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeReceiptModal"></button>
-            </div>
-            <div class="modal-body">
-                <div class="text-center mb-4">
-                    <i class="bi bi-check-circle-fill text-success display-1"></i>
-                    <h3 class="text-success mt-3">Payment Processed Successfully!</h3>
-                    <p class="text-muted">Payment receipt has been generated and saved.</p>
-                </div>
-
-                <div class="card border-success">
-                    <div class="card-header bg-success text-white">
-                        <h6 class="fw-bold mb-0">
-                            <i class="bi bi-receipt me-2"></i> Payment Receipt
-                        </h6>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Receipt ID:</strong></td>
-                                        <td>#{{ $latestPayment->id }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Payment Date:</strong></td>
-                                        <td>{{ \Carbon\Carbon::parse($latestPayment->payment_date)->format('M d, Y') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Customer:</strong></td>
-                                        <td>{{ $selectedCustomer->name }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Phone:</strong></td>
-                                        <td>{{ $selectedCustomer->phone }}</td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <div class="col-md-6">
-                                <table class="table table-borderless">
-                                    <tr>
-                                        <td><strong>Payment Method:</strong></td>
-                                        <td class="text-capitalize">{{ $latestPayment->payment_method }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Amount Paid:</strong></td>
-                                        <td class="fw-bold text-success">Rs.{{ number_format($latestPayment->amount, 2) }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Reference No:</strong></td>
-                                        <td>{{ $latestPayment->reference_number ?: 'N/A' }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Received By:</strong></td>
-                                        <td>{{ Auth::user()->name }}</td>
-                                    </tr>
-                                </table>
-                            </div>
+                    {{-- Payment Details Form --}}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" wire:model="paymentData.payment_date">
+                            @error('paymentData.payment_date') <span class="text-danger small">{{ $message }}</span> @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-select" wire:model.live="paymentData.payment_method">
+                                <option value="cash">Cash</option>
+                                <option value="cheque">Cheque</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
                         </div>
 
-                        @if($latestPayment->notes)
-                        <div class="mt-3">
-                            <strong>Notes:</strong>
-                            <p class="mb-0">{{ $latestPayment->notes }}</p>
+                        {{-- Cheque Details --}}
+                        @if($paymentData['payment_method'] === 'cheque')
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Cheque Details <span class="text-danger">*</span></label>
+                            <div class="border rounded p-3 bg-light">
+                                @foreach($cheques as $index => $cheque)
+                                <div class="row g-2 mb-3" wire:key="cheque-{{ $index }}">
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Cheque No.</label>
+                                        <input type="text" class="form-control"
+                                            wire:model="cheques.{{ $index }}.cheque_number"
+                                            placeholder="Cheque number">
+                                        @error('cheques.'.$index.'.cheque_number') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Bank Name</label>
+                                        <input type="text" class="form-control"
+                                            wire:model="cheques.{{ $index }}.bank_name"
+                                            placeholder="Bank name">
+                                        @error('cheques.'.$index.'.bank_name') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small">Cheque Date</label>
+                                        <input type="date" class="form-control"
+                                            wire:model="cheques.{{ $index }}.cheque_date">
+                                        @error('cheques.'.$index.'.cheque_date') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small">Amount</label>
+                                        <input type="number" step="0.01" class="form-control"
+                                            wire:model="cheques.{{ $index }}.amount"
+                                            placeholder="0.00">
+                                        @error('cheques.'.$index.'.amount') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-1">
+                                        <label class="form-label small d-block">&nbsp;</label>
+                                        @if($index > 0)
+                                        <button type="button" class="btn btn-danger btn-sm"
+                                            wire:click="removeCheque({{ $index }})">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
+
+                                <button type="button" class="btn btn-primary btn-sm" wire:click="addCheque">
+                                    <i class="bi bi-plus"></i> Add Another Cheque
+                                </button>
+
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Total Cheque Amount: Rs.{{ number_format(collect($cheques)->sum('amount'), 2) }}
+                                    </small>
+                                </div>
+                            </div>
                         </div>
                         @endif
+
+                        {{-- Bank Transfer Details --}}
+                        @if($paymentData['payment_method'] === 'bank_transfer')
+                        <div class="col-12">
+                            <div class="border rounded p-3 bg-light">
+                                <h6 class="fw-semibold mb-3">Bank Transfer Details</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Bank Name <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control"
+                                            wire:model="bankTransfer.bank_name"
+                                            placeholder="Bank name">
+                                        @error('bankTransfer.bank_name') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Transfer Date <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control"
+                                            wire:model="bankTransfer.transfer_date">
+                                        @error('bankTransfer.transfer_date') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-semibold">Reference Number <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control"
+                                            wire:model="bankTransfer.reference_number"
+                                            placeholder="Transfer reference">
+                                        @error('bankTransfer.reference_number') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Cash - No additional fields needed --}}
+                        @if($paymentData['payment_method'] === 'cash')
+                        <div class="col-12">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No additional details required for cash payment.
+                            </div>
+                        </div>
+                        @endif
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Reference Number</label>
+                            <input type="text" class="form-control" wire:model="paymentData.reference_number"
+                                placeholder="Enter reference number if any...">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Notes</label>
+                            <textarea class="form-control" rows="3" wire:model="paymentData.notes"
+                                placeholder="Additional payment notes..."></textarea>
+                        </div>
+                    </div>
+
+                    {{-- Allocation Breakdown --}}
+                    <h6 class="text-muted mt-4 mb-3">PAYMENT ALLOCATION BREAKDOWN</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Invoice</th>
+                                    <th class="text-end">Due Amount</th>
+                                    <th class="text-end">Payment Amount</th>
+                                    <th class="text-end">Remaining</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($allocations as $allocation)
+                                @if($allocation['payment_amount'] > 0)
+                                <tr>
+                                    <td class="fw-bold">{{ $allocation['invoice_number'] }}</td>
+                                    <td class="text-end">Rs.{{ number_format($allocation['due_amount'], 2) }}</td>
+                                    <td class="text-end text-success fw-bold">Rs.{{ number_format($allocation['payment_amount'], 2) }}</td>
+                                    <td class="text-end text-danger">Rs.{{ number_format($allocation['due_amount'] - $allocation['payment_amount'], 2) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $allocation['is_fully_paid'] ? 'success' : 'warning' }}">
+                                            {{ $allocation['is_fully_paid'] ? 'Fully Paid' : 'Partial Payment' }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @endif
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" wire:click="closeReceiptModal">
-                    <i class="bi bi-x-circle me-1"></i> Close
-                </button>
-                <button type="button" class="btn btn-success" wire:click="downloadReceipt">
-                    <i class="bi bi-download me-1"></i> Download Receipt
-                </button>
-                <button type="button" class="btn btn-primary" wire:click="closeReceiptModal">
-                    <i class="bi bi-check-circle me-1"></i> Done
-                </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closePaymentModal">Cancel</button>
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        wire:click="processPayment"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="disabled">
+                        <span wire:loading.remove wire:target="processPayment">
+                            <i class="bi bi-check-circle me-1"></i> Confirm Payment
+                        </span>
+                        <span wire:loading wire:target="processPayment">
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                            Processing...
+                        </span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
-@endif
+    @endif
 
-<style>
-    .sticky-top {
-        position: sticky;
-        z-index: 10;
-    }
+    {{-- Receipt Modal --}}
+    @if($showReceiptModal && $latestPayment)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-check-circle me-2"></i> Payment Successful!
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeReceiptModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-check-circle-fill text-success display-1"></i>
+                        <h3 class="text-success mt-3">Payment Processed Successfully!</h3>
+                        <p class="text-muted">Payment receipt has been generated and saved.</p>
+                    </div>
 
-    .allocation-items {
-        max-height: 400px;
-        overflow-y: auto;
-    }
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="fw-bold mb-0">
+                                <i class="bi bi-receipt me-2"></i> Payment Receipt
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Receipt ID:</strong></td>
+                                            <td>#{{ $latestPayment->id }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Payment Date:</strong></td>
+                                            <td>{{ \Carbon\Carbon::parse($latestPayment->payment_date)->format('M d, Y') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Customer:</strong></td>
+                                            <td>{{ $selectedCustomer->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Phone:</strong></td>
+                                            <td>{{ $selectedCustomer->phone }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless">
+                                        <tr>
+                                            <td><strong>Payment Method:</strong></td>
+                                            <td class="text-capitalize">{{ str_replace('_', ' ', $latestPayment->payment_method) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Amount Paid:</strong></td>
+                                            <td class="fw-bold text-success">Rs.{{ number_format($latestPayment->amount, 2) }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Reference No:</strong></td>
+                                            <td>{{ $latestPayment->payment_reference ?: 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Received By:</strong></td>
+                                            <td>{{ Auth::user()->name }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
 
-    .table th {
-        font-weight: 600;
-    }
+                            @if($latestPayment->notes)
+                            <div class="mt-3">
+                                <strong>Notes:</strong>
+                                <p class="mb-0">{{ $latestPayment->notes }}</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeReceiptModal">
+                        <i class="bi bi-x-circle me-1"></i> Close
+                    </button>
+                    <button type="button" class="btn btn-success" wire:click="downloadReceipt">
+                        <i class="bi bi-download me-1"></i> Download Receipt
+                    </button>
+                    <button type="button" class="btn btn-primary" wire:click="closeReceiptModal">
+                        <i class="bi bi-check-circle me-1"></i> Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
-    .badge {
-        font-size: 0.75em;
-    }
+    <style>
+        .sticky-top {
+            position: sticky;
+            z-index: 10;
+        }
 
-    .input-group-sm input {
-        font-size: 0.875rem;
-    }
+        .table th {
+            font-weight: 600;
+        }
 
-    .modal.show {
-        display: block !important;
-    }
+        .badge {
+            font-size: 0.75em;
+        }
 
-    .btn-group-sm>.btn {
-        padding: 0.25rem 0.5rem;
-    }
-</style>
+        .modal.show {
+            display: block !important;
+        }
+
+        .btn-group-sm>.btn {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .input-group-lg .form-control {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+    </style>
+
+    @push('scripts')
+    <script>
+        // Listen for toast notifications
+        window.addEventListener('show-toast', event => {
+            const data = event.detail[0] || event.detail;
+            const type = data.type || 'info';
+            const message = data.message || 'Notification';
+
+            // Create toast element
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="bi bi-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+
+            // Add toast to container
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                container.className = 'toast-container position-fixed top-0 end-0 p-3';
+                container.style.zIndex = '9999';
+                document.body.appendChild(container);
+            }
+
+            container.insertAdjacentHTML('beforeend', toastHtml);
+
+            // Show toast
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, {
+                autohide: true,
+                delay: 5000
+            });
+            toast.show();
+
+            // Remove toast element after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
+            });
+        });
+
+        // Listen for payment completed event and refresh page
+        window.addEventListener('payment-completed', event => {
+            console.log('Payment completed, refreshing page...');
+            // Small delay to allow modal to close smoothly
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        });
+
+        // Log when payment modal is opened
+        Livewire.on('paymentModalOpened', () => {
+            console.log('Payment modal opened');
+        });
+    </script>
+    @endpush
 </div>

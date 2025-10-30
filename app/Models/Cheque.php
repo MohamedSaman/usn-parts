@@ -18,4 +18,9 @@ class Cheque extends Model
         'customer_id',
         'payment_id',
     ];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 }

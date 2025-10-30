@@ -7,8 +7,10 @@ use Livewire\WithPagination;
 use App\Models\Customer;
 use App\Models\Sale;
 use App\Models\Payment;
+use App\Models\Cheque;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -28,6 +30,15 @@ class AddCustomerReceipt extends Component
         'reference_number' => '',
         'notes' => ''
     ];
+    
+    // Cheque related properties
+    public $cheques = [];
+    public $bankTransfer = [
+        'bank_name' => '',
+        'transfer_date' => '',
+        'reference_number' => ''
+    ];
+    
     public $allocations = [];
     public $totalDueAmount = 0;
     public $totalPaymentAmount = 0;
@@ -41,15 +52,37 @@ class AddCustomerReceipt extends Component
 
     protected $rules = [
         'paymentData.payment_date' => 'required|date',
-        'paymentData.payment_method' => 'required|in:cash,card,bank_transfer,cheque',
+        'paymentData.payment_method' => 'required|in:cash,cheque,bank_transfer',
         'paymentData.reference_number' => 'nullable|string|max:100',
         'paymentData.notes' => 'nullable|string|max:500',
-        'allocations.*.payment_amount' => 'required|numeric|min:0',
+        'totalPaymentAmount' => 'required|numeric|min:0.01',
+        'cheques.*.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50',
+        'cheques.*.bank_name' => 'required_if:paymentData.payment_method,cheque|string|max:100',
+        'cheques.*.cheque_date' => 'required_if:paymentData.payment_method,cheque|date',
+        'cheques.*.amount' => 'required_if:paymentData.payment_method,cheque|numeric|min:0.01',
+        'bankTransfer.bank_name' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
+        'bankTransfer.transfer_date' => 'required_if:paymentData.payment_method,bank_transfer|date',
+        'bankTransfer.reference_number' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
+    ];
+
+    protected $messages = [
+        'paymentData.payment_date.required' => 'Payment date is required.',
+        'paymentData.payment_method.required' => 'Payment method is required.',
+        'totalPaymentAmount.required' => 'Payment amount is required.',
+        'totalPaymentAmount.min' => 'Payment amount must be at least Rs. 0.01',
+        'cheques.*.cheque_number.required_if' => 'Cheque number is required for cheque payments.',
+        'cheques.*.bank_name.required_if' => 'Bank name is required for cheque payments.',
+        'cheques.*.cheque_date.required_if' => 'Cheque date is required for cheque payments.',
+        'cheques.*.amount.required_if' => 'Cheque amount is required for cheque payments.',
+        'bankTransfer.bank_name.required_if' => 'Bank name is required for bank transfer.',
+        'bankTransfer.transfer_date.required_if' => 'Transfer date is required for bank transfer.',
+        'bankTransfer.reference_number.required_if' => 'Reference number is required for bank transfer.',
     ];
 
     public function mount()
     {
         $this->paymentData['payment_date'] = now()->format('Y-m-d');
+        $this->totalPaymentAmount = 0;
     }
 
     public function updatedSearch()
@@ -60,10 +93,92 @@ class AddCustomerReceipt extends Component
         $this->resetPaymentData();
     }
 
+    public function updatedTotalPaymentAmount()
+    {
+        if ($this->totalPaymentAmount > $this->totalDueAmount) {
+            $this->totalPaymentAmount = $this->totalDueAmount;
+        }
+        
+        if ($this->totalPaymentAmount < 0) {
+            $this->totalPaymentAmount = 0;
+        }
+        
+        $this->calculateRemainingAmount();
+        $this->autoAllocatePayment();
+        
+        // Update cheque amounts if payment method is cheque
+        if ($this->paymentData['payment_method'] === 'cheque' && !empty($this->cheques)) {
+            $this->updateChequeAmounts();
+        }
+    }
+
+    public function updatedPaymentDataPaymentMethod($value)
+    {
+        // Reset all payment method specific fields first
+        $this->cheques = [];
+        $this->bankTransfer = [
+            'bank_name' => '',
+            'transfer_date' => '',
+            'reference_number' => ''
+        ];
+        
+        // Initialize based on selected method
+        if ($value === 'cheque') {
+            $this->initializeCheque();
+        } elseif ($value === 'bank_transfer') {
+            $this->bankTransfer = [
+                'bank_name' => '',
+                'transfer_date' => now()->format('Y-m-d'),
+                'reference_number' => ''
+            ];
+        }
+    }
+
+    private function initializeCheque()
+    {
+        $this->cheques = [
+            [
+                'cheque_number' => '',
+                'bank_name' => '',
+                'cheque_date' => now()->format('Y-m-d'),
+                'amount' => $this->totalPaymentAmount > 0 ? $this->totalPaymentAmount : 0
+            ]
+        ];
+    }
+
+    public function addCheque()
+    {
+        $this->cheques[] = [
+            'cheque_number' => '',
+            'bank_name' => '',
+            'cheque_date' => now()->format('Y-m-d'),
+            'amount' => 0
+        ];
+    }
+
+    public function removeCheque($index)
+    {
+        if (count($this->cheques) > 1) {
+            unset($this->cheques[$index]);
+            $this->cheques = array_values($this->cheques);
+        }
+    }
+
+    private function updateChequeAmounts()
+    {
+        $totalChequeAmount = collect($this->cheques)->sum('amount');
+        $difference = $this->totalPaymentAmount - $totalChequeAmount;
+
+        if ($difference != 0 && !empty($this->cheques)) {
+            $this->cheques[0]['amount'] = max(0, $this->cheques[0]['amount'] + $difference);
+        }
+    }
+
     public function selectCustomer($customerId)
     {
         $this->selectedCustomer = Customer::find($customerId);
         $this->loadCustomerSales();
+        $this->totalPaymentAmount = 0;
         $this->initializeAllocations();
     }
 
@@ -75,13 +190,15 @@ class AddCustomerReceipt extends Component
         $this->totalDueAmount = 0;
         $this->totalPaymentAmount = 0;
         $this->remainingAmount = 0;
+        $this->cheques = [];
+        $this->resetPaymentData();
     }
 
     private function loadCustomerSales()
     {
         if (!$this->selectedCustomer) return;
 
-        $this->customerSales = Sale::with(['items', 'payments'])
+        $sales = Sale::with(['items', 'payments'])
             ->where('customer_id', $this->selectedCustomer->id)
             ->where(function ($query) {
                 $query->where('payment_status', 'pending')
@@ -89,26 +206,24 @@ class AddCustomerReceipt extends Component
             })
             ->where('due_amount', '>', 0)
             ->orderBy('created_at', 'asc')
-            ->get()
-            ->map(function ($sale) {
-                $paidAmount = $sale->total_amount - $sale->due_amount;
-                $remainingDue = $sale->due_amount;
+            ->get();
 
-                return [
-                    'id' => $sale->id,
-                    'invoice_number' => $sale->invoice_number,
-                    'sale_id' => $sale->sale_id,
-                    'sale_date' => $sale->created_at->format('M d, Y'),
-                    'total_amount' => $sale->total_amount,
-                    'due_amount' => $remainingDue,
-                    'paid_amount' => $paidAmount,
-                    'payment_status' => $sale->payment_status,
-                    'items_count' => $sale->items->count(),
-                    'can_allocate' => $remainingDue > 0,
-                    'sale_object' => $sale // Store the sale object for viewing
-                ];
-            })
-            ->toArray();
+        $this->customerSales = $sales->map(function ($sale) {
+            $paidAmount = $sale->total_amount - $sale->due_amount;
+            $remainingDue = $sale->due_amount;
+
+            return [
+                'id' => $sale->id,
+                'invoice_number' => $sale->invoice_number,
+                'sale_id' => $sale->sale_id,
+                'sale_date' => $sale->created_at->format('M d, Y'),
+                'total_amount' => $sale->total_amount,
+                'due_amount' => $remainingDue,
+                'paid_amount' => $paidAmount,
+                'payment_status' => $sale->payment_status,
+                'items_count' => $sale->items->count(),
+            ];
+        })->toArray();
 
         $this->calculateTotalDue();
     }
@@ -117,6 +232,11 @@ class AddCustomerReceipt extends Component
     {
         $this->totalDueAmount = collect($this->customerSales)->sum('due_amount');
         $this->remainingAmount = $this->totalDueAmount;
+    }
+
+    private function calculateRemainingAmount()
+    {
+        $this->remainingAmount = $this->totalDueAmount - $this->totalPaymentAmount;
     }
 
     private function initializeAllocations()
@@ -132,78 +252,35 @@ class AddCustomerReceipt extends Component
                 'is_fully_paid' => false
             ];
         }
-
-        $this->calculatePaymentTotals();
     }
 
-    public function updatedAllocations()
+    private function autoAllocatePayment()
     {
-        $this->calculatePaymentTotals();
-    }
+        $remainingPayment = $this->totalPaymentAmount;
 
-    private function calculatePaymentTotals()
-    {
-        $this->totalPaymentAmount = 0;
+        foreach ($this->customerSales as $sale) {
+            $saleId = $sale['id'];
+            $dueAmount = $sale['due_amount'];
 
-        foreach ($this->allocations as $saleId => $allocation) {
-            $paymentAmount = floatval($allocation['payment_amount'] ?? 0);
-            $dueAmount = floatval($allocation['due_amount'] ?? 0);
-
-            // Validate payment amount doesn't exceed due amount
-            if ($paymentAmount > $dueAmount) {
-                $paymentAmount = $dueAmount;
+            if ($remainingPayment <= 0) {
+                $this->allocations[$saleId]['payment_amount'] = 0;
+                $this->allocations[$saleId]['is_fully_paid'] = false;
+            } elseif ($remainingPayment >= $dueAmount) {
                 $this->allocations[$saleId]['payment_amount'] = $dueAmount;
-            }
-
-            $this->totalPaymentAmount += $paymentAmount;
-
-            // Update fully paid status
-            $this->allocations[$saleId]['is_fully_paid'] =
-                abs($paymentAmount - $dueAmount) < 0.01;
-        }
-
-        $this->remainingAmount = $this->totalDueAmount - $this->totalPaymentAmount;
-    }
-
-    public function allocateFullPayment($saleId)
-    {
-        if (isset($this->allocations[$saleId])) {
-            $this->allocations[$saleId]['payment_amount'] = $this->allocations[$saleId]['due_amount'];
-            $this->calculatePaymentTotals();
-        }
-    }
-
-    public function clearAllocation($saleId)
-    {
-        if (isset($this->allocations[$saleId])) {
-            $this->allocations[$saleId]['payment_amount'] = 0;
-            $this->calculatePaymentTotals();
-        }
-    }
-
-    public function allocateRemainingAmount()
-    {
-        if ($this->remainingAmount <= 0) return;
-
-        // Find the first sale that still has due amount
-        foreach ($this->allocations as $saleId => $allocation) {
-            $currentPayment = floatval($allocation['payment_amount']);
-            $dueAmount = floatval($allocation['due_amount']);
-
-            if ($currentPayment < $dueAmount) {
-                $remainingForThisSale = $dueAmount - $currentPayment;
-                $amountToAllocate = min($this->remainingAmount, $remainingForThisSale);
-
-                $this->allocations[$saleId]['payment_amount'] = $currentPayment + $amountToAllocate;
-                $this->calculatePaymentTotals();
-                break;
+                $this->allocations[$saleId]['is_fully_paid'] = true;
+                $remainingPayment -= $dueAmount;
+            } else {
+                $this->allocations[$saleId]['payment_amount'] = $remainingPayment;
+                $this->allocations[$saleId]['is_fully_paid'] = false;
+                $remainingPayment = 0;
             }
         }
     }
 
     public function openPaymentModal()
     {
-        if ($this->totalPaymentAmount <= 0) {
+        // Validate payment amount
+        if (!$this->totalPaymentAmount || $this->totalPaymentAmount <= 0) {
             $this->dispatch('show-toast', [
                 'type' => 'error',
                 'message' => 'Please enter a payment amount greater than zero.'
@@ -211,23 +288,30 @@ class AddCustomerReceipt extends Component
             return;
         }
 
-        // Allocate the entered amount to oldest due invoices
-        $remaining = $this->totalPaymentAmount;
-        foreach ($this->customerSales as $sale) {
-            $saleId = $sale['id'];
-            $due = $sale['due_amount'];
-            if ($remaining <= 0) {
-                $this->allocations[$saleId]['payment_amount'] = 0;
-            } elseif ($remaining >= $due) {
-                $this->allocations[$saleId]['payment_amount'] = $due;
-                $remaining -= $due;
-            } else {
-                $this->allocations[$saleId]['payment_amount'] = $remaining;
-                $remaining = 0;
+        if ($this->totalPaymentAmount > $this->totalDueAmount) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Payment amount cannot exceed total due amount.'
+            ]);
+            return;
+        }
+
+        // Validate cheque amounts if payment method is cheque
+        if ($this->paymentData['payment_method'] === 'cheque') {
+            $totalChequeAmount = collect($this->cheques)->sum('amount');
+            if (abs($totalChequeAmount - $this->totalPaymentAmount) > 0.01) {
+                $this->dispatch('show-toast', [
+                    'type' => 'error',
+                    'message' => 'Total cheque amount must equal the payment amount.'
+                ]);
+                return;
             }
         }
 
-        $this->calculatePaymentTotals();
+        // Allocate payment
+        $this->autoAllocatePayment();
+        
+        // Show modal
         $this->showPaymentModal = true;
     }
 
@@ -235,7 +319,40 @@ class AddCustomerReceipt extends Component
     {
         $this->showPaymentModal = false;
         $this->paymentSuccess = false;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->selectedSale = null;
+    }
+
+    public function openReceiptModal()
+    {
+        $this->showReceiptModal = true;
+    }
+
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->latestPayment = null;
+        
+        // Reset everything
+        $this->selectedCustomer = null;
+        $this->customerSales = [];
+        $this->allocations = [];
+        $this->totalDueAmount = 0;
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = 0;
+        $this->cheques = [];
+        $this->search = '';
         $this->resetPaymentData();
+        
+        // Reset page
+        $this->resetPage();
+        
+        // Dispatch event to refresh the page
+        $this->dispatch('payment-completed');
     }
 
     private function resetPaymentData()
@@ -245,6 +362,13 @@ class AddCustomerReceipt extends Component
             'payment_method' => 'cash',
             'reference_number' => '',
             'notes' => ''
+        ];
+        $this->totalPaymentAmount = 0;
+        $this->cheques = [];
+        $this->bankTransfer = [
+            'bank_name' => '',
+            'transfer_date' => '',
+            'reference_number' => ''
         ];
     }
 
@@ -256,85 +380,156 @@ class AddCustomerReceipt extends Component
 
     public function processPayment()
     {
-        // Only validate the payment amount and payment details
-        $this->validate([
-            'paymentData.payment_date' => 'required|date',
-            'paymentData.payment_method' => 'required|in:cash,card,bank_transfer,cheque',
-            'paymentData.reference_number' => 'nullable|string|max:100',
-            'paymentData.notes' => 'nullable|string|max:500',
-            'totalPaymentAmount' => 'required|numeric|min:1',
+        Log::info('Payment processing started', [
+            'customer_id' => $this->selectedCustomer->id,
+            'amount' => $this->totalPaymentAmount,
+            'method' => $this->paymentData['payment_method']
         ]);
 
+        // Validate inputs
         try {
-            DB::transaction(function () {
-                $remaining = $this->totalPaymentAmount;
-                $totalPaid = 0;
-                $paymentRecords = [];
+            $this->validate();
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation failed', ['errors' => $e->errors()]);
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Please fill all required fields correctly.'
+            ]);
+            return;
+        }
 
-                foreach ($this->customerSales as $sale) {
-                    $saleId = $sale['id'];
-                    $due = $sale['due_amount'];
-                    $pay = min($due, $remaining);
-                    if ($pay <= 0) continue;
+        // Check payment amount
+        if ($this->totalPaymentAmount > $this->totalDueAmount) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Payment amount cannot exceed total due amount.'
+            ]);
+            return;
+        }
 
-                    // Create payment record
-                    $payment = Payment::create([
-                        'sale_id' => $saleId,
-                        'amount' => $pay,
-                        'payment_method' => $this->paymentData['payment_method'],
-                        'payment_reference' => $this->paymentData['reference_number'],
-                        'payment_date' => $this->paymentData['payment_date'],
-                        'status' => 'paid',
-                        'is_completed' => 1,
-                        'notes' => $this->paymentData['notes'] ?? null,
+        try {
+            DB::beginTransaction();
+
+            $totalProcessed = 0;
+            $processedInvoices = [];
+
+            // Create a single payment record for customer (not tied to specific sale)
+            $paymentData = [
+                'customer_id' => $this->selectedCustomer->id,
+                'amount' => $this->totalPaymentAmount,
+                'payment_method' => $this->paymentData['payment_method'],
+                'payment_reference' => $this->paymentData['reference_number'] ?? null,
+                'payment_date' => $this->paymentData['payment_date'],
+                'status' => 'paid',
+                'is_completed' => 1,
+                'notes' => $this->paymentData['notes'] ?? null,
+                'created_by' => Auth::id(),
+            ];
+
+            // Add bank transfer details if payment method is bank transfer
+            if ($this->paymentData['payment_method'] === 'bank_transfer') {
+                $paymentData['bank_name'] = $this->bankTransfer['bank_name'];
+                $paymentData['transfer_date'] = $this->bankTransfer['transfer_date'];
+                $paymentData['transfer_reference'] = $this->bankTransfer['reference_number'];
+            }
+
+            $payment = Payment::create($paymentData);
+
+            Log::info('Main payment created', ['payment_id' => $payment->id]);
+
+            // Process cheques if payment method is cheque
+            if ($this->paymentData['payment_method'] === 'cheque') {
+                foreach ($this->cheques as $chequeData) {
+                    Cheque::create([
+                        'payment_id' => $payment->id,
+                        'cheque_number' => $chequeData['cheque_number'],
+                        'bank_name' => $chequeData['bank_name'],
+                        'cheque_date' => $chequeData['cheque_date'],
+                        'cheque_amount' => $chequeData['amount'],
+                        'status' => 'pending',
+                        'customer_id' => $this->selectedCustomer->id,
                     ]);
-                    $paymentRecords[] = $payment;
+                }
+                Log::info('Cheques created', ['count' => count($this->cheques)]);
+            }
 
-                    // Update sale due amount and status
-                    $saleModel = \App\Models\Sale::find($saleId);
-                    if ($saleModel) {
-                        $newDue = $saleModel->due_amount - $pay;
-                        $saleModel->due_amount = max(0, $newDue);
-                        if ($saleModel->due_amount <= 0.01) {
-                            $saleModel->payment_status = 'paid';
-                            $saleModel->due_amount = 0;
-                        } else {
-                            $saleModel->payment_status = 'partial';
-                        }
-                        $saleModel->save();
+            // Process each sale allocation
+            foreach ($this->customerSales as $sale) {
+                $saleId = $sale['id'];
+                $allocation = $this->allocations[$saleId];
+                $paymentAmount = $allocation['payment_amount'];
+
+                if ($paymentAmount <= 0) continue;
+
+                // Update sale
+                $saleModel = Sale::find($saleId);
+                if ($saleModel) {
+                    $newDueAmount = $saleModel->due_amount - $paymentAmount;
+                    $saleModel->due_amount = max(0, $newDueAmount);
+
+                    if ($saleModel->due_amount <= 0.01) {
+                        $saleModel->payment_status = 'paid';
+                        $saleModel->due_amount = 0;
+                    } else {
+                        $saleModel->payment_status = 'partial';
                     }
-
-                    $totalPaid += $pay;
-                    $remaining -= $pay;
-                    if ($remaining <= 0) break;
+                    
+                    $saleModel->save();
+                    
+                    // Create payment allocation record (to track which payment paid which invoice)
+                    DB::table('payment_allocations')->insert([
+                        'payment_id' => $payment->id,
+                        'sale_id' => $saleId,
+                        'allocated_amount' => $paymentAmount,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    Log::info('Sale updated and allocation created', [
+                        'sale_id' => $saleId,
+                        'payment_amount' => $paymentAmount,
+                        'new_due' => $saleModel->due_amount
+                    ]);
                 }
 
-                // Log the transaction (optional)
-                // activity()->causedBy(Auth::user())->log('Customer payment processed');
+                $totalProcessed += $paymentAmount;
+                $processedInvoices[] = $sale['invoice_number'];
+            }
 
-                // Show success and open receipt
-                $this->paymentSuccess = true;
-                $this->showPaymentModal = false;
-                $this->openReceiptModal();
+            DB::commit();
 
-                // Reload customer sales
-                $this->loadCustomerSales();
-                $this->initializeAllocations();
+            Log::info('Payment processed successfully', [
+                'total_processed' => $totalProcessed,
+                'invoices' => $processedInvoices,
+                'payment_id' => $payment->id
+            ]);
 
-                // Dispatch toast notification
-                $this->dispatch('show-toast', [
-                    'type' => 'success',
-                    'message' => "Payment of Rs." . number_format($totalPaid, 2) . " processed successfully!"
-                ]);
-            });
+            $this->paymentSuccess = true;
+            $this->showPaymentModal = false;
+            $this->latestPayment = $payment;
+            
+            $this->dispatch('show-toast', [
+                'type' => 'success',
+                'message' => "Payment of Rs." . number_format($totalProcessed, 2) . " processed successfully!"
+            ]);
+
+            // Open receipt modal
+            $this->openReceiptModal();
+
         } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Payment processing failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             $this->dispatch('show-toast', [
                 'type' => 'error',
                 'message' => 'Failed to process payment: ' . $e->getMessage()
             ]);
         }
     }
-
 
     public function downloadReceipt()
     {
@@ -347,22 +542,31 @@ class AddCustomerReceipt extends Component
         }
 
         try {
-            $payment = $this->latestPayment;
-            $sale = Sale::with(['customer', 'items'])->find($payment->sale_id);
+            // Load payment with relationships
+            $payment = Payment::with(['cheques'])
+                ->find($this->latestPayment->id);
+
+            // Get allocations from payment_allocations table
+            $allocations = DB::table('payment_allocations')
+                ->join('sales', 'payment_allocations.sale_id', '=', 'sales.id')
+                ->where('payment_allocations.payment_id', $payment->id)
+                ->select(
+                    'sales.invoice_number',
+                    'sales.total_amount',
+                    'payment_allocations.allocated_amount'
+                )
+                ->get();
 
             $receiptData = [
                 'payment' => $payment,
-                'sale' => $sale,
                 'customer' => $this->selectedCustomer,
                 'received_by' => Auth::user()->name,
                 'payment_date' => $payment->payment_date,
+                'allocations' => $allocations,
             ];
 
             $pdf = PDF::loadView('admin.receipts.payment-receipt', $receiptData);
-
             $pdf->setPaper('a4', 'portrait');
-            $pdf->setOption('dpi', 150);
-            $pdf->setOption('defaultFont', 'sans-serif');
 
             $filename = 'payment-receipt-' . $payment->id . '-' . date('Y-m-d') . '.pdf';
 
@@ -373,6 +577,11 @@ class AddCustomerReceipt extends Component
                 $filename
             );
         } catch (\Exception $e) {
+            Log::error('Receipt download failed', [
+                'error' => $e->getMessage(),
+                'payment_id' => $this->latestPayment->id
+            ]);
+            
             $this->dispatch('show-toast', [
                 'type' => 'error',
                 'message' => 'Failed to generate receipt: ' . $e->getMessage()

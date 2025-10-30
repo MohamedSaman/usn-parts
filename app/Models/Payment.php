@@ -22,6 +22,8 @@ class Payment extends Model
         'due_payment_method',
         'due_payment_attachment',
         'status',
+        'customer_id',
+        
     ];
 
     protected $casts = [
@@ -48,5 +50,9 @@ class Payment extends Model
             'paid' => '<span class="badge bg-success">Paid</span>',
             default => '<span class="badge bg-secondary">Unknown</span>',
         };
+    }
+    public function allocations()
+    {
+        return $this->hasMany(PaymentAllocation::class);
     }
 }

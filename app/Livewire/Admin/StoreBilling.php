@@ -144,14 +144,14 @@ class StoreBilling extends Component
         if ($this->paymentMethod === 'credit') {
             return $this->grandTotal;
         }
-        return max(0, $this->grandTotal - $this->totalPaidAmount);
+        return max(0, $this->grandTotal - (int)$this->totalPaidAmount);
     }
 
     public function getPaymentStatusProperty()
     {
-        if ($this->paymentMethod === 'credit' || $this->totalPaidAmount <= 0) {
+        if ($this->paymentMethod === 'credit' || (int)$this->totalPaidAmount <= 0) {
             return 'pending';
-        } elseif ($this->totalPaidAmount >= $this->grandTotal) {
+        } elseif ((int)$this->totalPaidAmount >= $this->grandTotal) {
             return 'paid';
         } else {
             return 'partial';
@@ -164,7 +164,7 @@ class StoreBilling extends Component
         if ($this->paymentMethod === 'credit') {
             return 'partial';
         }
-        if ($this->totalPaidAmount >= $this->grandTotal) {
+        if ((int)$this->totalPaidAmount >= $this->grandTotal) {
             return 'full';
         } else {
             return 'partial';
@@ -515,9 +515,9 @@ class StoreBilling extends Component
 
         // Check if payment amount matches grand total (except for credit)
         if ($this->paymentMethod !== 'credit') {
-            if ($this->totalPaidAmount < $this->grandTotal) {
+            if ((int)$this->totalPaidAmount < $this->grandTotal) {
                 // Show confirmation modal for due amount
-                $this->pendingDueAmount = $this->grandTotal - $this->totalPaidAmount;
+                $this->pendingDueAmount = $this->grandTotal - (int)$this->totalPaidAmount;
                 $this->showPaymentConfirmModal = true;
                 return;
             }
@@ -597,10 +597,10 @@ class StoreBilling extends Component
             }
 
             // Create Payment Record
-            if ($this->paymentMethod !== 'credit' && $this->totalPaidAmount > 0) {
+            if ($this->paymentMethod !== 'credit' && (int)$this->totalPaidAmount > 0) {
                 $payment = Payment::create([
                     'sale_id' => $sale->id,
-                    'amount' => $this->totalPaidAmount,
+                    'amount' => (int)$this->totalPaidAmount,
                     'payment_method' => $this->paymentMethod,
                     'payment_date' => now(),
                     'is_completed' => true,
@@ -714,7 +714,7 @@ class StoreBilling extends Component
             'dueAmount' => $this->dueAmount,
             'paymentStatus' => $this->paymentStatus,
             'databasePaymentType' => $this->databasePaymentType,
-            'totalPaidAmount' => $this->totalPaidAmount,
+            'totalPaidAmount' => (int)$this->totalPaidAmount,
         ]);
     }
 }

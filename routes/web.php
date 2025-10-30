@@ -62,8 +62,9 @@ use App\Livewire\Admin\Income;
 use App\Livewire\Admin\ReturnList;
 use App\Livewire\Admin\ReturnProduct;
 use App\Livewire\Admin\AddCustomerReceipt;
+use App\Livewire\Admin\ChequeList;
 use App\Livewire\Admin\ListCustomerReceipt;
-
+use App\Livewire\Admin\ReturnCheque;
 
 /*
 |--------------------------------------------------------------------------
@@ -137,6 +138,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
         Route::get('/return-list', ReturnList::class)->name('return-list');
         Route::get('/add-customer-receipt', AddCustomerReceipt::class)->name('add-customer-receipt');
+        Route::get('/cheque-list', ChequeList::class)->name('cheque-list');
+        Route::get('/return-cheque', ReturnCheque::class)->name('return-cheque');
+        Route::get('/list-customer-receipt', ListCustomerReceipt::class)->name('list-customer-receipt');
+
+
 
     });
     Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])

@@ -823,13 +823,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.cheque-list') }}">
                         <i class="bi bi-card-text"></i> <span>Cheque List</span>
 
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.return-cheque') }}">
                         <i class="bi bi-arrow-left-right"></i> <span>Return Cheque</span>
 
                     </a>
@@ -875,7 +875,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.list-customer-receipt') }}">
                         <i class="bi bi-people-fill"></i> <span>List Customer Receipt</span>
                     </a>
                 </li>
