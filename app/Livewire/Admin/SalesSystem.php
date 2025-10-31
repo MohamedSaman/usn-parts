@@ -77,6 +77,7 @@ class SalesSystem extends Component
     public function getSubtotalAfterItemDiscountsProperty()
     {
         return $this->subtotal;
+        dd($this->subtotal);
     }
 
     public function getAdditionalDiscountAmountProperty()
@@ -379,7 +380,7 @@ class SalesSystem extends Component
                 'customer_id' => $customer->id,
                 'customer_type' => $customer->type,
                 'subtotal' => $this->subtotal,
-                'discount_amount' => $this->totalDiscount + $this->additionalDiscountAmount,
+                'discount_amount' => $this->additionalDiscountAmount,
                 'total_amount' => $this->grandTotal,
                 'payment_type' => 'full',
                 'payment_status' => 'pending',

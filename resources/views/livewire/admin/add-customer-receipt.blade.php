@@ -287,20 +287,6 @@
                                 wire:click="$set('totalPaymentAmount', {{ $totalDueAmount }})">
                                 Pay Full Amount (Rs.{{ number_format($totalDueAmount, 2) }})
                             </button>
-                            @if($totalDueAmount >= 10000)
-                            <button
-                                class="btn btn-outline-secondary btn-sm"
-                                wire:click="$set('totalPaymentAmount', {{ min(10000, $totalDueAmount) }})">
-                                Pay Rs.1,000
-                            </button>
-                            @endif
-                            @if($totalDueAmount >= 50000)
-                            <button
-                                class="btn btn-outline-secondary btn-sm"
-                                wire:click="$set('totalPaymentAmount', {{ min(50000, $totalDueAmount) }})">
-                                Pay Rs.5,0000
-                            </button>
-                            @endif
                         </div>
                     </div>
 

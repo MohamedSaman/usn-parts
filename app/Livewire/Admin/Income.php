@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
-#[Title("Income")]
+#[Title("Deposit By Cash")]
 #[Layout('components.layouts.admin')]
 class Income extends Component
 {

@@ -434,15 +434,26 @@
 
                                 {{-- Totals Section --}}
                                 <tfoot class="table-light">
+                                    @php
+                                    $itemDiscountTotal = $createdSale->items->sum(function($item) {
+                                        return ($item->discount_per_unit ?? 0) * $item->quantity;
+                                    });
+                                    @endphp
                                     <tr>
-                                        <td colspan="6" class="text-end fw-bold">Subtotal:</td>
-                                        <td class="text-end fw-bold">{{ number_format($createdSale->subtotal, 2) }}</td>
+                                        <td colspan="6" class="text-end fw-bold">Total:</td>
+                                        <td class="text-end fw-bold">{{ number_format($createdSale->subtotal + $itemDiscountTotal, 2) }}</td>
                                     </tr>
 
-                                    @if($createdSale->discount_amount > 0)
+                                    @php
+                                    $itemDiscountTotal = $createdSale->items->sum(function($item) {
+                                        return ($item->discount_per_unit ?? 0) * $item->quantity;
+                                    });
+                                    $totalDiscount = ($createdSale->discount_amount + $itemDiscountTotal);
+                                    @endphp
+                                    @if($totalDiscount > 0)
                                     <tr>
                                         <td colspan="6" class="text-end fw-bold text-danger">Total Discount:</td>
-                                        <td class="text-end fw-bold text-danger">- {{ number_format($createdSale->discount_amount, 2) }}</td>
+                                        <td class="text-end fw-bold text-danger">- {{ number_format($totalDiscount, 2) }}</td>
                                     </tr>
                                     @endif
 

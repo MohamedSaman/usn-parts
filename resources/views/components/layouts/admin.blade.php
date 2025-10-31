@@ -818,7 +818,7 @@
         <div class="collapse" id="banksSubmenu">
             <ul class="nav flex-column ms-3">
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.income') }}">
                         <i class="bi bi-cash-stack"></i> <span>Deposit By Cash</span>
                     </a>
                 </li>
@@ -838,12 +838,12 @@
         </div>
     </li>
     </li>
-    <li class="nav-item">
+    {{--<li class="nav-item">
         <a class="nav-link py-2" href="{{ route('admin.income') }}">
             <i class="bi bi-cash-stack"></i> <span>Income</span>
 
         </a>
-    </li>
+    </li>--}}
     {{-- // Expensive  --}}
     <li class="nav-item">
         <a class="nav-link dropdown-toggle" href="#expensesSubmenu" data-bs-toggle="collapse" role="button"

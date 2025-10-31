@@ -1,6 +1,4 @@
 <div>
-
-
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -64,7 +62,7 @@
                                     </div>
                                     <div class="flex-grow-1">
                                         <div class="fw-semibold">Invoice #{{ $invoice->invoice_number }}</div>
-                                        <small class="text-muted">{{ $invoice->created_at->format('Y-m-d') }} | ${{ number_format($invoice->total_amount, 2) }}</small>
+                                        <small class="text-muted">{{ $invoice->created_at->format('Y-m-d') }} | Rs.{{ number_format($invoice->total_amount, 2) }}</small>
                                     </div>
                                 </div>
                             </button>
@@ -123,7 +121,7 @@
                                     </td>
                                     <td>{{ $invoice->created_at->format('Y-m-d') }}</td>
                                     <td>
-                                        <span class="fw-bold text-dark">${{ number_format($invoice->total_amount, 2) }}</span>
+                                        <span class="fw-bold text-dark">Rs.{{ number_format($invoice->total_amount, 2) }}</span>
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group btn-group-sm">
@@ -154,15 +152,74 @@
     </div>
 
     @if($showReturnSection && $selectedInvoice)
+    <!-- Previous Returns Section -->
+    @if(!empty($previousReturns))
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-warning">
+                <div class="card-header bg-warning bg-opacity-10 border-bottom border-warning">
+                    <h5 class="fw-bold mb-0 text-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i> Previous Returns for Invoice #{{ $selectedInvoice->invoice_number }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Total Returned</th>
+                                    <th>Total Amount</th>
+                                    <th>Return Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($previousReturns as $productId => $returnData)
+                                <tr>
+                                    <td>{{ $returnData['product_name'] }}</td>
+                                    <td><span class="badge bg-warning">{{ $returnData['total_returned'] }} units</span></td>
+                                    <td class="fw-bold">Rs.{{ number_format($returnData['total_amount'], 2) }}</td>
+                                    <td>
+                                        <div class="small">
+                                            @foreach($returnData['returns'] as $return)
+                                            <div class="mb-1">
+                                                <span class="badge bg-secondary">{{ $return['quantity'] }} units</span>
+                                                <span class="text-muted">- Rs.{{ number_format($return['amount'], 2) }}</span>
+                                                <span class="text-muted">on {{ $return['date'] }}</span>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Invoice Items for Return -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom">
-                    <h5 class="fw-bold mb-0">
-                        <i class="bi bi-receipt text-info me-2"></i> Invoice #{{ $selectedInvoice->invoice_number }} Items
-                    </h5>
-                    <p class="text-muted small mb-0">Select return quantity for each item below</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="fw-bold mb-0">
+                                <i class="bi bi-receipt text-info me-2"></i> Invoice #{{ $selectedInvoice->invoice_number }} Items
+                            </h5>
+                            <p class="text-muted small mb-0">Select return quantity for each item below</p>
+                        </div>
+                        @if($overallDiscountPerItem > 0)
+                        <div class="text-end">
+                            <span class="badge bg-success">Overall Discount Applied</span>
+                            <p class="small text-muted mb-0">Rs.{{ number_format($overallDiscountPerItem, 2) }} per item</p>
+                        </div>
+                        @endif
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -171,37 +228,75 @@
                                 <tr>
                                     <th>Product</th>
                                     <th>Code</th>
-                                    <th>Sold Qty</th>
+                                    <th>Original Qty</th>
+                                    <th>Returned</th>
+                                    <th>Available</th>
                                     <th>Return Qty</th>
                                     <th>Unit Price</th>
+                                    <th>Item Disc.</th>
+                                    <th>Overall Disc.</th>
+                                    <th>Net Price</th>
                                     <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($selectedInvoice->items as $index => $item)
+                                @foreach($returnItems as $index => $item)
                                 <tr>
-                                    <td>{{ $item->product->name }}</td>
-                                    <td>{{ $item->product->code }}</td>
-                                    <td>{{ $item->quantity }}</td>
+                                    <td>{{ $item['name'] }}</td>
+                                    <td>{{ $selectedInvoice->items[$index]->product->code }}</td>
+                                    <td>{{ $item['original_qty'] }}</td>
                                     <td>
-                                        <input type="number" class="form-control form-control-sm" style="width: 80px;" min="0" max="{{ $item->quantity }}"
-                                            wire:model.lazy="returnItems.{{ $index }}.return_qty">
-                                        <input type="hidden" wire:model="returnItems.{{ $index }}.product_id" value="{{ $item->product->id }}">
-                                        <input type="hidden" wire:model="returnItems.{{ $index }}.name" value="{{ $item->product->name }}">
-                                        <input type="hidden" wire:model="returnItems.{{ $index }}.unit_price" value="{{ ($item->unit_price - ($item->discount_per_unit ?? 0)) }}">
-                                        <input type="hidden" wire:model="returnItems.{{ $index }}.max_qty" value="{{ $item->quantity }}">
+                                        @if($item['already_returned'] > 0)
+                                        <span class="badge bg-warning">{{ $item['already_returned'] }}</span>
+                                        @else
+                                        <span class="text-muted">0</span>
+                                        @endif
                                     </td>
-                                    <td>${{ number_format($item->unit_price - ($item->discount_per_unit ?? 0), 2) }}</td>
                                     <td>
-                                        ${{ isset($returnItems[$index]['return_qty']) ? number_format($returnItems[$index]['return_qty'] * ($item->unit_price - ($item->discount_per_unit ?? 0)), 2) : '0.00' }}
+                                        <span class="badge bg-success">{{ $item['max_qty'] }}</span>
+                                    </td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm" style="width: 80px;" 
+                                            min="0" max="{{ $item['max_qty'] }}"
+                                            wire:model.lazy="returnItems.{{ $index }}.return_qty"
+                                            @if($item['max_qty'] == 0) disabled @endif>
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.product_id" value="{{ $item['product_id'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.name" value="{{ $item['name'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.unit_price" value="{{ $item['unit_price'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.discount_per_unit" value="{{ $item['discount_per_unit'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.overall_discount_per_unit" value="{{ $item['overall_discount_per_unit'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.total_discount_per_unit" value="{{ $item['total_discount_per_unit'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.net_unit_price" value="{{ $item['net_unit_price'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.max_qty" value="{{ $item['max_qty'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.original_qty" value="{{ $item['original_qty'] }}">
+                                        <input type="hidden" wire:model="returnItems.{{ $index }}.already_returned" value="{{ $item['already_returned'] }}">
+                                    </td>
+                                    <td>Rs.{{ number_format($item['unit_price'], 2) }}</td>
+                                    <td>
+                                        @if($item['discount_per_unit'] > 0)
+                                        <span class="text-danger">-Rs.{{ number_format($item['discount_per_unit'], 2) }}</span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($item['overall_discount_per_unit'] > 0)
+                                        <span class="text-danger">-Rs.{{ number_format($item['overall_discount_per_unit'], 2) }}</span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="fw-bold">Rs.{{ number_format($item['net_unit_price'], 2) }}</td>
+                                    <td class="fw-bold text-success">
+                                        Rs.{{ number_format($item['return_qty'] * $item['net_unit_price'], 2) }}
                                     </td>
                                 </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <div class="d-flex justify-content-end mt-3">
-                        <span class="fw-bold fs-5 text-warning">Total Return Value: ${{ number_format($totalReturnValue, 2) }}</span>
+                    <div class="d-flex justify-content-end mt-3 bg-light p-3 rounded">
+                        <span class="fw-bold fs-4 text-warning">Total Return Value: Rs.{{ number_format($totalReturnValue, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-end mt-2">
                         <button class="btn btn-success px-4" wire:click="processReturn">
@@ -214,15 +309,13 @@
     </div>
     @endif
 
-
-
     <!-- Return Processing Modal -->
     <div wire:ignore.self class="modal fade" id="returnModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-arrow-return-left me-2"></i> Process Product Return
+                        <i class="bi bi-arrow-return-left me-2"></i> Confirm Product Return
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -233,32 +326,45 @@
                             <p><strong>Invoice:</strong> #{{ $selectedInvoice?->invoice_number }}</p>
                         </div>
                         <div class="col-md-6">
-                            <p><strong>Return Value:</strong> ${{ number_format($totalReturnValue, 2) }}</p>
-                            <p><strong>Items:</strong> {{ count($returnItems) }}</p>
+                            <p><strong>Return Value:</strong> <span class="text-success fw-bold">Rs.{{ number_format($totalReturnValue, 2) }}</span></p>
+                            <p><strong>Items:</strong> {{ count(array_filter($returnItems, fn($item) => $item['return_qty'] > 0)) }}</p>
                         </div>
                     </div>
 
-                    <h6>Return Items</h6>
+                    <h6 class="fw-bold mb-3">Return Items Summary</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
                                     <th>Product</th>
                                     <th>Return Qty</th>
-                                    <th>Unit Price</th>
+                                    <th>Net Unit Price</th>
                                     <th>Total</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($returnItems as $item)
+                                @if($item['return_qty'] > 0)
                                 <tr>
-                                    <td>{{ $item['name'] }}</td>
+                                    <td>
+                                        {{ $item['name'] }}
+                                        @if($item['total_discount_per_unit'] > 0)
+                                        <br><small class="text-muted">(Discounts applied: Rs.{{ number_format($item['total_discount_per_unit'], 2) }}/unit)</small>
+                                        @endif
+                                    </td>
                                     <td>{{ $item['return_qty'] }}</td>
-                                    <td>${{ number_format($item['unit_price'], 2) }}</td>
-                                    <td>${{ number_format($item['return_qty'] * $item['unit_price'], 2) }}</td>
+                                    <td>Rs.{{ number_format($item['net_unit_price'], 2) }}</td>
+                                    <td class="fw-bold">Rs.{{ number_format($item['return_qty'] * $item['net_unit_price'], 2) }}</td>
                                 </tr>
+                                @endif
                                 @endforeach
                             </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Total Return Amount:</td>
+                                    <td class="fw-bold text-success">Rs.{{ number_format($totalReturnValue, 2) }}</td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>
@@ -289,19 +395,25 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Date:</strong> {{ $invoiceModalData['date'] }}</p>
-                            <p><strong>Total Amount:</strong> ${{ number_format($invoiceModalData['total_amount'], 2) }}</p>
+                            <p><strong>Total Amount:</strong> Rs.{{ number_format($invoiceModalData['total_amount'], 2) }}</p>
+                            @if($invoiceModalData['overall_discount'] > 0)
+                            <p><strong>Overall Discount:</strong> <span class="text-danger">Rs.{{ number_format($invoiceModalData['overall_discount'], 2) }}</span></p>
+                            @endif
                         </div>
                     </div>
 
-                    <h6>Invoice Items</h6>
+                    <h6 class="fw-bold mb-3">Invoice Items</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Product Name</th>
+                                    <th>Product</th>
                                     <th>Code</th>
-                                    <th>Quantity</th>
+                                    <th>Qty</th>
                                     <th>Unit Price</th>
+                                    <th>Item Disc.</th>
+                                    <th>Overall Disc.</th>
+                                    <th>Net Price</th>
                                     <th>Total</th>
                                 </tr>
                             </thead>
@@ -311,8 +423,23 @@
                                     <td>{{ $item['product_name'] }}</td>
                                     <td>{{ $item['product_code'] }}</td>
                                     <td>{{ $item['quantity'] }}</td>
-                                    <td>${{ number_format($item['unit_price'], 2) }}</td>
-                                    <td>${{ number_format($item['total'], 2) }}</td>
+                                    <td>Rs.{{ number_format($item['unit_price'], 2) }}</td>
+                                    <td>
+                                        @if($item['item_discount'] > 0)
+                                        <span class="text-danger">-Rs.{{ number_format($item['item_discount'], 2) }}</span>
+                                        @else
+                                        -
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($item['overall_discount'] > 0)
+                                        <span class="text-danger">-Rs.{{ number_format($item['overall_discount'], 2) }}</span>
+                                        @else
+                                        -
+                                        @endif
+                                    </td>
+                                    <td class="fw-bold">Rs.{{ number_format($item['net_price'], 2) }}</td>
+                                    <td class="fw-bold">Rs.{{ number_format($item['total'], 2) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -356,11 +483,12 @@
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        white-space: nowrap;
     }
 
     .table td {
         vertical-align: middle;
-        padding: 0.25rem 0.75rem;
+        padding: 0.75rem;
     }
 
     .btn-group-sm>.btn {
@@ -378,31 +506,31 @@
     .table-hover tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.025);
     }
+
+    .border-warning {
+        border-width: 2px !important;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-    // Handle success alerts
     window.addEventListener('alert', event => {
         Swal.fire('Success', event.detail.message, 'success');
     });
 
-    // Show return confirmation modal
     Livewire.on('show-return-modal', () => {
         var modalEl = document.getElementById('returnModal');
         var modal = new bootstrap.Modal(modalEl);
         modal.show();
     });
 
-    // Show invoice details modal
     Livewire.on('show-invoice-modal', () => {
         var modalEl = document.getElementById('invoiceModal');
         var modal = new bootstrap.Modal(modalEl);
         modal.show();
     });
 
-    // Close return modal after confirm
     Livewire.on('close-return-modal', () => {
         var modalEl = document.getElementById('returnModal');
         var modal = bootstrap.Modal.getInstance(modalEl);
@@ -410,7 +538,7 @@
             modal.hide();
         }
     });
-    // Reload page after confirm return
+
     Livewire.on('reload-page', () => {
         window.location.reload();
     });

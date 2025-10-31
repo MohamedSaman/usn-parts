@@ -23,11 +23,12 @@ class ReturnProduct extends Component
 
     public $customerInvoices = [];
     public $selectedInvoice = null;
-    public $selectedInvoices = []; // For multiple invoice selection
+    public $selectedInvoices = [];
 
     public $invoiceProducts = [];
     public $returnItems = [];
     public $totalReturnValue = 0;
+    public $overallDiscountPerItem = 0;
 
     public $showInvoiceModal = false;
     public $invoiceModalData = null;
@@ -35,8 +36,10 @@ class ReturnProduct extends Component
     public $showReturnSection = false;
     public $searchReturnProduct = '';
     public $availableProducts = [];
-    public $invoiceProductsForSearch = []; // Products from selected invoice for search
-    public $selectedProducts = []; // Products selected for return
+    public $invoiceProductsForSearch = [];
+    public $selectedProducts = [];
+
+    public $previousReturns = []; // Track previously returned items
 
     /** 🔍 Search Customer or Invoice */
     public function updatedSearchCustomer()
@@ -49,7 +52,6 @@ class ReturnProduct extends Component
                 ->limit(10)
                 ->get();
 
-            // Search invoices by invoice number
             $this->customerInvoices = Sale::where('invoice_number', 'like', '%' . $this->searchCustomer . '%')
                 ->latest()
                 ->limit(5)
@@ -67,22 +69,11 @@ class ReturnProduct extends Component
         $this->searchCustomer = '';
         $this->customers = [];
 
-        // Reset all selections when selecting a new customer
-        $this->selectedInvoice = null;
-        $this->selectedInvoices = [];
-        $this->invoiceProducts = [];
-        $this->returnItems = [];
-        $this->selectedProducts = [];
-        $this->showReturnSection = false;
-        $this->searchReturnProduct = '';
-        $this->availableProducts = [];
-        $this->invoiceProductsForSearch = [];
-        $this->totalReturnValue = 0;
-
+        $this->resetReturnData();
         $this->loadCustomerInvoices();
     }
 
-    /** 🧾 Load Selected Customer’s Invoices */
+    /** 🧾 Load Selected Customer's Invoices */
     public function loadCustomerInvoices()
     {
         if (!$this->selectedCustomer) {
@@ -96,86 +87,109 @@ class ReturnProduct extends Component
             ->get();
     }
 
-    /** 📦 Load Products from Selected Invoice */
-    public function selectInvoice($invoiceId)
-    {
-        $this->selectedInvoice = Sale::with(['items.product'])->find($invoiceId);
-
-        if ($this->selectedInvoice) {
-            $this->invoiceProducts = $this->selectedInvoice->items->map(function ($item) {
-                return [
-                    'id' => $item->product->id,
-                    'name' => $item->product->name,
-                    'code' => $item->product->code,
-                    'image' => $item->product->image,
-                    'quantity' => $item->quantity,
-                    'unit_price' => ($item->unit_price - ($item->discount_per_unit ?? 0)),
-                ];
-            })->toArray();
-
-            // Build returnItems array with all required keys
-            $this->returnItems = [];
-            foreach ($this->selectedInvoice->items as $item) {
-                $this->returnItems[] = [
-                    'product_id' => $item->product->id,
-                    'name' => $item->product->name,
-                    'unit_price' => ($item->unit_price - ($item->discount_per_unit ?? 0)),
-                    'max_qty' => $item->quantity,
-                    'return_qty' => 0,
-                ];
-            }
-        }
-
-        // Also update the selected invoices for the new search functionality
-        if (!in_array($invoiceId, $this->selectedInvoices)) {
-            $this->selectedInvoices[] = $invoiceId;
-            $this->showReturnSection = true;
-            $this->loadInvoiceProductsForSearch();
-        }
-    }
-
     /** 🎯 Simple Invoice Selection for Return */
     public function selectInvoiceForReturn($invoiceId)
     {
-        // Clear previous selections
-        $this->selectedInvoice = null;
-        $this->selectedInvoices = [];
-        $this->invoiceProducts = [];
-        $this->returnItems = [];
-        $this->selectedProducts = [];
-        $this->searchReturnProduct = '';
-        $this->availableProducts = [];
-        $this->invoiceProductsForSearch = [];
-        $this->totalReturnValue = 0;
+        $this->resetReturnData();
 
-        // Set new selection with customer relationship
         $this->selectedInvoice = Sale::with(['items.product', 'customer'])->find($invoiceId);
         $this->selectedInvoices = [$invoiceId];
         $this->showReturnSection = true;
 
-        // Set the selected customer from the invoice
         if ($this->selectedInvoice && $this->selectedInvoice->customer) {
             $this->selectedCustomer = $this->selectedInvoice->customer;
         }
 
-        // Build returnItems array with all required keys
         if ($this->selectedInvoice) {
+            // Calculate overall discount per item
+            $this->calculateOverallDiscountPerItem();
+
+            // Load previous returns for this invoice
+            $this->loadPreviousReturns();
+
+            // Build return items with remaining quantities
             foreach ($this->selectedInvoice->items as $item) {
-                $this->returnItems[] = [
-                    'product_id' => $item->product->id,
-                    'name' => $item->product->name,
-                    'unit_price' => $item->unit_price,
-                    'max_qty' => $item->quantity,
-                    'return_qty' => 0,
-                ];
+                $alreadyReturned = $this->getAlreadyReturnedQuantity($item->product->id);
+                $remainingQty = $item->quantity - $alreadyReturned;
+
+                if ($remainingQty > 0) {
+                    // Calculate per-unit discount (item discount + proportional overall discount)
+                    $itemDiscount = $item->discount_per_unit ?? 0;
+                    $proportionalOverallDiscount = $this->overallDiscountPerItem;
+                    $totalDiscountPerUnit = $itemDiscount + $proportionalOverallDiscount;
+
+                    $this->returnItems[] = [
+                        'product_id' => $item->product->id,
+                        'name' => $item->product->name,
+                        'unit_price' => $item->unit_price,
+                        'discount_per_unit' => $itemDiscount,
+                        'overall_discount_per_unit' => $proportionalOverallDiscount,
+                        'total_discount_per_unit' => $totalDiscountPerUnit,
+                        'net_unit_price' => $item->unit_price - $totalDiscountPerUnit,
+                        'original_qty' => $item->quantity,
+                        'already_returned' => $alreadyReturned,
+                        'max_qty' => $remainingQty,
+                        'return_qty' => 0,
+                    ];
+                }
             }
         }
 
-        // Load products for search
         $this->loadInvoiceProductsForSearch();
-
-        // Clear search field
         $this->searchCustomer = '';
+    }
+
+    /** 📊 Calculate Overall Discount Per Item */
+    private function calculateOverallDiscountPerItem()
+    {
+        if (!$this->selectedInvoice) {
+            $this->overallDiscountPerItem = 0;
+            return;
+        }
+
+        $totalQuantity = $this->selectedInvoice->items->sum('quantity');
+        $overallDiscount = $this->selectedInvoice->discount_amount ?? 0;
+
+        $this->overallDiscountPerItem = $totalQuantity > 0 ? ($overallDiscount / $totalQuantity) : 0;
+    }
+
+    /** 📜 Load Previous Returns */
+    private function loadPreviousReturns()
+    {
+        if (!$this->selectedInvoice) {
+            $this->previousReturns = [];
+            return;
+        }
+
+        $this->previousReturns = ReturnsProduct::where('sale_id', $this->selectedInvoice->id)
+            ->with('product')
+            ->get()
+            ->groupBy('product_id')
+            ->map(function ($returns) {
+                return [
+                    'product_name' => $returns->first()->product->name ?? 'Unknown',
+                    'total_returned' => $returns->sum('return_quantity'),
+                    'total_amount' => $returns->sum('total_amount'),
+                    'returns' => $returns->map(function ($return) {
+                        return [
+                            'quantity' => $return->return_quantity,
+                            'amount' => $return->total_amount,
+                            'date' => $return->created_at->format('Y-m-d H:i'),
+                        ];
+                    })->toArray()
+                ];
+            })
+            ->toArray();
+    }
+
+    /** 🔢 Get Already Returned Quantity */
+    private function getAlreadyReturnedQuantity($productId)
+    {
+        if (!$this->selectedInvoice) return 0;
+
+        return ReturnsProduct::where('sale_id', $this->selectedInvoice->id)
+            ->where('product_id', $productId)
+            ->sum('return_quantity');
     }
 
     /** 👁️ View Invoice Details in Modal */
@@ -184,18 +198,30 @@ class ReturnProduct extends Component
         $invoice = Sale::with(['items.product', 'customer'])->find($invoiceId);
 
         if ($invoice) {
+            $overallDiscount = $invoice->discount_amount ?? 0;
+            $totalQty = $invoice->items->sum('quantity');
+            $discountPerItem = $totalQty > 0 ? ($overallDiscount / $totalQty) : 0;
+
             $this->invoiceModalData = [
                 'invoice_number' => $invoice->invoice_number,
                 'customer_name' => $invoice->customer->name,
                 'date' => $invoice->created_at->format('Y-m-d H:i:s'),
                 'total_amount' => $invoice->total_amount,
-                'items' => $invoice->items->map(function ($item) {
+                'overall_discount' => $overallDiscount,
+                'items' => $invoice->items->map(function ($item) use ($discountPerItem) {
+                    $itemDiscount = $item->discount_per_unit ?? 0;
+                    $totalDiscountPerUnit = $itemDiscount + $discountPerItem;
+                    $netPrice = $item->unit_price - $totalDiscountPerUnit;
+
                     return [
                         'product_name' => $item->product->name,
                         'product_code' => $item->product->code,
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
-                        'total' => $item->quantity * $item->unit_price,
+                        'item_discount' => $itemDiscount,
+                        'overall_discount' => $discountPerItem,
+                        'net_price' => $netPrice,
+                        'total' => $item->quantity * $netPrice,
                     ];
                 })->toArray()
             ];
@@ -204,7 +230,12 @@ class ReturnProduct extends Component
         }
     }
 
-
+    /** ❌ Close Invoice Modal */
+    public function closeInvoiceModal()
+    {
+        $this->showInvoiceModal = false;
+        $this->invoiceModalData = null;
+    }
 
     /** 📦 Load Products from Selected Invoice for Search */
     private function loadInvoiceProductsForSearch()
@@ -220,88 +251,26 @@ class ReturnProduct extends Component
             $invoice = Sale::with(['items.product.price'])->find($invoiceId);
             if ($invoice) {
                 $products = $invoice->items->map(function ($item) use ($invoice) {
+                    $alreadyReturned = $this->getAlreadyReturnedQuantity($item->product->id);
+                    $remainingQty = $item->quantity - $alreadyReturned;
+
                     return [
                         'id' => $item->product->id,
                         'name' => $item->product->name,
                         'code' => $item->product->code,
                         'image' => $item->product->image,
-                        'selling_price' => $item->unit_price, // Use the price from the sale item
+                        'selling_price' => $item->unit_price,
                         'invoice_id' => $invoice->id,
                         'invoice_number' => $invoice->invoice_number,
-                        'max_qty' => $item->quantity,
+                        'max_qty' => $remainingQty,
                     ];
                 });
                 $allProducts = $allProducts->merge($products);
             }
         }
 
-        // Remove duplicates based on product ID and convert to array
         $this->invoiceProductsForSearch = $allProducts->unique('id')->values()->toArray();
     }
-
-    /** 🔍 Search Products for Return */
-    public function updatedSearchReturnProduct()
-    {
-        if (strlen($this->searchReturnProduct) >= 1 && !empty($this->invoiceProductsForSearch)) {
-            $returnProductIds = array_column($this->returnItems, 'product_id');
-
-            $this->availableProducts = collect($this->invoiceProductsForSearch)->filter(function ($product) use ($returnProductIds) {
-                $matchesSearch = stripos($product['name'], $this->searchReturnProduct) !== false ||
-                    stripos($product['code'], $this->searchReturnProduct) !== false;
-
-                return $matchesSearch && !in_array($product['id'], $returnProductIds);
-            })->take(10)->values()->toArray();
-        } else {
-            $this->availableProducts = [];
-        }
-    }
-
-    /** ➕ Add Product Directly to Return Cart */
-    public function addProductDirectlyToReturn($productId)
-    {
-        $product = collect($this->invoiceProductsForSearch)->firstWhere('id', $productId);
-
-        if (!$product) {
-            $this->dispatch('alert', ['message' => 'Product not found!']);
-            return;
-        }
-
-        // Check if product is already in return cart
-        $existingIndex = collect($this->returnItems)->search(fn($item) => $item['product_id'] == $productId);
-
-        if ($existingIndex !== false) {
-            // Increase quantity if already exists
-            $currentQty = $this->returnItems[$existingIndex]['return_qty'];
-            if ($currentQty < $product['max_qty']) {
-                $this->returnItems[$existingIndex]['return_qty'] = $currentQty + 1;
-            } else {
-                $this->dispatch('alert', ['message' => 'Maximum quantity reached for ' . $product['name']]);
-            }
-        } else {
-            // Add new product to return cart
-            $this->returnItems[] = [
-                'product_id' => $product['id'],
-                'name' => $product['name'],
-                'unit_price' => $product['selling_price'],
-                'max_qty' => $product['max_qty'],
-                'return_qty' => 1,
-            ];
-        }
-
-        // Clear search and recalculate
-        $this->searchReturnProduct = '';
-        $this->availableProducts = [];
-        $this->calculateTotalReturnValue();
-    }
-
-    /** ❌ Close Invoice Modal */
-    public function closeInvoiceModal()
-    {
-        $this->showInvoiceModal = false;
-        $this->invoiceModalData = null;
-    }
-
-
 
     /** ❌ Remove Product from Return Cart */
     public function removeFromReturn($index)
@@ -328,34 +297,30 @@ class ReturnProduct extends Component
     private function calculateTotalReturnValue()
     {
         $this->totalReturnValue = collect($this->returnItems)->sum(
-            fn($item) =>
-            $item['return_qty'] * $item['unit_price']
+            fn($item) => $item['return_qty'] * $item['net_unit_price']
         );
     }
 
     /** ✅ Validate before showing confirmation */
     public function processReturn()
     {
-        // Force recalculation
         $this->calculateTotalReturnValue();
-        
 
         if (empty($this->returnItems) || !$this->selectedInvoice) {
             $this->js("Swal.fire('Error!', 'Please select items for return.', 'error')");
             return;
         }
 
-        // Check if at least one item has a return quantity > 0
         $hasReturnItems = false;
         foreach ($this->returnItems as $item) {
-            if($item['return_qty'] < 0){
+            if ($item['return_qty'] < 0) {
                 $this->js("Swal.fire('Error!', 'Return quantity cannot be negative for " . $item['name'] . "', 'error')");
                 return;
             }
 
             if (isset($item['return_qty']) && $item['return_qty'] > 0) {
                 if ($item['return_qty'] > $item['max_qty']) {
-                    $this->js("Swal.fire('Error!', 'Invalid return quantity for " . $item['name'] . "', 'error')");
+                    $this->js("Swal.fire('Error!', 'Invalid return quantity for " . $item['name'] . ". Maximum available: " . $item['max_qty'] . "', 'error')");
                     return;
                 }
                 $hasReturnItems = true;
@@ -373,12 +338,10 @@ class ReturnProduct extends Component
     /** 💾 Confirm Return & Save to Database */
     public function confirmReturn()
     {
-        // Force recalculation and syncing
         $this->calculateTotalReturnValue();
 
         if (empty($this->returnItems) || !$this->selectedCustomer || !$this->selectedInvoice) return;
 
-        // Filter only items with return_qty > 0
         $itemsToReturn = array_filter($this->returnItems, function ($item) {
             return isset($item['return_qty']) && $item['return_qty'] > 0;
         });
@@ -388,23 +351,17 @@ class ReturnProduct extends Component
             return;
         }
 
-        // Debug log for troubleshooting
-        Log::info('ReturnProduct: Saving items', $itemsToReturn);
-        
-
         DB::transaction(function () use ($itemsToReturn) {
             foreach ($itemsToReturn as $item) {
-                $unitPrice= $item['unit_price'] - ($item['discount_per_unit'] ?? 0);
                 ReturnsProduct::create([
                     'sale_id' => $this->selectedInvoice->id,
                     'product_id' => $item['product_id'],
                     'return_quantity' => $item['return_qty'],
-                    'selling_price' => $unitPrice,
-                    'total_amount' => $item['return_qty'] * $unitPrice,
+                    'selling_price' => $item['net_unit_price'],
+                    'total_amount' => $item['return_qty'] * $item['net_unit_price'],
                     'notes' => 'Customer return processed via system',
                 ]);
 
-                // ✅ Update stock (increase available stock)
                 $this->updateProductStock($item['product_id'], $item['return_qty']);
             }
         });
@@ -434,6 +391,23 @@ class ReturnProduct extends Component
                 'restocked_quantity' => 0,
             ]);
         }
+    }
+
+    /** 🔄 Reset Return Data */
+    private function resetReturnData()
+    {
+        $this->selectedInvoice = null;
+        $this->selectedInvoices = [];
+        $this->invoiceProducts = [];
+        $this->returnItems = [];
+        $this->selectedProducts = [];
+        $this->showReturnSection = false;
+        $this->searchReturnProduct = '';
+        $this->availableProducts = [];
+        $this->invoiceProductsForSearch = [];
+        $this->totalReturnValue = 0;
+        $this->overallDiscountPerItem = 0;
+        $this->previousReturns = [];
     }
 
     public function render()
