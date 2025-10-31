@@ -65,6 +65,7 @@
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
+
                                     <th class="ps-4">No</th>
                                     <th>Quotation No</th>
                                     <th>Customer</th>
@@ -78,37 +79,29 @@
                                 @if($quotations->count() > 0)
                                 @foreach($quotations as $quotation)
                                 <tr>
-                                    <td class="ps-4">
+                                    <td class="ps-4" wire:click="viewQuotation({{ $quotation->id }})">
                                         <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
                                     </td>
-                                    <td class="fw-bold text-primary">{{ $quotation->quotation_number }}</td>
-                                    <td>
+                                    <td class="fw-bold text-primary" wire:click="viewQuotation({{ $quotation->id }})">{{ $quotation->quotation_number }}</td>
+                                    <td wire:click="viewQuotation({{ $quotation->id }})">
                                         <strong class="fw-medium text-dark">{{ $quotation->customer_name }}</strong>
                                         <div class="text-muted small">{{ $quotation->customer_phone }}</div>
                                     </td>
-                                    <td>
+                                    <td wire:click="viewQuotation({{ $quotation->id }})">
                                         <span class="fw-medium text-dark">{{ $quotation->quotation_date->format('d/m/Y') }}</span>
                                     </td>
-                                    <td>
+                                    <td wire:click="viewQuotation({{ $quotation->id }})">
                                         <span class="fw-bold text-success">Rs. {{ number_format($quotation->total_amount, 2) }}</span>
                                     </td>
-                                    <td>
+                                    <td wire:click="viewQuotation({{ $quotation->id }})">
                                         <span class="badge bg-{{ $quotation->status === 'converted' ? 'success' : ($quotation->status === 'draft' ? 'secondary' : 'primary') }}">
                                             {{ ucfirst($quotation->status) }}
                                         </span>
                                     </td>
-                                    <td class="text-end pe-2">
+                                    <td class="text-end pe-4">
                                         <div class="action-btns">
-                                            <button class="btn action-btn view" title="View Quotation"
-                                                wire:click="viewQuotation({{ $quotation->id }})"
-                                                wire:loading.attr="disabled">
-                                                <i class="bi bi-eye" wire:loading.class="d-none"
-                                                    wire:target="viewQuotation({{ $quotation->id }})"></i>
-                                                <span wire:loading wire:target="viewQuotation({{ $quotation->id }})">
-                                                    <i class="spinner-border spinner-border-sm"></i>
-                                                </span>
-                                            </button>
-                                            
+
+
                                             @if($quotation->status !== 'converted')
                                             <button class="btn action-btn sale" title="Create Sale"
                                                 wire:click="openCreateSaleModal({{ $quotation->id }})"
@@ -119,12 +112,9 @@
                                                     <i class="spinner-border spinner-border-sm"></i>
                                                 </span>
                                             </button>
-                                            @else
-                                            <button class="btn action-btn success" title="Already Converted to Sale" disabled>
-                                                <i class="bi bi-check-circle"></i>
-                                            </button>
+
                                             @endif
-                                            
+
                                             <button class="btn action-btn delete" title="Delete Quotation"
                                                 wire:click="confirmDeleteQuotation({{ $quotation->id }})"
                                                 wire:loading.attr="disabled">
@@ -223,34 +213,34 @@
                                                         <small class="text-muted">Code: {{ $item['product_code'] }} | Model: {{ $item['product_model'] }} | Stock: {{ $item['current_stock'] }}</small>
                                                     </div>
                                                     @else
-                                                    <input type="text" 
-                                                           class="form-control form-control-sm" 
-                                                           placeholder="Search and select product..."
-                                                           wire:model="searchTerms.{{ $index }}"
-                                                           wire:key="search-{{ $index }}"
-                                                           wire:keydown.debounce.500ms="showSearchResult({{ $index }}, $event.target.value)">
-                                                    
+                                                    <input type="text"
+                                                        class="form-control form-control-sm"
+                                                        placeholder="Search and select product..."
+                                                        wire:model="searchTerms.{{ $index }}"
+                                                        wire:key="search-{{ $index }}"
+                                                        wire:keydown.debounce.500ms="showSearchResult({{ $index }}, $event.target.value)">
+
                                                     <!-- Search Results -->
                                                     @if($showSearchResults[$index] ?? false)
-                                                    <div class="search-results border rounded p-2 mt-1 bg-white shadow" 
-                                                         style="max-height: 200px; overflow-y: auto; position: absolute; z-index: 1050; width: calc(100% - 30px);">
+                                                    <div class="search-results border rounded p-2 mt-1 bg-white shadow"
+                                                        style="max-height: 200px; overflow-y: auto; position: absolute; z-index: 1050; width: calc(100% - 30px);">
                                                         @php
-                                                            $searchResults = $this->searchProducts($searchTerms[$index]);
+                                                        $searchResults = $this->searchProducts($searchTerms[$index]);
                                                         @endphp
                                                         @if(count($searchResults) > 0)
-                                                            @foreach($searchResults as $product)
-                                                            <div class="search-result-item p-2 border-bottom cursor-pointer"
-                                                                 wire:click="selectProduct({{ $index }}, {{ $product['id'] }})"
-                                                                 wire:key="product-{{ $product['id'] }}-{{ $index }}">
-                                                                <strong>{{ $product['name'] }}</strong>
-                                                                <br>
-                                                                <small>Code: {{ $product['code'] }} | Model: {{ $product['model'] }}</small>
-                                                                <br>
-                                                                <small>Price: Rs.{{ number_format($product['price'], 2) }} | Discount: Rs.{{ number_format($product['discount_price'], 2) }} | Stock: {{ $product['stock'] }}</small>
-                                                            </div>
-                                                            @endforeach
+                                                        @foreach($searchResults as $product)
+                                                        <div class="search-result-item p-2 border-bottom cursor-pointer"
+                                                            wire:click="selectProduct({{ $index }}, {{ $product['id'] }})"
+                                                            wire:key="product-{{ $product['id'] }}-{{ $index }}">
+                                                            <strong>{{ $product['name'] }}</strong>
+                                                            <br>
+                                                            <small>Code: {{ $product['code'] }} | Model: {{ $product['model'] }}</small>
+                                                            <br>
+                                                            <small>Price: Rs.{{ number_format($product['price'], 2) }} | Discount: Rs.{{ number_format($product['discount_price'], 2) }} | Stock: {{ $product['stock'] }}</small>
+                                                        </div>
+                                                        @endforeach
                                                         @else
-                                                            <div class="text-muted p-2">No products found for "{{ $searchTerms[$index] }}"</div>
+                                                        <div class="text-muted p-2">No products found for "{{ $searchTerms[$index] }}"</div>
                                                         @endif
                                                     </div>
                                                     @endif
@@ -258,23 +248,23 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="number" 
-                                                       class="form-control form-control-sm" 
-                                                       wire:model="editableItems.{{ $index }}.quantity"
-                                                       wire:change="updateItemQuantity({{ $index }}, $event.target.value)"
-                                                       min="1" 
-                                                       max="{{ $item['current_stock'] }}">
+                                                <input type="number"
+                                                    class="form-control form-control-sm"
+                                                    wire:model="editableItems.{{ $index }}.quantity"
+                                                    wire:change="updateItemQuantity({{ $index }}, $event.target.value)"
+                                                    min="1"
+                                                    max="{{ $item['current_stock'] }}">
                                                 <small class="text-muted">Max: {{ $item['current_stock'] }}</small>
                                             </td>
                                             <td class="text-center">
                                                 <span class="fw-bold">Rs. {{ number_format($item['unit_price'], 2) }}</span>
                                             </td>
                                             <td>
-                                                <input type="number" 
-                                                       class="form-control form-control-sm" 
-                                                       wire:model="editableItems.{{ $index }}.discount_per_unit"
-                                                       wire:change="updateItemDiscount({{ $index }}, $event.target.value)"
-                                                       step="0.01" min="0" max="{{ $item['unit_price'] }}">
+                                                <input type="number"
+                                                    class="form-control form-control-sm"
+                                                    wire:model="editableItems.{{ $index }}.discount_per_unit"
+                                                    wire:change="updateItemDiscount({{ $index }}, $event.target.value)"
+                                                    step="0.01" min="0" max="{{ $item['unit_price'] }}">
                                             </td>
                                             <td class="text-end fw-bold text-danger">
                                                 Rs. {{ number_format($item['total_discount'], 2) }}
@@ -284,8 +274,8 @@
                                             </td>
                                             <td class="text-center">
                                                 <button type="button" class="btn btn-sm btn-danger"
-                                                        wire:click="removeItem({{ $index }})"
-                                                        {{ count($editableItems) <= 1 ? 'disabled' : '' }}>
+                                                    wire:click="removeItem({{ $index }})"
+                                                    {{ count($editableItems) <= 1 ? 'disabled' : '' }}>
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -312,37 +302,37 @@
                                                     <option value="fixed">Rs.</option>
                                                     <option value="percentage">%</option>
                                                 </select>
-                                                <input type="number" 
-                                                       class="form-control" 
-                                                       wire:model.live="saleData.additional_discount"
-                                                       wire:change="calculateTotals"
-                                                       step="0.01" 
-                                                       min="0"
-                                                       @if($saleData['additional_discount_type'] === 'percentage') max="100" @endif
-                                                       placeholder="Enter discount">
+                                                <input type="number"
+                                                    class="form-control"
+                                                    wire:model.live="saleData.additional_discount"
+                                                    wire:change="calculateTotals"
+                                                    step="0.01"
+                                                    min="0"
+                                                    @if($saleData['additional_discount_type']==='percentage' ) max="100" @endif
+                                                    placeholder="Enter discount">
                                             </div>
                                             <small class="text-muted">
                                                 @if($saleData['additional_discount_type'] === 'percentage')
-                                                    Percentage discount applied to subtotal
+                                                Percentage discount applied to subtotal
                                                 @else
-                                                    Fixed amount discount
+                                                Fixed amount discount
                                                 @endif
                                             </small>
                                         </div>
-                                        
+
                                     </div>
-                                    
+
                                     <!-- Display current discount info from quotation -->
                                     @if($selectedQuotation && ($selectedQuotation->additional_discount > 0 || $selectedQuotation->additional_discount_value > 0))
                                     <div class="mt-2 p-2 bg-info bg-opacity-10 rounded">
                                         <small class="text-info">
-                                            <i class="bi bi-info-circle"></i> 
-                                            Quotation had additional discount: 
+                                            <i class="bi bi-info-circle"></i>
+                                            Quotation had additional discount:
                                             @if($selectedQuotation->additional_discount_type === 'percentage')
-                                                {{ $selectedQuotation->additional_discount_value ?? $selectedQuotation->additional_discount }}% 
-                                                (Rs. {{ number_format($selectedQuotation->additional_discount ?? 0, 2) }})
+                                            {{ $selectedQuotation->additional_discount_value ?? $selectedQuotation->additional_discount }}%
+                                            (Rs. {{ number_format($selectedQuotation->additional_discount ?? 0, 2) }})
                                             @else
-                                                Rs. {{ number_format($selectedQuotation->additional_discount_value ?? $selectedQuotation->additional_discount ?? 0, 2) }}
+                                            Rs. {{ number_format($selectedQuotation->additional_discount_value ?? $selectedQuotation->additional_discount ?? 0, 2) }}
                                             @endif
                                         </small>
                                     </div>
@@ -353,11 +343,11 @@
                             <!-- Notes -->
                             <div class="mt-3">
                                 <label class="form-label">Sale Notes</label>
-                                <textarea class="form-control" wire:model="saleData.notes" rows="3" 
-                                          placeholder="Any additional notes for this sale..."></textarea>
+                                <textarea class="form-control" wire:model="saleData.notes" rows="3"
+                                    placeholder="Any additional notes for this sale..."></textarea>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-4">
                             <!-- Pricing Summary -->
                             <div class="card border-0 bg-light">
@@ -371,7 +361,7 @@
                                                 <td class="fw-bold">Subtotal:</td>
                                                 <td class="text-end">Rs. {{ number_format($subtotal, 2) }}</td>
                                             </tr>
-                                            
+
                                             <!-- Item Discount -->
                                             @if($totalDiscount > 0)
                                             <tr>
@@ -405,7 +395,7 @@
                         <i class="bi bi-x-circle me-1"></i> Cancel
                     </button>
                     <button type="button" class="btn btn-success" wire:click="createSale"
-                            wire:loading.attr="disabled">
+                        wire:loading.attr="disabled">
                         <i class="bi bi-cart-check me-1" wire:loading.class="d-none"></i>
                         <span wire:loading wire:target="createSale">
                             <i class="spinner-border spinner-border-sm me-1"></i>
@@ -422,18 +412,18 @@
         aria-labelledby="viewQuotationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-file-earmark-text text-primary me-2"></i> Quotation Details
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+
                 <div class="modal-body p-0">
+
                     @if($selectedQuotation)
                     <!-- Professional Quotation Template -->
                     <div class="quotation-template" id="quotationPrint">
+
                         <!-- Quotation Header -->
                         <div class="quotation-header bg-primary text-white p-4 rounded-top">
+                            <div class="d-flex justify-content-end mb-3">
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
                             <div class="row align-items-center">
                                 <div class="col-md-6">
                                     <h1 class="h3 fw-bold mb-1">QUOTATION</h1>
@@ -441,7 +431,7 @@
                                 </div>
                                 <div class="col-md-6 text-md-end">
                                     <div class="quotation-meta">
-                                        <h4 class="fw-bold mb-1">{{ $selectedQuotation->quotation_number }}</h4>
+                                        <h2 class="h4 fw-bold mb-1">{{ $selectedQuotation->quotation_number }}</h2>
                                         <p class="mb-0 opacity-75">Date: {{ $selectedQuotation->quotation_date->format('F d, Y') }}</p>
                                     </div>
                                 </div>
@@ -538,21 +528,21 @@
                                                     <td class="fw-bold">Subtotal</td>
                                                     <td class="text-end">Rs. {{ number_format($selectedQuotation->subtotal, 2) }}</td>
                                                 </tr>
-                                                
+
                                                 <!-- Total Discount (Item + Additional) -->
                                                 @php
-                                                    $totalDiscount = $selectedQuotation->discount_amount + $selectedQuotation->additional_discount;
+                                                $totalDiscount = $selectedQuotation->discount_amount + $selectedQuotation->additional_discount;
                                                 @endphp
-                                                
+
                                                 @if($totalDiscount > 0)
                                                 <tr>
                                                     <td class="fw-bold text-danger">
-                                                        Total Discount 
+                                                        Total Discount
                                                         @if($selectedQuotation->discount_amount > 0 && $selectedQuotation->additional_discount > 0)
-                                                            <br><small class="text-muted fw-normal">(Item: Rs.{{ number_format($selectedQuotation->discount_amount, 2) }} + Additional: Rs.{{ number_format($selectedQuotation->additional_discount, 2) }})</small>
+                                                        <br><small class="text-muted fw-normal">(Item: Rs.{{ number_format($selectedQuotation->discount_amount, 2) }} + Additional: Rs.{{ number_format($selectedQuotation->additional_discount, 2) }})</small>
                                                         @elseif($selectedQuotation->discount_amount > 0)
                                                         @elseif($selectedQuotation->additional_discount > 0)
-                                                            <br><small class="text-muted fw-normal">(Additional Discount)</small>
+                                                        <br><small class="text-muted fw-normal">(Additional Discount)</small>
                                                         @endif
                                                     </td>
                                                     <td class="text-end text-danger">- Rs. {{ number_format($totalDiscount, 2) }}</td>
@@ -735,7 +725,8 @@
         background: linear-gradient(135deg, #0d6404ff 0%, #027f44ff 100%);
     }
 
-    .company-info h6, .client-info h6 {
+    .company-info h6,
+    .client-info h6 {
         color: #0d6efd;
     }
 
@@ -765,12 +756,12 @@
             flex-direction: column;
             gap: 4px;
         }
-        
+
         .action-btn {
             width: 32px;
             height: 32px;
         }
-        
+
         .modal-dialog {
             margin: 0.5rem;
         }
@@ -858,7 +849,10 @@
             const index = e.target.getAttribute('wire:model').split('.')[1];
             const searchTerm = e.target.value;
             if (searchTerm.length >= 2) {
-                Livewire.dispatch('showSearchResult', { index: index, searchTerm: searchTerm });
+                Livewire.dispatch('showSearchResult', {
+                    index: index,
+                    searchTerm: searchTerm
+                });
             }
         }
     });

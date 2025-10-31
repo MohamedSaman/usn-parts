@@ -52,7 +52,7 @@ class ReturnProduct extends Component
             // Search invoices by invoice number
             $this->customerInvoices = Sale::where('invoice_number', 'like', '%' . $this->searchCustomer . '%')
                 ->latest()
-                ->limit(10)
+                ->limit(5)
                 ->get();
         } else {
             $this->customers = [];
@@ -109,7 +109,7 @@ class ReturnProduct extends Component
                     'code' => $item->product->code,
                     'image' => $item->product->image,
                     'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price,
+                    'unit_price' => ($item->unit_price - ($item->discount_per_unit ?? 0)),
                 ];
             })->toArray();
 
@@ -119,7 +119,7 @@ class ReturnProduct extends Component
                 $this->returnItems[] = [
                     'product_id' => $item->product->id,
                     'name' => $item->product->name,
-                    'unit_price' => $item->unit_price,
+                    'unit_price' => ($item->unit_price - ($item->discount_per_unit ?? 0)),
                     'max_qty' => $item->quantity,
                     'return_qty' => 0,
                 ];
@@ -338,18 +338,24 @@ class ReturnProduct extends Component
     {
         // Force recalculation
         $this->calculateTotalReturnValue();
+        
 
         if (empty($this->returnItems) || !$this->selectedInvoice) {
-            $this->dispatch('alert', ['message' => 'Please select items for return.']);
+            $this->js("Swal.fire('Error!', 'Please select items for return.', 'error')");
             return;
         }
 
         // Check if at least one item has a return quantity > 0
         $hasReturnItems = false;
         foreach ($this->returnItems as $item) {
+            if($item['return_qty'] < 0){
+                $this->js("Swal.fire('Error!', 'Return quantity cannot be negative for " . $item['name'] . "', 'error')");
+                return;
+            }
+
             if (isset($item['return_qty']) && $item['return_qty'] > 0) {
                 if ($item['return_qty'] > $item['max_qty']) {
-                    $this->dispatch('alert', ['message' => 'Invalid return quantity for ' . $item['name']]);
+                    $this->js("Swal.fire('Error!', 'Invalid return quantity for " . $item['name'] . "', 'error')");
                     return;
                 }
                 $hasReturnItems = true;
@@ -384,15 +390,17 @@ class ReturnProduct extends Component
 
         // Debug log for troubleshooting
         Log::info('ReturnProduct: Saving items', $itemsToReturn);
+        
 
         DB::transaction(function () use ($itemsToReturn) {
             foreach ($itemsToReturn as $item) {
+                $unitPrice= $item['unit_price'] - ($item['discount_per_unit'] ?? 0);
                 ReturnsProduct::create([
                     'sale_id' => $this->selectedInvoice->id,
                     'product_id' => $item['product_id'],
                     'return_quantity' => $item['return_qty'],
-                    'selling_price' => $item['unit_price'],
-                    'total_amount' => $item['return_qty'] * $item['unit_price'],
+                    'selling_price' => $unitPrice,
+                    'total_amount' => $item['return_qty'] * $unitPrice,
                     'notes' => 'Customer return processed via system',
                 ]);
 
