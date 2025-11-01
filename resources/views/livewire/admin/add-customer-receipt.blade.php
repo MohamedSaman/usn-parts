@@ -103,8 +103,12 @@
                     <tbody>
                         @forelse($customers as $customer)
                         @php
-                        $dueInvoices = $customer->sales->where('due_amount', '>', 0)->count();
-                        $totalDue = $customer->sales->where('due_amount', '>', 0)->sum('due_amount');
+                        $dueInvoices = $customer->sales->whereIn('payment_status', ['pending', 'partial'])->count();
+                        // Calculate adjusted due: due_amount - returns for each sale
+                        $totalDue = $customer->sales->whereIn('payment_status', ['pending', 'partial'])->sum(function($sale) {
+                        $returnAmount = $sale->returns ? $sale->returns->sum('total_amount') : 0;
+                        return max(0, $sale->due_amount - $returnAmount);
+                        });
                         @endphp
                         <tr wire:key="customer-{{ $customer->id }}">
                             <td class="ps-4">
@@ -122,6 +126,8 @@
                             </td>
                             <td class="text-end">
                                 <span class="fw-bold text-danger">Rs.{{ number_format($totalDue, 2) }}</span>
+                                <br>
+                                <small class="text-muted">(Adjusted for returns)</small>
                             </td>
                             <td class="text-end pe-4">
                                 <button class="btn btn-primary btn-sm" wire:click="selectCustomer({{ $customer->id }})">
@@ -171,8 +177,10 @@
                                 <tr>
                                     <th class="ps-4">Invoice</th>
                                     <th class="text-center">Date</th>
-                                    <th class="text-end">Total Amount</th>
-                                    <th class="text-end">Paid Amount</th>
+                                    <th class="text-end">Original Total</th>
+                                    <th class="text-end">Returns</th>
+                                    <th class="text-end">Adjusted Total</th>
+                                    <th class="text-end">Paid</th>
                                     <th class="text-end">Due Amount</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-center pe-4">Actions</th>
@@ -180,13 +188,28 @@
                             </thead>
                             <tbody>
                                 @foreach($customerSales as $sale)
-                                <tr class="{{ $sale['due_amount'] > 0 ? 'table-warning' : '' }}">
+                                <tr class="{{ $sale['has_returns'] ? 'table-info' : 'table-warning' }}">
                                     <td class="ps-4">
                                         <div class="fw-bold text-primary">{{ $sale['invoice_number'] }}</div>
                                         <small class="text-muted">#{{ $sale['sale_id'] }}</small>
+                                        @if($sale['has_returns'])
+                                        <br><span class="badge bg-info badge-sm">Has Returns</span>
+                                        @endif
                                     </td>
                                     <td class="text-center">{{ $sale['sale_date'] }}</td>
-                                    <td class="text-end">Rs.{{ number_format($sale['total_amount'], 2) }}</td>
+                                    <td class="text-end">
+                                        Rs.{{ number_format($sale['original_total_amount'], 2) }}
+                                    </td>
+                                    <td class="text-end">
+                                        @if($sale['has_returns'])
+                                        <span class="text-danger fw-bold">-Rs.{{ number_format($sale['return_amount'], 2) }}</span>
+                                        @else
+                                        <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end fw-bold">
+                                        Rs.{{ number_format($sale['total_amount'], 2) }}
+                                    </td>
                                     <td class="text-end text-success">Rs.{{ number_format($sale['paid_amount'], 2) }}</td>
                                     <td class="text-end fw-bold text-danger">Rs.{{ number_format($sale['due_amount'], 2) }}</td>
                                     <td class="text-center">
@@ -206,7 +229,7 @@
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <td colspan="4" class="text-end fw-bold ps-4">Total Due:</td>
+                                    <td colspan="6" class="text-end fw-bold ps-4">Total Due After Returns:</td>
                                     <td class="text-end fw-bold text-danger">Rs.{{ number_format($totalDueAmount, 2) }}</td>
                                     <td colspan="2" class="pe-4"></td>
                                 </tr>
@@ -232,6 +255,10 @@
                             <span class="fw-semibold">Total Due Amount:</span>
                             <span class="fw-bold fs-5">Rs.{{ number_format($totalDueAmount, 2) }}</span>
                         </div>
+                        <small class="text-muted d-block mt-2">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Amount adjusted for returns
+                        </small>
                     </div>
 
                     {{-- Payment Amount Field --}}
@@ -301,6 +328,16 @@
             </div>
         </div>
     </div>
+    @elseif($selectedCustomer && count($customerSales) == 0)
+    <div class="alert alert-success">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-check-circle-fill fs-2 me-3"></i>
+            <div>
+                <h5 class="mb-1">No Pending Payments</h5>
+                <p class="mb-0">{{ $selectedCustomer->name }} has no pending invoices. All invoices are fully paid (including adjustments for returns).</p>
+            </div>
+        </div>
+    </div>
     @endif
 
     {{-- View Sale Modal --}}
@@ -332,12 +369,22 @@
                                     <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
                                 </tr>
                                 <tr>
-                                    <td><strong>Total Amount:</strong></td>
+                                    <td><strong>Original Total:</strong></td>
                                     <td class="fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
                                 </tr>
+                                @if($selectedSale->return_amount > 0)
+                                <tr>
+                                    <td><strong>Returns Amount:</strong></td>
+                                    <td class="fw-bold text-danger">-Rs.{{ number_format($selectedSale->return_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Adjusted Total:</strong></td>
+                                    <td class="fw-bold text-success">Rs.{{ number_format($selectedSale->adjusted_total, 2) }}</td>
+                                </tr>
+                                @endif
                                 <tr>
                                     <td><strong>Due Amount:</strong></td>
-                                    <td class="fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
+                                    <td class="fw-bold text-danger">Rs.{{ number_format($selectedSale->adjusted_due, 2) }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Payment Status:</strong></td>
@@ -397,6 +444,43 @@
                             </tbody>
                         </table>
                     </div>
+
+                    @if($selectedSale->returns && count($selectedSale->returns) > 0)
+                    <h6 class="text-muted mb-3">RETURNED ITEMS</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-info">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Return Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Return Amount</th>
+                                    <th class="text-center">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedSale->returns as $index => $return)
+                                <tr>
+                                    <td>{{ $index + 1 }}</td>
+                                    <td>{{ $return->product->name ?? 'N/A' }}</td>
+                                    <td class="text-center">{{ $return->return_quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
+                                    <td class="text-end fw-bold text-danger">Rs.{{ number_format($return->total_amount, 2) }}</td>
+                                    <td class="text-center">{{ $return->created_at->format('M d, Y') }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="4" class="text-end fw-bold">Total Returns:</td>
+                                    <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->return_amount, 2) }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @endif
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" wire:click="closeViewModal">Close</button>

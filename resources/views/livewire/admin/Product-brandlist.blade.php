@@ -39,32 +39,32 @@
                             </thead>
                             <tbody>
                                 @if ($brands->count() > 0)
-                                    @foreach ($brands as $brand)
-                                        <tr>
-                                            <td class="ps-4">
-                                                <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="fw-medium text-dark">{{ $brand->brand_name }}</span>
-                                            </td>
-                                            <td class="text-end pe-4">
-                                                <button class="btn btn-link text-primary p-0 me-2" wire:click="editBrand({{ $brand->id }})">
-                                                    <i class="bi bi-pencil fs-6"></i>
-                                                </button>
-                                                <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $brand->id }})">
-                                                    <i class="bi bi-trash fs-6"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    @endforeach
+                                @foreach ($brands as $brand)
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-medium text-dark">{{ $brand->brand_name }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editBrand({{ $brand->id }})">
+                                            <i class="bi bi-pencil fs-6"></i>
+                                        </button>
+                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $brand->id }})">
+                                            <i class="bi bi-trash fs-6"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
                                 @else
-                                    <tr>
-                                        <td colspan="3" class="text-center py-5">
-                                            <div class="alert alert-primary bg-opacity-10">
-                                                <i class="bi bi-info-circle me-2"></i> No product brands found.
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="alert alert-primary bg-opacity-10">
+                                            <i class="bi bi-info-circle me-2"></i> No product brands found.
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endif
                             </tbody>
                         </table>
@@ -90,7 +90,7 @@
                             <label class="form-label fw-semibold">Brand Name</label>
                             <input type="text" class="form-control" wire:model="brandName" placeholder="Enter brand name" required>
                             @error('brandName')
-                                <span class="text-danger small">* {{ $message }}</span>
+                            <span class="text-danger small">* {{ $message }}</span>
                             @enderror
                         </div>
                         <div class="d-grid">
@@ -120,7 +120,7 @@
                             <label class="form-label fw-semibold">Brand Name</label>
                             <input type="text" class="form-control" wire:model="editBrandName" placeholder="Enter brand name" required>
                             @error('editBrandName')
-                                <span class="text-danger small">* {{ $message }}</span>
+                            <span class="text-danger small">* {{ $message }}</span>
                             @enderror
                         </div>
                         <div class="d-grid">
@@ -185,7 +185,9 @@
     .table th {
         border-top: none;
         font-weight: 600;
-        color: #6c757d;
+        color: #ffffff;
+        background: #3B5B0C;
+        background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;

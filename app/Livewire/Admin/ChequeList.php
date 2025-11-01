@@ -16,13 +16,7 @@ class ChequeList extends Component
 {
     use WithPagination;
 
-    public $showCompleteModal = false;
-    public $showReturnModal = false;
     public $selectedChequeId = null;
-
-    protected $listeners = [
-        'closeModals' => 'closeModals',
-    ];
 
     public function getChequesProperty()
     {
@@ -48,18 +42,9 @@ class ChequeList extends Component
         return Cheque::where('status', 'overdue')->count();
     }
 
-    public function confirmComplete($chequeId)
+    public function setSelectedCheque($id)
     {
-        $this->selectedChequeId = $chequeId;
-        $this->showCompleteModal = true;
-        $this->dispatch('showModal', 'confirmCompleteModal');
-    }
-
-    public function confirmReturn($chequeId)
-    {
-        $this->selectedChequeId = $chequeId;
-        $this->showReturnModal = true;
-        $this->dispatch('showModal', 'confirmReturnModal');
+        $this->selectedChequeId = $id;
     }
 
     public function completeCheque()
@@ -70,10 +55,13 @@ class ChequeList extends Component
                 // Mark as complete
                 $cheque->status = 'complete';
                 $cheque->save();
-                $this->dispatch('showToast', ['type' => 'success', 'message' => 'Cheque marked as complete.']);
+
+                $this->selectedChequeId = null;
+                $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Cheque marked as complete.']);
+                return;
             }
         }
-        $this->closeModals();
+        $this->selectedChequeId = null;
     }
 
     public function returnCheque()
@@ -83,25 +71,13 @@ class ChequeList extends Component
             if ($cheque) {
                 $cheque->status = 'return';
                 $cheque->save();
-                $this->dispatch('showToast', ['type' => 'success', 'message' => 'Cheque marked as returned.']);
+
+                $this->selectedChequeId = null;
+                $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Cheque marked as returned.']);
+                return;
             }
         }
-        $this->closeModals();
-    }
-
-    public function setSelectedCheque($id)
-    {
-        $this->selectedChequeId = $id;
-    }
-
-
-    public function closeModals()
-    {
-        $this->showCompleteModal = false;
-        $this->showReturnModal = false;
         $this->selectedChequeId = null;
-        $this->dispatch('hideModal', 'confirmCompleteModal');
-        $this->dispatch('hideModal', 'confirmReturnModal');
     }
 
     public function render()

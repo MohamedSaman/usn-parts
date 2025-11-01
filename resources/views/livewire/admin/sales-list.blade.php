@@ -202,7 +202,7 @@
     {{-- ==================== VIEW SALE MODAL (same structure as the photo) ==================== --}}
     <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1"
          aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-xl">
             <div class="modal-content" id="printableInvoice">
 
                 {{-- Header – logo + company name --}}
@@ -230,13 +230,14 @@
                             {{ $selectedSale->customer->address ?? '' }}<br>
                             Tel: {{ $selectedSale->customer->phone ?? '' }}
                         </div>
-                        <div class="col-6">
+                        <div class="col-6 text-end">
                             <table class="table table-sm table-borderless">
                                 <tr><td><strong>Invoice No :</strong></td><td>{{ $selectedSale->invoice_number }}</td></tr>
                                 <tr><td><strong>Sale Status :</strong></td><td>Completed</td></tr>
                                 <tr><td><strong>Payment Status :</strong></td><td>Pending</td></tr>
                                 <tr><td><strong>Invoice Date :</strong></td><td>{{ $selectedSale->created_at->format('d/m/Y H:i') }}</td></tr>
-                                
+                                <tr><td><strong>Due Date :</strong></td><td>00-00-00</td></tr>
+                                <tr><td><strong>Sales Person :</strong></td><td>ART STORE</td></tr>
                             </table>
                         </div>
                     </div>
@@ -310,7 +311,12 @@
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
                     <div>
-                       
+                        @if($selectedSale && $selectedSale->payment_status !== 'paid')
+                        <button type="button" class="btn btn-success me-2"
+                                wire:click="markAsPaid({{ $selectedSale->id }})">
+                            <i class="bi bi-check-circle me-1"></i> Mark as Paid
+                        </button>
+                        @endif
                         <button type="button" class="btn btn-outline-primary"
                                 onclick="window.print()">
                             <i class="bi bi-printer me-1"></i> Print
@@ -441,6 +447,20 @@
     .modal-header { background: linear-gradient(90deg, #0d6efd, #0056b3); color:#fff; }
     .modal-title i { color:#ffc107; }
     .closebtn { top:3%; right:3%; position:absolute; }
+    .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #ffffff;
+            background: #3B5B0C;
+            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    .table td {
+            vertical-align: middle;
+            padding: 1rem 0.75rem;
+        }
 
     @media print {
         body * { visibility:hidden; }

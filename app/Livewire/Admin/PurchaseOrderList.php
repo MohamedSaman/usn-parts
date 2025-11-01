@@ -277,6 +277,8 @@ class PurchaseOrderList extends Component
                     $orderItem->quantity = $qty;
                     $orderItem->unit_price = $item['unit_price'] ?? 0;
                     $orderItem->discount = $item['discount'] ?? 0;
+                    $orderItem->total_amount = $item['total_amount'] ?? 0;
+                    $orderItem->due_amount = $item['due_amount'] ?? 0;
                     $orderItem->save();
                     $keepIds[] = $orderItem->id;
                 }
@@ -397,6 +399,7 @@ class PurchaseOrderList extends Component
 
         $receivedItemsCount = 0;
         $notReceivedItemsCount = 0;
+        $orderTotal = 0; // <-- Track the total amount
 
         foreach ($this->grnItems as $item) {
             $productId = $item['product_id'];
@@ -418,63 +421,59 @@ class PurchaseOrderList extends Component
 
             // Handle new product creation
             if ($isNewProduct && !empty($item['name']) && !empty($item['code'])) {
-                // Check if product with same code already exists
                 $existingProduct = ProductDetail::where('code', $item['code'])->first();
-
                 if ($existingProduct) {
-                    // Use existing product
                     $productId = $existingProduct->id;
                 } else {
-                    // Create new product
                     $newProduct = ProductDetail::create([
                         'code' => $item['code'],
                         'name' => $item['name'],
                         'description' => 'Added via GRN',
-
                         'category_id' => 1,
                         'brand_id' => 1,
                         'status' => 'active',
                     ]);
-
-                    // Create product price
                     \App\Models\ProductPrice::create([
                         'product_id' => $newProduct->id,
                         'supplier_price' => $item['unit_price'] ?? 0,
-                        'selling_price' => ($item['unit_price'] ?? 0) * 1.2, // 20% markup
-                        'wholesale_price' => ($item['unit_price'] ?? 0) * 1.1, // 10% markup
+                        'selling_price' => ($item['unit_price'] ?? 0) * 1.2,
+                        'wholesale_price' => ($item['unit_price'] ?? 0) * 1.1,
                     ]);
-
-                    // Create initial stock
                     \App\Models\ProductStock::create([
                         'product_id' => $newProduct->id,
                         'available_stock' => 0,
                         'reserved_stock' => 0,
                     ]);
-
                     $productId = $newProduct->id;
                 }
             }
 
+            // Calculate total for this item (with discount)
+            $unitPrice = floatval($item['unit_price'] ?? 0);
+            $discount = floatval($item['discount'] ?? 0);
+            $discountType = $item['discount_type'] ?? 'rs';
+            $subtotal = $receivedQty * $unitPrice;
+            if ($discountType === 'percent') {
+                $discountAmount = ($subtotal * $discount) / 100;
+                $itemTotal = $subtotal - $discountAmount;
+            } else {
+                $itemTotal = $subtotal - $discount;
+            }
+            $orderTotal += max(0, $itemTotal);
+
             if (isset($item['id'])) {
                 // Update existing order item
                 $orderItem = PurchaseOrderItem::find($item['id']);
-
                 if ($orderItem) {
-                    // Find total quantity for this product in the same order
                     $totalQty = PurchaseOrderItem::where('order_id', $orderItem->order_id)
                         ->where('product_id', $orderItem->product_id)
                         ->sum('quantity');
-
                     $previousQty = $totalQty ?? 0;
-
-                    // Update item data
                     $orderItem->quantity = $receivedQty;
                     $orderItem->unit_price = $item['unit_price'];
                     $orderItem->discount = $item['discount'];
                     $orderItem->status = $status;
                     $orderItem->save();
-
-                    // Update stock with correct delta
                     if ($status === 'received' && $receivedQty > 0) {
                         $previousQty += $receivedQty;
                         $this->updateProductStock($productId, $receivedQty);
@@ -491,11 +490,8 @@ class PurchaseOrderList extends Component
                     'discount' => $item['discount'] ?? 0,
                     'status' => 'received',
                 ]);
-
-                // Ensure it's saved as received (defensive)
                 $newOrderItem->status = 'received';
                 $newOrderItem->save();
-                // Update stock for new received item
                 if ($receivedQty > 0) {
                     $this->updateProductStock($productId, $receivedQty);
                 }
@@ -515,6 +511,9 @@ class PurchaseOrderList extends Component
             $this->selectedPO->status = 'pending';
         }
 
+        // Set total_amount and due_amount
+        $this->selectedPO->total_amount = $orderTotal;
+        $this->selectedPO->due_amount = $orderTotal;
         $this->selectedPO->save();
 
         // Refresh the orders table
@@ -528,7 +527,6 @@ class PurchaseOrderList extends Component
         $this->selectedPO = null;
         $this->grnItems = [];
         $this->searchResults = [];
-        //relode js
         $this->js("location.reload();");
     }
 

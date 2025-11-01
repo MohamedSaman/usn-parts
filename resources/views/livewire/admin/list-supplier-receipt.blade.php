@@ -3,42 +3,42 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-receipt text-success me-2"></i> Customer Payment List
+                <i class="bi bi-receipt text-primary me-2"></i> Supplier Payment List
             </h3>
-            <p class="text-muted mb-0">View all customer receipts and payment allocations</p>
+            <p class="text-muted mb-0">View all supplier receipts and payment allocations</p>
         </div>
     </div>
 
-    {{-- Customer List Table --}}
+    {{-- Supplier List Table --}}
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center bg-light">
             <h5 class="fw-bold mb-0">
-                <i class="bi bi-people me-2"></i> Customers with Payments
+                <i class="bi bi-people me-2"></i> Suppliers with Payments
             </h5>
-            <span class="badge bg-primary">{{ $customers->total() }} customers</span>
+            <span class="badge bg-primary">{{ $suppliers->total() }} suppliers</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="ps-4">Customer Name</th>
+                            <th class="ps-4">Supplier Name</th>
                             <th class="text-center">Total Paid</th>
                             <th class="text-center">No. of Receipts</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($customers as $customer)
-                        <tr wire:key="customer-{{ $customer->id }}" style="cursor:pointer" wire:click="showCustomerPayments({{ $customer->id }})">
-                            <td class="ps-4 fw-semibold">{{ $customer->name }}</td>
-                            <td class="text-center">Rs.{{ number_format($customer->total_paid, 2) }}</td>
-                            <td class="text-center">{{ $customer->receipts_count }}</td>
+                        @forelse($suppliers as $supplier)
+                        <tr wire:key="supplier-{{ $supplier->id }}" style="cursor:pointer" wire:click="showSupplierPayments({{ $supplier->id }})">
+                            <td class="ps-4 fw-semibold">{{ $supplier->name }}</td>
+                            <td class="text-center">Rs.{{ number_format($supplier->total_paid, 2) }}</td>
+                            <td class="text-center">{{ $supplier->receipts_count }}</td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
+                            <td colspan="3" class="text-center text-muted py-4">
                                 <i class="bi bi-x-circle display-4 d-block mb-2"></i>
-                                No customer payments found.
+                                No supplier payments found.
                             </td>
                         </tr>
                         @endforelse
@@ -47,10 +47,10 @@
             </div>
 
             {{-- Pagination --}}
-            @if($customers->hasPages())
+            @if($suppliers->hasPages())
             <div class="card-footer">
                 <div class="d-flex justify-content-center">
-                    {{ $customers->links('pagination::bootstrap-5') }}
+                    {{ $suppliers->links('pagination::bootstrap-5') }}
                 </div>
             </div>
             @endif
@@ -58,38 +58,38 @@
     </div>
 
     {{-- Payment Details Modal --}}
-    @if($showPaymentModal && $selectedCustomer)
+    @if($showPaymentModal && $selectedSupplier)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-xl">
             <div class="modal-content">
-                <div class="modal-header bg-gradient-success text-white">
+                <div class="modal-header bg-gradient-primary text-white">
                     <div>
                         <h5 class="modal-title fw-bold mb-1">
                             <i class="bi bi-receipt-cutoff me-2"></i> Payment History
                         </h5>
-                        <small class="opacity-75">{{ $selectedCustomer->name }}</small>
+                        <small class="opacity-75">{{ $selectedSupplier->name }}</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" wire:click="closePaymentModal"></button>
                 </div>
                 <div class="modal-body p-0">
-                    {{-- Customer Info Card --}}
+                    {{-- Supplier Info Card --}}
                     <div class="bg-light border-bottom p-3">
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="d-flex align-items-center">
-                                    <i class="bi bi-person-circle text-success me-2" style="font-size: 1.5rem;"></i>
+                                    <i class="bi bi-person-circle text-primary me-2" style="font-size: 1.5rem;"></i>
                                     <div>
-                                        <small class="text-muted d-block">Customer Name</small>
-                                        <strong>{{ $selectedCustomer->name }}</strong>
+                                        <small class="text-muted d-block">Supplier Name</small>
+                                        <strong>{{ $selectedSupplier->name }}</strong>
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="d-flex align-items-center">
-                                    <i class="bi bi-telephone text-primary me-2" style="font-size: 1.5rem;"></i>
+                                    <i class="bi bi-telephone text-success me-2" style="font-size: 1.5rem;"></i>
                                     <div>
                                         <small class="text-muted d-block">Mobile</small>
-                                        <strong>{{ $selectedCustomer->mobile }}</strong>
+                                        <strong>{{ $selectedSupplier->mobile }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -98,7 +98,7 @@
                                     <i class="bi bi-envelope text-info me-2" style="font-size: 1.5rem;"></i>
                                     <div>
                                         <small class="text-muted d-block">Email</small>
-                                        <strong>{{ $selectedCustomer->email }}</strong>
+                                        <strong>{{ $selectedSupplier->email }}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -109,7 +109,7 @@
                                     <div class="card-body py-2">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <span class="text-muted">Total Payments Made</span>
-                                            <span class="badge bg-success rounded-pill">{{ count($payments) }} receipts</span>
+                                            <span class="badge bg-primary rounded-pill">{{ count($payments) }} receipts</span>
                                         </div>
                                     </div>
                                 </div>
@@ -130,12 +130,12 @@
                     {{-- Payment List --}}
                     <div class="p-3">
                         @forelse($payments as $index => $payment)
-                        <div class="card mb-3 shadow-sm border-start border-4 border-success">
+                        <div class="card mb-3 shadow-sm border-start border-4 border-primary">
                             <div class="card-header bg-white">
                                 <div class="row align-items-center">
                                     <div class="col-md-8">
                                         <div class="d-flex align-items-center">
-                                            <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
                                                 <strong>#{{ $index + 1 }}</strong>
                                             </div>
                                             <div>
@@ -184,45 +184,45 @@
                                         </div>
                                         <div class="col-md-6">
                                             <small class="text-muted d-block">Transaction Reference</small>
-                                            <strong>{{ $payment->reference_number }}</strong>
+                                            <strong>{{ $payment->bank_transaction }}</strong>
                                         </div>
                                     </div>
                                 </div>
                                 @endif
 
-                                {{-- Allocated Invoices --}}
+                                {{-- Allocated Orders --}}
                                 <div class="mb-2">
                                     <strong class="text-muted d-block mb-2">
-                                        <i class="bi bi-file-earmark-text me-1"></i> Allocated to Invoices:
+                                        <i class="bi bi-box-seam me-1"></i> Allocated to Orders:
                                     </strong>
                                     @if($payment->allocations && count($payment->allocations) > 0)
                                     <div class="table-responsive">
                                         <table class="table table-sm table-bordered mb-0">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th>Invoice ID</th>
-                                                    <th>Invoice Code</th>
+                                                    <th>Order ID</th>
+                                                    <th>Order Code</th>
                                                     <th class="text-end">Allocated Amount</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 @foreach($payment->allocations as $alloc)
                                                 <tr>
-                                                    <td><span class="badge bg-dark">#{{ $alloc->sale_id }}</span></td>
-                                                    <td>{{ $alloc->sale ? $alloc->sale->invoice_code : 'N/A' }}</td>
-                                                    <td class="text-end fw-bold text-success">Rs.{{ number_format($alloc->amount, 2) }}</td>
+                                                    <td><span class="badge bg-dark">#{{ $alloc->purchase_order_id }}</span></td>
+                                                    <td>{{ $alloc->order ? $alloc->order->order_code : 'N/A' }}</td>
+                                                    <td class="text-end fw-bold text-success">Rs.{{ number_format($alloc->allocated_amount, 2) }}</td>
                                                 </tr>
                                                 @endforeach
                                                 <tr class="table-active">
                                                     <td colspan="2" class="text-end"><strong>Total Allocated:</strong></td>
-                                                    <td class="text-end fw-bold text-primary">Rs.{{ number_format($payment->allocations->sum('amount'), 2) }}</td>
+                                                    <td class="text-end fw-bold text-primary">Rs.{{ number_format($payment->allocations->sum('allocated_amount'), 2) }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
                                     @else
                                     <div class="alert alert-warning mb-0">
-                                        <i class="bi bi-exclamation-triangle me-1"></i> No invoice allocation found for this payment
+                                        <i class="bi bi-exclamation-triangle me-1"></i> No order allocation found for this payment
                                     </div>
                                     @endif
                                 </div>
@@ -239,7 +239,7 @@
                         @empty
                         <div class="text-center py-5">
                             <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
-                            <p class="text-muted mt-3">No payments found for this customer.</p>
+                            <p class="text-muted mt-3">No payments found for this supplier.</p>
                         </div>
                         @endforelse
                     </div>

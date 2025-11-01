@@ -1,4 +1,28 @@
 <div class="container-fluid py-3">
+    {{-- Toast Alert --}}
+    <div>
+        <div
+            x-data="{ show: false, type: '', message: '' }"
+            x-init="
+                window.addEventListener('show-toast', e => {
+                    type = e.detail.type;
+                    message = e.detail.message;
+                    show = true;
+                    setTimeout(() => show = false, 3500);
+                });
+            "
+            style="position: fixed; top: 24px; right: 24px; z-index: 2000; min-width: 320px;">
+            <template x-if="show">
+                <div :class="type === 'success' ? 'alert alert-success shadow' : 'alert alert-danger shadow'" class="fade show">
+                    <div class="d-flex align-items-center">
+                        <i :class="type === 'success' ? 'bi bi-check-circle-fill me-2' : 'bi bi-exclamation-triangle-fill me-2'" style="font-size: 1.5rem;"></i>
+                        <div x-text="message"></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -128,7 +152,7 @@
                     <h5 class="modal-title fw-bold">
                         <i class="bi bi-arrow-repeat me-2"></i> Re-Cheque
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form wire:submit.prevent="rechequeSubmit">
                     <div class="modal-body">
@@ -150,7 +174,7 @@
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">
-                        <button type="button" class="btn btn-secondary" wire:click="closeModals">Cancel</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary">Add Cheque</button>
                     </div>
                 </form>
@@ -161,17 +185,24 @@
 
 @push('script')
 <script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('showModal', (modalId) => {
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            modal.show();
-        });
+    // Clean up any stuck modals on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        document.body.style.removeProperty('overflow');
+    });
 
-        Livewire.on('hideModal', (modalId) => {
+    // Close modal and reset form after successful submission
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('closeModal', (data) => {
+            const modalId = Array.isArray(data) ? data[0] : data;
             const modalEl = document.getElementById(modalId);
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
+            if (modalEl) {
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
             }
         });
     });

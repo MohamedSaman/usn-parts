@@ -51,7 +51,9 @@ class GRN extends Component
     }
     public function viewGRN($orderId)
     {
-        $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product'])->find($orderId);
+        $this->selectedPO = PurchaseOrder::with(['supplier', 'items' => function ($query) {
+            $query->where('status', 'received');
+        }, 'items.product'])->find($orderId);
 
         if (!$this->selectedPO) {
             $this->dispatch('alert', ['message' => 'Order not found!', 'type' => 'error']);

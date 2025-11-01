@@ -20,4 +20,8 @@ class ProductSupplier extends Model
     {
         return $this->hasMany(PurchaseOrder::class, 'supplier_id');
     }
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\PurchaseOrder::class, 'supplier_id');
+    }
 }

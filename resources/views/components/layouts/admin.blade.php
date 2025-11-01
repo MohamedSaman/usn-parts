@@ -31,11 +31,11 @@
 
 
             /* Primary / Brand */
-            --primary: #0d6efd;
+            --primary: #fff;
             /* main blue (links, active) */
             --primary-600: #0b5ed7;
             /* hover background for links */
-            --primary-100: #e9f0ff;
+            --primary-100: #8eb922;
             /* main blue (links, active) */
 
 
@@ -69,8 +69,8 @@
 
 
             /* Topbar / sidebar specifics */
-            --sidebar-bg: #ffffff;
-            --topbar-bg: #ffffff;
+            --sidebar-bg: #000000;
+            --topbar-bg: #000000;
 
 
             /* Text */
@@ -92,7 +92,8 @@
         .sidebar {
             width: 265px;
             height: 100vh;
-            background-color: var(--sidebar-bg);
+            background-color: #000000;
+            color: #ffffff;
             border-right: 1px solid var(--border);
             padding: 20px 0;
             position: fixed;
@@ -110,12 +111,12 @@
         }
 
         .sidebar::-webkit-scrollbar-track {
-            background: var(--page-bg);
+            background: #000000;
         }
 
         .sidebar::-webkit-scrollbar-thumb {
             background-color: var(--muted-3);
-            border-radius: 6px;
+
         }
 
         /* Add padding to the bottom of sidebar to ensure last items are visible */
@@ -154,7 +155,7 @@
         .sidebar-title {
             font-weight: 600;
             font-size: 1.2rem;
-            color: var(--text);
+            color: #ffffff;
             letter-spacing: -0.02em;
         }
 
@@ -165,16 +166,15 @@
         }
 
         .nav-link {
-            color: var(--muted-2);
+            color: #fff;
             padding: 8px 20px;
-            /* Reduced top/bottom padding from 10px to 8px */
-            border-radius: 6px;
             transition: all 0.2s;
         }
 
 
         .nav-link.active {
-            background-color: var(--primary-100);
+            background: #3B5B0C;
+            background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
             color: var(--primary);
             font-weight: 500;
         }
@@ -182,7 +182,7 @@
         .nav-link:focus,
         .nav-link:hover,
         .nav-link:focus-visible {
-            color: var(--primary);
+            color: var(--primary-100);
 
             outline: none;
         }
@@ -271,6 +271,10 @@
             left: 70px;
         }
 
+        .top-bar .title {
+            color: #8eb922;
+        }
+
         /* User info styles */
         .admin-info {
             display: flex;
@@ -279,10 +283,11 @@
             padding: 5px;
             border-radius: 5px;
             transition: background-color 0.2s;
+            color: #ffffff;
         }
 
         .admin-info:hover {
-            background-color: var(--page-bg);
+            background-color: #8eb922;
         }
 
         .admin-avatar,
@@ -291,13 +296,14 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            background-color: var(--avatar-bg);
-            color: var(--avatar-text);
+            background-color: #000000;
+            color: #ffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
             letter-spacing: -0.03em;
+            border: 1px solid #ffffff;
         }
 
         .admin-name {
@@ -338,9 +344,10 @@
 
         /* Main content styles */
         .main-content {
-            margin-left: 250px;
+            margin-left: 260px;
             margin-top: 60px;
             padding: 20px;
+            background-color: #F8F9FA;
             min-height: calc(100vh - 60px);
             width: calc(100% - 250px);
             transition: all 0.3s ease;
@@ -581,6 +588,17 @@
             z-index: 1050 !important;
         }
 
+        .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #ffffff;
+            background: #3B5B0C;
+            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         /* Responsive styles */
         @media (max-width: 767.98px) {
             .sidebar {
@@ -623,7 +641,7 @@
         <div class="sidebar">
             <div class="sidebar-header d-flex justify-content-center">
                 <div class="sidebar-title">
-                    <img src="{{ asset('images/USN.png') }}" alt="Logo" width="150">
+                    <img src="{{ asset('images/USN-Dark.png') }}" alt="Logo" width="200">
                 </div>
             </div>
             <ul class="nav flex-column">
@@ -640,8 +658,7 @@
                     <div class="collapse" id="hrSubmenu">
                         <ul class="nav flex-column ms-3">
                             <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.manage-admin') }}">
-                <i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
+                                <a class="nav-link py-2" href="{{ route('admin.manage-admin') }}"><i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
                 </a>
                 </li>
                 <!-- Disabled: Manage Staff -->
@@ -725,7 +742,7 @@
                     {{-- no need him  --}}
 
                     {{-- <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.due-payments') }}">
+                                        <a class="nav-link py-2" href="{{ route('admin.due-payments') }}">
                     <i class="bi bi-cash-coin"></i> <span>Due Payments</span>
                     </a>
         </li>
@@ -760,7 +777,7 @@
                     </a>
                 </li>
                 {{-- <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
+                                            <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
                 <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                 </a>
     </li> --}}
@@ -837,12 +854,11 @@
             </ul>
         </div>
     </li>
-    </li>
     {{--<li class="nav-item">
-        <a class="nav-link py-2" href="{{ route('admin.income') }}">
-            <i class="bi bi-cash-stack"></i> <span>Income</span>
+                    <a class="nav-link py-2" href="{{ route('admin.income') }}">
+    <i class="bi bi-cash-stack"></i> <span>Income</span>
 
-        </a>
+    </a>
     </li>--}}
     {{-- // Expensive  --}}
     <li class="nav-item">
@@ -880,12 +896,12 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.add-supplier-receipt') }}">
                         <i class="bi bi-truck-flatbed"></i> <span>Add Supplier Receipt</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.list-supplier-receipt') }}">
                         <i class="bi bi-clipboard-data"></i> <span>List Supplier Receipt</span>
                     </a>
                 </li>
@@ -951,7 +967,7 @@
 
         <!-- Centered Company Name (hidden on small screens) -->
         <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-            <h2 class="mb-0"><b>USN Auto Parts</b></h2>
+            <h2 class="title"><b>USN Auto Parts</b></h2>
         </div>
         @php
         use App\Models\CashInHand as CashModel;
@@ -959,13 +975,13 @@
         @endphp
 
         <!-- Editable Cash in Hand Display -->
-        <div class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill shadow-sm border border-success border-opacity-25 d-flex align-items-center gap-2">
-            <i class="bi bi-wallet2"></i>
-            <span class="fw-semibold">Cash in Hand:</span>
+        <div class="badge  bg-opacity-10  px-3 py-2 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2" style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem;">
+            <i class="bi bi-lock-fill"></i>
+            <span class="fw-semibold">POS:</span>
             <span class="fw-bold">Rs. {{ number_format($cashInHand, 2) }}</span>
 
             <!-- Edit button -->
-            <button class="btn btn-sm btn-outline-success border-0 ms-2 p-0" data-bs-toggle="modal" data-bs-target="#editCashAdminModal">
+            <button class="btn btn-sm  border-0 ms-2 p-0" data-bs-toggle="modal" data-bs-target="#editCashAdminModal" style="color:#8eb922;">
                 <i class="bi bi-pencil-square"></i>
             </button>
 
@@ -1073,7 +1089,7 @@
 
 
     @livewireScripts
-
+    <script src="https://unpkg.com/alpinejs" defer></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Define all elements once

@@ -410,16 +410,6 @@
         border-radius: 12px 12px 0 0 !important;
         padding: 1.25rem 1.5rem;
     }
-
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #6c757d;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
     .table td {
         vertical-align: middle;
         padding: 1rem 0.75rem;

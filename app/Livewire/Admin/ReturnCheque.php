@@ -15,7 +15,6 @@ class ReturnCheque extends Component
 {
     use WithPagination;
 
-    public $showRechequeModal = false;
     public $selectedChequeId = null;
 
     // New cheque fields
@@ -59,8 +58,6 @@ class ReturnCheque extends Component
     public function setSelectedCheque($id)
     {
         $this->selectedChequeId = $id;
-        $this->showRechequeModal = true;
-        $this->dispatch('showModal', 'rechequeModal');
     }
 
     public function rechequeSubmit()
@@ -83,17 +80,19 @@ class ReturnCheque extends Component
                 'payment_id' => $oldCheque->payment_id,
             ]);
 
-            $this->dispatch('showToast', ['type' => 'success', 'message' => 'New cheque added and old cheque cancelled.']);
+            // Reset form and close modal
+            $this->resetForm();
+            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'New cheque added and old cheque cancelled.']);
+            $this->dispatch('closeModal', ['rechequeModal']);
         }
-        $this->closeModals();
     }
 
-    public function closeModals()
+    private function resetForm()
     {
-        $this->showRechequeModal = false;
         $this->selectedChequeId = null;
         $this->reset(['newChequeNumber', 'newBankName', 'newChequeDate', 'newChequeAmount']);
-        $this->dispatch('hideModal', 'rechequeModal');
+        $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function render()

@@ -247,7 +247,9 @@
         .table th {
             border-top: none;
             font-weight: 600;
-            color: #6c757d;
+            color: #ffffff;
+            background: #3B5B0C;
+            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;

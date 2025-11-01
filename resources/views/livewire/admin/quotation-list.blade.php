@@ -745,6 +745,17 @@
         border: 1px solid #dee2e6;
     }
 
+    .table th {
+            border-top: none;
+            font-weight: 600;
+            color: #ffffff;
+            background: #3B5B0C;
+            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
     .table-active {
         background-color: rgba(13, 110, 253, 0.1) !important;
     }

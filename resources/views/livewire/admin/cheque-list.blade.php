@@ -1,4 +1,28 @@
 <div class="container-fluid py-3">
+    {{-- Toast Alert --}}
+    <div>
+        <div
+            x-data="{ show: false, type: '', message: '' }"
+            x-init="
+                window.addEventListener('show-toast', e => {
+                    type = e.detail.type;
+                    message = e.detail.message;
+                    show = true;
+                    setTimeout(() => show = false, 3500);
+                });
+            "
+            style="position: fixed; top: 24px; right: 24px; z-index: 2000; min-width: 320px;">
+            <template x-if="show">
+                <div :class="type === 'success' ? 'alert alert-success shadow' : 'alert alert-danger shadow'" class="fade show">
+                    <div class="d-flex align-items-center">
+                        <i :class="type === 'success' ? 'bi bi-check-circle-fill me-2' : 'bi bi-exclamation-triangle-fill me-2'" style="font-size: 1.5rem;"></i>
+                        <div x-text="message"></div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
@@ -141,14 +165,14 @@
                     <h5 class="modal-title fw-bold">
                         <i class="bi bi-check2-circle me-2"></i> Confirm Complete
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center"> <!-- 👈 Centered text -->
                     <p class="fw-semibold fs-5">Are you sure you want to mark this cheque as <strong>Complete</strong>?</p>
                 </div>
                 <div class="modal-footer justify-content-center"> <!-- 👈 Center footer buttons -->
-                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Cancel</button>
-                    <button type="button" class="btn btn-success" wire:click="completeCheque">Yes, Complete</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" wire:click="completeCheque" data-bs-dismiss="modal">Yes, Complete</button>
                 </div>
             </div>
         </div>
@@ -163,14 +187,14 @@
                     <h5 class="modal-title fw-bold">
                         <i class="bi bi-arrow-counterclockwise me-2"></i> Confirm Return
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeModals"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body text-center">
                     <p class="fw-semibold fs-5">Are you sure you want to <strong>Return</strong> this cheque?</p>
                 </div>
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" wire:click="closeModals">Cancel</button>
-                    <button type="button" class="btn btn-danger" wire:click="returnCheque">Yes, Return</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" wire:click="returnCheque" data-bs-dismiss="modal">Yes, Return</button>
                 </div>
             </div>
         </div>
@@ -180,19 +204,12 @@
 
 @push('script')
 <script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('showModal', (modalId) => {
-            const modal = new bootstrap.Modal(document.getElementById(modalId));
-            modal.show();
-        });
-
-        Livewire.on('hideModal', (modalId) => {
-            const modalEl = document.getElementById(modalId);
-            const modalInstance = bootstrap.Modal.getInstance(modalEl);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
-        });
+    // Clean up any stuck modals on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        document.body.style.removeProperty('overflow');
     });
 </script>
 @endpush
