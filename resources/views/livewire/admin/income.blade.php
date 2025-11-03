@@ -149,7 +149,7 @@
                                     <span class="fw-bold text-success">{{ number_format($deposit->amount, 2) }}</span>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-link text-danger p-0" wire:click="deleteDeposit({{ $deposit->id }})">
+                                    <button class="text-danger  me-2 bg-opacity-0 border-0" wire:click="deleteDeposit({{ $deposit->id }})">
                                         <i class="bi bi-trash fs-6"></i>
                                     </button>
                                 </td>
@@ -173,7 +173,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-success me-2"></i> Add & Deposit Daily Income
+                        <i class="bi bi-plus-circle text-white me-2"></i> Add & Deposit Daily Income
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

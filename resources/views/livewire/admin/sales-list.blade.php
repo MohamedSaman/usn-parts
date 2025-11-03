@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-cash-stack text-primary me-2"></i> Admin Sales Management
+                <i class="bi bi-cash-stack text-success me-2"></i> Admin Sales Management
             </h3>
             <p class="text-muted mb-0">View and manage admin sales</p>
         </div>
@@ -163,12 +163,12 @@
                             <td class="text-center"><span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span></td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-success"
+                                    <button class="text-success me-2 bg-opacity-0 border-0"
                                             wire:click.stop="downloadInvoice({{ $sale->id }})"
                                             title="Download Invoice">
                                         <i class="bi bi-download"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger"
+                                    <button class="text-danger  me-2 bg-opacity-0 border-0"
                                             wire:click.stop="deleteSale({{ $sale->id }})"
                                             title="Delete Sale">
                                         <i class="bi bi-trash"></i>
@@ -202,7 +202,7 @@
     {{-- ==================== VIEW SALE MODAL (same structure as the photo) ==================== --}}
     <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1"
          aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableInvoice">
 
                 {{-- Header – logo + company name --}}
@@ -212,7 +212,6 @@
                              class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
                         <p class="mb-0 small text-muted">
-                            IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS. SPECIALIST IN ART BRAND
                         </p>
                     </div>
                     <button type="button" class="btn-close btn-close-white closebtn"
@@ -288,11 +287,7 @@
 
                     {{-- Footer – logos + address + note --}}
                     <div class="mt-4 text-center small">
-                        <div class="d-flex justify-content-center gap-4 align-items-center mb-2">
-                            <img src="{{ asset('images/tata.png') }}" alt="Tata" style="height:35px;">
-                            <img src="{{ asset('images/art.png') }}" alt="ART" style="height:35px;">
-                            <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra" style="height:35px;">
-                        </div>
+                        
                         <p class="mb-0">
                             <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
                             <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
@@ -311,12 +306,7 @@
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
                     <div>
-                        @if($selectedSale && $selectedSale->payment_status !== 'paid')
-                        <button type="button" class="btn btn-success me-2"
-                                wire:click="markAsPaid({{ $selectedSale->id }})">
-                            <i class="bi bi-check-circle me-1"></i> Mark as Paid
-                        </button>
-                        @endif
+                       
                         <button type="button" class="btn btn-outline-primary"
                                 onclick="window.print()">
                             <i class="bi bi-printer me-1"></i> Print
@@ -444,7 +434,7 @@
 {{-- ==================== STYLES (unchanged – only print tweaks) ==================== --}}
 @push('styles')
 <style>
-    .modal-header { background: linear-gradient(90deg, #0d6efd, #0056b3); color:#fff; }
+    .modal-header { background: linear-gradient(90deg, #3b5b0c, #8eb922); color:#fff; }
     .modal-title i { color:#ffc107; }
     .closebtn { top:3%; right:3%; position:absolute; }
     .table th {
@@ -459,7 +449,7 @@
         }
     .table td {
             vertical-align: middle;
-            padding: 1rem 0.75rem;
+            
         }
 
     @media print {

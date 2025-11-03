@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-arrow-return-left text-primary me-2"></i> Product Returns List
+                <i class="bi bi-arrow-return-left text-success me-2"></i> Product Returns List
             </h3>
             <p class="text-muted mb-0">View and manage all product returns</p>
         </div>
@@ -46,7 +46,7 @@
                                 <div class="btn-group btn-group-sm">
                                     
                                     
-                                    <button class="btn btn-outline-danger"
+                                    <button class=" text-danger  me-2 bg-opacity-0 border-0"
                                             wire:click="deleteReturn({{ $return->id }})"
                                             title="Delete Return">
                                         <i class="bi bi-trash"></i>
@@ -74,14 +74,12 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableReturnReceipt">
                 <!-- Header – logo + company name -->
-                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #0d6efd, #0056b3); color: #fff;">
+                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #3b5b0c, #8eb922); color: #fff;">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
                              class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
-                        <p class="mb-0 small" style="opacity: 0.9;">
-                            IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS. SPECIALIST IN ART BRAND
-                        </p>
+                        
                     </div>
                     <button type="button" class="btn-close btn-close-white closebtn"
                             wire:click="closeModal"></button>

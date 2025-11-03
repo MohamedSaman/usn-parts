@@ -236,8 +236,10 @@ class SalesSystem extends Component
             ];
         }
         
+        
         $this->search = '';
         $this->searchResults = [];
+    
     }
 
     // Update Quantity
@@ -421,6 +423,7 @@ class SalesSystem extends Component
             $this->showSaleModal = true;
             
             session()->flash('success', 'Sale created successfully! Payment status: Pending');
+            
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -459,6 +462,7 @@ class SalesSystem extends Component
         $this->showSaleModal = false;
         $this->lastSaleId = null;
         $this->createdSale = null;
+        
     }
 
     // Continue creating new sale
@@ -467,6 +471,7 @@ class SalesSystem extends Component
         $this->resetExcept(['customers']);
         $this->loadCustomers();
         $this->showSaleModal = false;
+         
         
     }
 

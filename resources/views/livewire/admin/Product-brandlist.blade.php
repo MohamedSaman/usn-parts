@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-shop text-primary me-2"></i> Product Brand Management
+                <i class="bi bi-shop text-success me-2"></i> Product Brand Management
             </h3>
             <p class="text-muted mb-0">Manage and organize your product brands efficiently</p>
         </div>
@@ -48,10 +48,10 @@
                                         <span class="fw-medium text-dark">{{ $brand->brand_name }}</span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editBrand({{ $brand->id }})">
+                                        <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editBrand({{ $brand->id }})">
                                             <i class="bi bi-pencil fs-6"></i>
                                         </button>
-                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $brand->id }})">
+                                        <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $brand->id }})">
                                             <i class="bi bi-trash fs-6"></i>
                                         </button>
                                     </td>
@@ -80,7 +80,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-primary me-2"></i> Add Brand
+                        <i class="bi bi-plus-circle text-white me-2"></i> Add Brand
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -110,7 +110,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Brand
+                        <i class="bi bi-pencil-square text-white me-2"></i> Edit Brand
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

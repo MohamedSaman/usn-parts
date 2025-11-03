@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-clipboard-check-fill text-primary me-2"></i> Goods Received Notes
+                <i class="bi bi-clipboard-check-fill text-success me-2"></i> Goods Received Notes
             </h3>
             <p class="text-muted mb-0">Process and track incoming orders from suppliers</p>
         </div>
@@ -99,7 +99,7 @@
                                 </td>
                                 
                                 <td class="text-end pe-4">
-                                    <button class="btn btn-link text-info p-0"
+                                    <button class="btn-link text-info  me-2 bg-opacity-0 border-0"
                                         wire:click="viewGRN({{ $po->id }})"
                                         title="View GRN Details">
                                         <i class="bi bi-eye fs-5"></i>

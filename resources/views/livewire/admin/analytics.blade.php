@@ -319,7 +319,7 @@
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="fw-bold mb-1"><i class="bi bi-bar-chart text-primary me-2"></i>Analytics Dashboard</h4>
+                        <h4 class="fw-bold mb-1"><i class="bi bi-bar-chart text-success me-2"></i>Analytics Dashboard</h4>
                         <p class="text-muted mb-0">Comprehensive business insights and trends</p>
                     </div>
                 </div>

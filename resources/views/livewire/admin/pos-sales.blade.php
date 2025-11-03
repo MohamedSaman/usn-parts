@@ -7,7 +7,7 @@ use App\Models\Sale;
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-cash-stack text-primary me-2"></i> POS Sales Management
+                <i class="bi bi-cash-stack text-success me-2"></i> POS Sales Management
             </h3>
             <p class="text-muted mb-0">View and manage POS sales</p>
         </div>
@@ -187,12 +187,12 @@ use App\Models\Sale;
                             </td>
                             <td class="text-end pe-4">
                                 <div class="btn-group btn-group-sm">
-                                    <button class="btn btn-outline-success" wire:click.stop="downloadInvoice({{ $sale->id }})"
+                                    <button class=" text-success me-2 bg-opacity-0 border-0" wire:click.stop="downloadInvoice({{ $sale->id }})"
                                         wire:target="downloadInvoice({{ $sale->id }})"
                                         title="Download Invoice">
                                         <i class="bi bi-download"></i>
                                     </button>
-                                    <button class="btn btn-outline-danger" wire:click.stop="deleteSale({{ $sale->id }})"
+                                    <button class="text-danger me-2 bg-opacity-0 border-0" wire:click.stop="deleteSale({{ $sale->id }})"
                                         title="Delete Sale">
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -227,14 +227,12 @@ use App\Models\Sale;
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableInvoice">
                 {{-- ==================== HEADER ==================== --}}
-                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #0d6efd, #0056b3); color: #fff;">
+                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #3b5b0c, #8eb922); color: #fff;">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
                              class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
-                        <p class="mb-0 small" style="opacity: 0.9;">
-                            IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS. SPECIALIST IN ART BRAND
-                        </p>
+                        
                     </div>
                     <button type="button" class="btn-close btn-close-white closebtn"
                             wire:click="closeModals"></button>
@@ -420,11 +418,6 @@ use App\Models\Sale;
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
                     <div>
-                        @if($selectedSale && $selectedSale->payment_status !== 'paid')
-                        <button type="button" class="btn btn-success me-2" wire:click="markAsPaid({{ $selectedSale->id }})">
-                            <i class="bi bi-check-circle me-1"></i> Mark as Paid
-                        </button>
-                        @endif
                         <button type="button" class="btn btn-outline-primary" onclick="window.print()">
                             <i class="bi bi-printer me-1"></i> Print
                         </button>

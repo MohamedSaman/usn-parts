@@ -94,7 +94,7 @@
             height: 100vh;
             background-color: #000000;
             color: #ffffff;
-            border-right: 1px solid var(--border);
+           
             padding: 20px 0;
             position: fixed;
             transition: all 0.3s ease;
@@ -115,7 +115,7 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background-color: var(--muted-3);
+            background-color: #000000;
 
         }
 
@@ -182,7 +182,7 @@
         .nav-link:focus,
         .nav-link:hover,
         .nav-link:focus-visible {
-            color: var(--primary-100);
+            color: #fff;
 
             outline: none;
         }
@@ -347,11 +347,13 @@
             margin-left: 260px;
             margin-top: 60px;
             padding: 20px;
-            background-color: #F8F9FA;
+            background-color: #f5fdf1ff;
             min-height: calc(100vh - 60px);
             width: calc(100% - 250px);
             transition: all 0.3s ease;
         }
+       
+        
 
         .main-content.collapsed {
             margin-left: 70px;
@@ -599,6 +601,19 @@
             letter-spacing: 0.5px;
         }
 
+        .btn{
+            background: #8eb922;
+            background: linear-gradient(0deg,rgba(142, 185, 34, 1) 0%, rgba(59, 91, 12, 1) 100%);
+            color: #ffffff;
+        }
+
+        .modal-header{
+            background: #3B5B0C;
+            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            color: #ffffff;
+        }
+
+        
         /* Responsive styles */
         @media (max-width: 767.98px) {
             .sidebar {
@@ -961,13 +976,13 @@
     <!-- Top Navigation Bar -->
     <nav class="top-bar d-flex justify-content-between align-items-center">
         <!-- Sidebar toggle button -->
-        <button id="sidebarToggler" class="btn btn-sm btn-light d-flex align-items-center">
+        <button id="sidebarToggler" class="btn btn-sm px-2 py-1  d-flex align-items-center" style="color:#ffffff; border-color:#ffffff;">
             <i class="bi bi-list fs-5"></i>
         </button>
 
         <!-- Centered Company Name (hidden on small screens) -->
         <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-            <h2 class="title"><b>USN Auto Parts</b></h2>
+            
         </div>
         @php
         use App\Models\CashInHand as CashModel;

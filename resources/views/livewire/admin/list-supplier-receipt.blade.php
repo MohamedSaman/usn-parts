@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-receipt text-primary me-2"></i> Supplier Payment List
+                <i class="bi bi-receipt text-success me-2"></i> Supplier Payment List
             </h3>
             <p class="text-muted mb-0">View all supplier receipts and payment allocations</p>
         </div>

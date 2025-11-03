@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-cash-stack text-primary me-2"></i> Customer Due Payments
+                <i class="bi bi-cash-stack text-success me-2"></i> Customer Due Payments
             </h3>
             <p class="text-muted mb-0">Manage and collect pending payments from customers efficiently</p>
         </div>

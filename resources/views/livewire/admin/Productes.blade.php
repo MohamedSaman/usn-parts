@@ -280,7 +280,7 @@
             <div class="d-flex justify-content-between align-items-center mb-5">
                 <div>
                     <h3 class="fw-bold text-dark mb-2">
-                        <i class="bi bi-box-seam text-primary me-2"></i> Product Inventory Management
+                        <i class="bi bi-box-seam text-success me-2"></i> Product Inventory Management
                     </h3>
                     <p class="text-muted mb-0">Manage your product catalog and inventory levels efficiently</p>
                 </div>
@@ -439,7 +439,7 @@
         <div class="modal-content border-0 shadow-lg">
             <!-- Modern Header with Gradient -->
             <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem;">
+                 style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); padding: 1.5rem;">
                 <h5 class="modal-title fw-bold d-flex align-items-center">
                     <i class="bi bi-box-seam me-2 fs-4"></i> 
                     <span>Product Details</span>
@@ -455,7 +455,7 @@
                         <div class="p-4 text-center">
                             <!-- Product Image -->
                             <div class="product-image-container mb-4 position-relative">
-                                <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://media.istockphoto.com/id/1300845620/vector/user-icon-flat-isolated-on-white-background-user-symbol-vector-illustration.jpg?s=612x612&w=0&k=20&c=yBeyba0hUkh14_jgv1OKqIH0CCSWU_4ckRkAoy2p73o=' }}"
+    <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://cdn-icons-png.flaticon.com/512/679/679922.png' }}"
                                     alt="Product Image" 
                                     class="img-fluid rounded-3 shadow-sm product-image"
                                     style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
@@ -760,11 +760,11 @@
             <!-- Create Product Modal -->
             <div wire:ignore.self class="modal fade" id="createProductModal" tabindex="-1"
                 aria-labelledby="createProductModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title fw-bold">
-                                <i class="bi bi-plus-circle text-primary me-2"></i> Create New Product
+                                <i class="bi bi-plus-circle text-white me-2"></i> Create New Product
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
@@ -987,11 +987,11 @@
             <!-- Edit Product Modal -->
             <div wire:ignore.self wire:key="edit-modal-{{ $editId ?? 'new' }}" class="modal fade" id="editProductModal" tabindex="-1"
                 aria-labelledby="editProductModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
                     <div class="modal-content">
                         <div class="modal-header">
                             <h5 class="modal-title fw-bold">
-                                <i class="bi bi-pencil-square text-primary me-2"></i> Edit Product
+                                <i class="bi bi-pencil-square text-white me-2"></i> Edit Product
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>

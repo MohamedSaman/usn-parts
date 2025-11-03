@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-cart-check-fill text-primary me-2"></i> Purchase Order Management
+                <i class="bi bi-cart-check-fill text-success me-2"></i> Purchase Order Management
             </h3>
             <p class="text-muted mb-0">Create and manage purchase orders from suppliers</p>
         </div>
@@ -209,7 +209,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-primary me-2"></i> Create New Purchase Order
+                        <i class="bi bi-plus-circle text-white me-2"></i> Create New Purchase Order
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -367,7 +367,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-clipboard-check text-primary me-2"></i> Create GRN for {{ $selectedPO?->order_code }}
+                        <i class="bi bi-clipboard-check text-white me-2"></i> Create GRN for {{ $selectedPO?->order_code }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -383,9 +383,9 @@
                                     <th style="width: 120px;">Code</th>
                                     <th style="width: 120px;">Product</th>
                                     <th style="width: 80px;">Ordered Qty</th>
-                                    <th style="width: 80px;">Received Qty</th>
-                                    <th style="width: 100px;">Supplier Price</th>
-                                    <th style="width: 150px;">Discount</th>
+                                    <th style="width: 150px;">Received Qty</th>
+                                    <th style="width: 180px;">Supplier Price</th>
+                                    <th style="width: 250px;">Discount</th>
                                     <th style="width: 80px;">Cost</th>
                                     <th style="width: 80px;">Total</th>
                                     <th style="width: 50px;">Actions</th>

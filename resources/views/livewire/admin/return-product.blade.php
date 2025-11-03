@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-arrow-return-left text-primary me-2"></i> Product Returns
+                <i class="bi bi-arrow-return-left text-success me-2"></i> Product Returns
             </h3>
             <p class="text-muted mb-0">Manage product returns and refunds efficiently</p>
         </div>
@@ -479,7 +479,7 @@
     .table th {
         border-top: none;
         font-weight: 600;
-        color: #6c757d;
+        color: #ffff;
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;

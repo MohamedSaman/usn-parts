@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-pie-chart-fill text-primary me-2"></i> Expense Management
+                <i class="bi bi-pie-chart-fill text-success me-2"></i> Expense Management
             </h3>
             <p class="text-muted mb-0">Track and manage your company expenses efficiently</p>
         </div>
@@ -29,7 +29,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">Today's Expenses</p>
-                            <h4 class="fw-bold mb-0">${{ number_format($todayTotal, 2) }}</h4>
+                            <h4 class="fw-bold mb-0">Rs.{{ number_format($todayTotal, 2) }}</h4>
                         </div>
                     </div>
                 </div>
@@ -46,7 +46,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">This Month's Expenses</p>
-                            <h4 class="fw-bold mb-0">${{ number_format($monthTotal, 2) }}</h4>
+                            <h4 class="fw-bold mb-0">Rs.{{ number_format($monthTotal, 2) }}</h4>
                         </div>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                         </div>
                         <div class="flex-grow-1">
                             <p class="text-muted mb-1">Total Expenses</p>
-                            <h4 class="fw-bold mb-0">${{ number_format($overallTotal, 2) }}</h4>
+                            <h4 class="fw-bold mb-0">Rs.{{ number_format($overallTotal, 2) }}</h4>
                         </div>
                     </div>
                 </div>
@@ -106,16 +106,14 @@
                                     </td>
                                     <td>{{ $expense->description ?? '—' }}</td>
                                     <td>
-                                        <span class="fw-bold text-dark">${{ number_format($expense->amount, 2) }}</span>
+                                        <span class="fw-bold text-dark">Rs.{{ number_format($expense->amount, 2) }}</span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-link text-info p-0 me-2" wire:click="viewExpense({{ $expense->id }})" wire:loading.attr="disabled" title="View">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
+                                        
+                                        <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled" title="Delete">
+                                        <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $expense->id }}) " wire:loading.attr="disabled" title="Delete">
                                             <i class="bi bi-trash fs-6"></i>
                                         </button>
                                     </td>
@@ -166,7 +164,7 @@
                                         <span class="fw-medium text-dark">{{ $expense->category }}</span>
                                     </td>
                                     <td>
-                                        <span class="fw-bold text-dark">${{ number_format($expense->amount, 2) }}</span>
+                                        <span class="fw-bold text-dark">Rs.{{ number_format($expense->amount, 2) }}</span>
                                     </td>
                                     <td>
                                         @if($expense->status == 'Paid')
@@ -178,13 +176,11 @@
                                         @endif
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-link text-info p-0 me-2" wire:click="viewExpense({{ $expense->id }})" wire:loading.attr="disabled" title="View">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        <button class="btn btn-link text-primary p-0 me-2" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
+                                        
+                                        <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editExpense({{ $expense->id }})" wire:loading.attr="disabled" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </button>
-                                        <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled" title="Delete">
+                                        <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $expense->id }})" wire:loading.attr="disabled" title="Delete">
                                             <i class="bi bi-trash fs-6"></i>
                                         </button>
                                     </td>
@@ -208,7 +204,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-primary me-2"></i> Add Daily Expense
+                        <i class="bi bi-plus-circle text-white me-2"></i> Add Daily Expense
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -233,7 +229,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">Rs.</span>
                                 <input type="number" step="0.01" class="form-control" wire:model="amount" placeholder="e.g., 100" required>
                             </div>
                             @error('amount') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -257,7 +253,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle-fill text-info me-2"></i> Add Monthly Expense
+                        <i class="bi bi-plus-circle-fill text-white me-2"></i> Add Monthly Expense
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -283,7 +279,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">Rs.</span>
                                 <input type="number" step="0.01" class="form-control" wire:model="amount" placeholder="e.g., 500" required>
                             </div>
                             @error('amount') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -316,7 +312,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Daily Expense
+                        <i class="bi bi-pencil-square text-white me-2"></i> Edit Daily Expense
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeEditDailyModal"></button>
                 </div>
@@ -343,7 +339,7 @@
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">Rs.</span>
                                 <input type="number" step="0.01" class="form-control" wire:model="edit_amount" required>
                             </div>
                             @error('edit_amount') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -370,7 +366,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-info me-2"></i> Edit Monthly Expense
+                        <i class="bi bi-pencil-square text-white me-2"></i> Edit Monthly Expense
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeEditMonthlyModal"></button>
                 </div>
@@ -398,7 +394,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Amount</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">Rs.</span>
                                 <input type="number" step="0.01" class="form-control" wire:model="edit_amount" required>
                             </div>
                             @error('edit_amount') <span class="text-danger small">{{ $message }}</span> @enderror
@@ -470,7 +466,7 @@
                         <div class="col-md-6">
                             <div class="p-3 border rounded">
                                 <small class="text-muted d-block">Amount</small>
-                                <strong class="text-success">${{ number_format($viewExpense->amount, 2) }}</strong>
+                                <strong class="text-success">Rs.{{ number_format($viewExpense->amount, 2) }}</strong>
                             </div>
                         </div>
 
@@ -532,7 +528,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-danger">
+                    <h5 class="modal-title fw-bold text-white ">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Delete
                     </h5>
                     <button type="button" class="btn-close" wire:click="cancelDelete"></button>
