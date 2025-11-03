@@ -78,7 +78,7 @@ class QuotationSystem extends Component
 
     public function getSubtotalAfterItemDiscountsProperty()
     {
-        return $this->subtotal - $this->totalDiscount;
+        return $this->subtotal;
     }
 
     public function getAdditionalDiscountAmountProperty()
@@ -497,6 +497,7 @@ public function createQuotation()
     // Close Modal and reset only necessary fields
     public function closeModal()
     {
+        
         $this->showQuotationModal = false;
         $this->lastQuotationId = null;
         $this->createdQuotation = null;

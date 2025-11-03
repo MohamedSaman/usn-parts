@@ -2,7 +2,7 @@
 
     {{-- Page Header --}}
     <div class="d-flex align-items-center mb-4">
-        <i class="bi bi-gear-fill text-primary fs-2"></i>
+        <i class="bi bi-gear-fill text-success fs-2"></i>
         <div class="ms-3">
             <h1 class="h3 fw-bold mb-0">System Settings</h1>
             <p class="text-muted mb-0">Manage all system configurations.</p>
@@ -17,7 +17,7 @@
                         type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapseSystemConfigs" aria-expanded="true"
                         aria-controls="collapseSystemConfigs">
-                    <i class="bi bi-sliders fs-5 me-3 text-primary"></i>
+                    <i class="bi bi-sliders fs-5 me-3 text-success"></i>
                     System Configurations
                 </button>
             </h2>

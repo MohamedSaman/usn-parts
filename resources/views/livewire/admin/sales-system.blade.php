@@ -121,7 +121,7 @@
                                     <th width="30">#</th>
                                     <th>Product</th>
                                     <th width="120">Unit Price</th>
-                                    <th width="120">Quantity</th>
+                                    <th width="150">Quantity</th>
                                     <th width="120">Discount/Unit</th>
                                     <th width="120">Total</th>
                                     <th width="100" class="text-center">Actions</th>
@@ -188,7 +188,7 @@
                                     <td colspan="3" class="text-end fw-bold align-middle">
                                         Additional Discount:
                                         @if($additionalDiscount > 0)
-                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1"
+                                        <button type="button" class=" text-danger p-0 ms-1 border-0 bg-opacity-0"
                                             wire:click="removeAdditionalDiscount" title="Remove discount">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
@@ -292,7 +292,7 @@
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header  text-white">
                     <h5 class="modal-title">
                         <i class="bi bi-person-plus me-2"></i>Add New Customer
                     </h5>
@@ -424,7 +424,7 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $item->product_code }}</td>
                                         <td>{{ $item->product_name }}</td>
-                                        <td class="text-center">{{ $item->quantity }}</td>
+                                        <td class="text-end">{{ $item->quantity }}</td>
                                         <td class="text-end">{{ number_format($item->unit_price, 2) }}</td>
                                         <td class="text-end">{{ number_format($item->discount_per_unit ?? 0, 2) }}</td>
                                         <td class="text-end">{{ number_format($item->total, 2) }}</td>

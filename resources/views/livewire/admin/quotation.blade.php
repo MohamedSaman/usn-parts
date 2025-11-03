@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-cart-check-fill text-primary me-2"></i> Purchase Order Management
+                <i class="bi bi-cart-check-fill text-success me-2"></i> Purchase Order Management
             </h3>
             <p class="text-muted mb-0">Create and manage purchase orders from suppliers</p>
         </div>

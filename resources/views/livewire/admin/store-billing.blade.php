@@ -120,7 +120,7 @@
                                     <th width="30">#</th>
                                     <th>Product</th>
                                     <th width="120">Unit Price</th>
-                                    <th width="120">Quantity</th>
+                                    <th width="150">Quantity</th>
                                     <th width="120">Discount/Unit</th>
                                     <th width="120">Total</th>
                                     <th width="100" class="text-center">Actions</th>

@@ -91,7 +91,7 @@
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
-                    <thead class="table-light">
+                    <thead class="table">
                         <tr>
                             <th class="ps-4">Customer</th>
                             <th>Contact</th>
@@ -173,7 +173,7 @@
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
-                            <thead class="table-light">
+                            <thead class="table">
                                 <tr>
                                     <th class="ps-4">Invoice</th>
                                     <th class="text-center">Date</th>
@@ -227,7 +227,7 @@
                                 </tr>
                                 @endforeach
                             </tbody>
-                            <tfoot class="table-light">
+                            <tfoot class="table">
                                 <tr>
                                     <td colspan="6" class="text-end fw-bold ps-4">Total Due After Returns:</td>
                                     <td class="text-end fw-bold text-danger">Rs.{{ number_format($totalDueAmount, 2) }}</td>
@@ -420,7 +420,7 @@
                     <h6 class="text-muted mb-3">ITEMS SOLD</h6>
                     <div class="table-responsive mb-4">
                         <table class="table table-bordered">
-                            <thead class="table-light">
+                            <thead class="table">
                                 <tr>
                                     <th>#</th>
                                     <th>Product</th>
@@ -449,7 +449,7 @@
                     <h6 class="text-muted mb-3">RETURNED ITEMS</h6>
                     <div class="table-responsive mb-4">
                         <table class="table table-bordered table-info">
-                            <thead class="table-light">
+                            <thead class="table">
                                 <tr>
                                     <th>#</th>
                                     <th>Product</th>
@@ -471,7 +471,7 @@
                                 </tr>
                                 @endforeach
                             </tbody>
-                            <tfoot class="table-light">
+                            <tfoot class="table">
                                 <tr>
                                     <td colspan="4" class="text-end fw-bold">Total Returns:</td>
                                     <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->return_amount, 2) }}</td>
@@ -672,7 +672,7 @@
                     <h6 class="text-muted mt-4 mb-3">PAYMENT ALLOCATION BREAKDOWN</h6>
                     <div class="table-responsive">
                         <table class="table table-bordered">
-                            <thead class="table-light">
+                            <thead class="table">
                                 <tr>
                                     <th>Invoice</th>
                                     <th class="text-end">Due Amount</th>

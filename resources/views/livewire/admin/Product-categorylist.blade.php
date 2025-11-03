@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-tags-fill text-primary me-2"></i> Product Category Management
+                <i class="bi bi-tags-fill text-success me-2"></i> Product Category Management
             </h3>
             <p class="text-muted mb-0">Manage and organize your product categories efficiently</p>
         </div>
@@ -48,10 +48,10 @@
                                                 <span class="fw-medium text-dark">{{ $category->category_name }}</span>
                                             </td>
                                             <td class="text-end pe-4">
-                                                <button class="btn btn-link text-primary p-0 me-2" wire:click="editCategory({{ $category->id }})">
+                                                <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editCategory({{ $category->id }})">
                                                     <i class="bi bi-pencil fs-6"></i>
                                                 </button>
-                                                <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $category->id }})">
+                                                <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $category->id }})">
                                                     <i class="bi bi-trash fs-6"></i>
                                                 </button>
                                             </td>
@@ -80,7 +80,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-primary me-2"></i> Add Category
+                        <i class="bi bi-plus-circle text-white me-2"></i> Add Category
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -110,7 +110,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Category
+                        <i class="bi bi-pencil-square text-white me-2"></i> Edit Category
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

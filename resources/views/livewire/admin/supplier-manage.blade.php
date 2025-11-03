@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-people-fill text-primary me-2"></i> Supplier Management
+                <i class="bi bi-people-fill text-success me-2"></i> Supplier Management
             </h3>
             <p class="text-muted mb-0">Manage your suppliers and business contacts efficiently</p>
         </div>
@@ -49,17 +49,17 @@
                                 <td>{{ $supplier->email }}</td>
                                 <td class="text-end pe-4">
                                     <!-- View Button -->
-                                    <button class="btn btn-link text-info p-0 me-2" wire:click="view({{ $supplier->id }})" 
+                                    <button class="text-info me-2 bg-opacity-0 border-0" wire:click="view({{ $supplier->id }})" 
                                             title="View Supplier Details">
                                         <i class="bi bi-eye fs-6"></i>
                                     </button>
                                     <!-- Edit Button -->
-                                    <button class="btn btn-link text-primary p-0 me-2" wire:click="edit({{ $supplier->id }})"
+                                    <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="edit({{ $supplier->id }})"
                                             title="Edit Supplier">
                                         <i class="bi bi-pencil fs-6"></i>
                                     </button>
                                     <!-- Delete Button -->
-                                    <button class="btn btn-link text-danger p-0" wire:click="confirmDelete({{ $supplier->id }})"
+                                    <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $supplier->id }})"
                                             title="Delete Supplier">
                                         <i class="bi bi-trash fs-6"></i>
                                     </button>
@@ -88,7 +88,7 @@
                 <form wire:submit.prevent="save">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold">
-                            <i class="bi bi-plus-circle text-primary me-2"></i> Create Supplier
+                            <i class="bi bi-plus-circle text-white me-2"></i> Create Supplier
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>
@@ -155,7 +155,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-eye text-info me-2"></i> Supplier Details
+                        <i class="bi bi-eye text-white me-2"></i> Supplier Details
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
@@ -221,7 +221,7 @@
                 <form wire:submit.prevent="updateSupplier">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold">
-                            <i class="bi bi-pencil-square text-primary me-2"></i> Edit Supplier
+                            <i class="bi bi-pencil-square text-white me-2"></i> Edit Supplier
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeModal"></button>
                     </div>

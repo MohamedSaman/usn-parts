@@ -3,7 +3,7 @@
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-people-fill text-primary me-2"></i> Manage Customers
+                <i class="bi bi-people-fill text-success me-2"></i> Manage Customers
             </h3>
             <p class="text-muted mb-0">Manage all customer information efficiently</p>
         </div>
@@ -73,20 +73,20 @@
                                     @endif
                                 </td>
                                 <td>{{ $customer->address ?? '-' }}</td>
-                                <td class="text-end pe-4">
-                                    <button class="btn btn-link text-info p-0 me-2" 
+                                <td class="text-end ">
+                                    <button class=" text-info me-2 bg-opacity-0 border-0" 
                                             wire:click="viewDetails({{ $customer->id }})" 
                                             wire:loading.attr="disabled"
                                             title="View Details">
                                         <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-link text-primary p-0 me-2" 
+                                    <button class="text-primary me-2 bg-opacity-0 border-0" 
                                             wire:click="editCustomer({{ $customer->id }})" 
                                             wire:loading.attr="disabled"
                                             title="Edit Customer">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <button class="btn btn-link text-danger p-0" 
+                                    <button class="text-danger me-2 bg-opacity-0 border-0" 
                                             wire:click="confirmDelete({{ $customer->id }})" 
                                             wire:loading.attr="disabled"
                                             title="Delete Customer">
@@ -116,7 +116,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-primary me-2"></i> Create Customer
+                        <i class="bi bi-plus-circle text-white me-2"></i> Create Customer
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
@@ -200,7 +200,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-pencil-square text-primary me-2"></i> Edit Customer
+                        <i class="bi bi-pencil-square text-white me-2"></i> Edit Customer
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
@@ -283,7 +283,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-person-badge text-primary me-2"></i> Customer Details
+                        <i class="bi bi-person-badge text-white me-2"></i> Customer Details
                     </h5>
                     <button type="button" class="btn-close" wire:click="closeModal"></button>
                 </div>
@@ -366,7 +366,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold text-danger">
+                    <h5 class="modal-title fw-bold text-white">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Delete
                     </h5>
                     <button type="button" class="btn-close" wire:click="cancelDelete"></button>

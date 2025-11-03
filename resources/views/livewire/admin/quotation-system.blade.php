@@ -5,7 +5,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="fw-bold text-dark mb-2">
-                        <i class="bi bi-file-earmark-text text-primary me-2"></i> Create Quotation
+                        <i class="bi bi-file-earmark-text text-success me-2"></i> Create Quotation
                     </h3>
                     <p class="text-muted">Quickly create professional quotations for customers</p>
                 </div>
@@ -137,7 +137,7 @@
                                     <th width="30">#</th>
                                     <th>Product</th>
                                     <th width="120">Unit Price</th>
-                                    <th width="120">Quantity</th>
+                                    <th width="150">Quantity</th>
                                     <th width="120">Discount/Unit</th>
                                     <th width="120">Total</th>
                                     <th width="100" class="text-center">Actions</th>
@@ -194,11 +194,7 @@
                                     <td class="fw-bold">Rs.{{ number_format($subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
-                                <tr>
-                                    <td colspan="5" class="text-end fw-bold text-danger">Total Item Discount:</td>
-                                    <td class="fw-bold text-danger">- Rs.{{ number_format($totalDiscount, 2) }}</td>
-                                    <td></td>
-                                </tr>
+                               
                                
 
                                 {{-- Additional Discount Section --}}
@@ -206,7 +202,7 @@
                                     <td colspan="3" class="text-end fw-bold align-middle">
                                         Additional Discount:
                                         @if($additionalDiscount > 0)
-                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-1"
+                                        <button type="button" class=" btn-link text-danger me-2 p-0 border-0"
                                             wire:click="removeAdditionalDiscount" title="Remove discount">
                                             <i class="bi bi-x-circle"></i>
                                         </button>
@@ -369,7 +365,7 @@
    {{-- Quotation Preview Modal --}}
 @if($showQuotationModal && $createdQuotation)
 <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-xl">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">
