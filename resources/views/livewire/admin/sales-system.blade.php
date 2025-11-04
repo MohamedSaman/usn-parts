@@ -399,7 +399,7 @@
 
                             </div>
                             <button type="button" class="btn-close btn-close-black closebtn"
-                                wire:click="closeModals"></button>
+                                wire:click="closeModal"></button>
                         </div>
 
                         {{-- Customer & Sale Details --}}
