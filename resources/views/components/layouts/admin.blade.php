@@ -972,7 +972,6 @@
     </ul>
     </div>
 
-
     <!-- Top Navigation Bar -->
     <nav class="top-bar d-flex justify-content-between align-items-center">
         <!-- Sidebar toggle button -->
