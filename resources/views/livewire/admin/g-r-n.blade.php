@@ -84,17 +84,14 @@
                                 <td class="ps-4" wire:click="viewGRN({{ $po->id }})">
                                     <span class="fw-medium text-dark">{{ $po->order_code }}</span>
                                 </td>
-<<<<<<< Updated upstream
                                 <td>{{ $po->supplier->name }}</td>
                                 <td>{{ $po->order_date }}</td>
                                 <td>
                                     @if($po->status == 'received')
-=======
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->supplier->name }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->order_date }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">
                                     @if($po->status == 'complete')
->>>>>>> Stashed changes
                                     <span class="badge bg-warning">Awaiting Receipt</span>
                                     @elseif($po->status == 'complete')
                                     <span class="badge bg-success">Fully Received</span>

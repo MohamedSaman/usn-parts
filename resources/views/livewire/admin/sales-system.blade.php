@@ -22,7 +22,6 @@
     @endif
 
     <div class="row">
-<<<<<<< Updated upstream
         {{-- Customer Information --}}
         <div class="col-md-6">
             <div class="card">
@@ -48,7 +47,6 @@
                             </select>
                             <div class="form-text">Select existing customer</div>
                         </div>
-=======
        {{-- Customer Information --}}
 <div class="col-6 mb-4">
     <div class="card">
