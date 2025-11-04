@@ -89,6 +89,114 @@
             letter-spacing: -0.01em;
         }
 
+        /* Ensure dropdowns in table are not clipped */
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        .dropdown-menu {
+            position: absolute !important;
+            will-change: transform;
+            left: auto !important;
+            right: 0 !important;
+            top: 100% !important;
+            margin-top: 0.2rem;
+            min-width: 160px;
+            z-index: 9999 !important;
+            background: #fff !important;
+            box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.22), 0 2px 8px 0 rgba(0, 0, 0, 0.10);
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            overflow: visible !important;
+            filter: none !important;
+        }
+
+        .dropdown-menu>li>.dropdown-item {
+            background: #fff !important;
+            z-index: 9999 !important;
+        }
+
+        .dropdown-menu>li>.dropdown-item:active,
+        .dropdown-menu>li>.dropdown-item:focus {
+            background: #f0f7ff !important;
+            color: #222 !important;
+        }
+
+        .dropdown {
+            position: relative !important;
+        }
+
+        .container-fluid,
+        .card,
+        .modal-content {
+            font-size: 13px !important;
+        }
+
+        .table th,
+        .table td {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+        .modal-header {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .modal-footer,
+        .card-header,
+        .card-body,
+        .row,
+        .col-md-6,
+        .col-md-4,
+        .col-md-2,
+        .col-md-12 {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+        .btn,
+        .btn-sm,
+        .btn-primary,
+        .btn-secondary,
+        .btn-outline-danger,
+        .btn-outline-secondary {
+            font-size: 12px !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+
+        .badge {
+            font-size: 11px !important;
+            padding: 0.25em 0.5em !important;
+        }
+
+        .list-group-item,
+        .dropdown-item {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+        .summary-card,
+        .card {
+            border-radius: 8px !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+        }
+
+        .icon-container {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 1.1rem !important;
+        }
+
         /* Sidebar styles */
         .sidebar {
             width: 265px;
@@ -614,65 +722,6 @@
             color: #ffffff;
         }
 
-        /* Commen styles */
-        .container-fluid,
-        .card,
-        .modal-content {
-            font-size: 13px !important;
-        }
-
-        .table th,
-        .table td {
-            font-size: 12px !important;
-            padding: 0.35rem 0.5rem !important;
-        }
-
-        .modal-header {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            margin-bottom: 0.25rem !important;
-        }
-
-        .modal-footer,
-        .card-header,
-        .card-body,
-        .row,
-        .col-md-6,
-        .col-md-4,
-        .col-md-2,
-        .col-md-12 {
-            padding-top: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-            margin-top: 0.25rem !important;
-            margin-bottom: 0.25rem !important;
-        }
-
-        .form-control,
-        .form-select {
-            font-size: 12px !important;
-            padding: 0.35rem 0.5rem !important;
-        }
-
-        .btn,
-        .btn-sm,
-        .btn-primary,
-        .btn-secondary,
-        .btn-outline-danger,
-        .btn-outline-secondary {
-            font-size: 12px !important;
-            padding: 0.25rem 0.5rem !important;
-        }
-
-        .badge {
-            font-size: 11px !important;
-            padding: 0.25em 0.5em !important;
-        }
-
-        .list-group-item,
-        .dropdown-item {
-            font-size: 12px !important;
-            padding: 0.35rem 0.5rem !important;
-        }
 
 
 
@@ -1024,7 +1073,7 @@
         </div>
     </li>
     <li>
-        <a class="nav-link" href="{{ route('admin.store-billing') }}">
+        <a class="nav-link" href="{{ route('admin.store-billing') }}" target="_blank">
             <i class="bi bi-cash"></i> <span>POS</span>
         </a>
     </li>
@@ -1493,8 +1542,8 @@
             const lastShown = localStorage.getItem('posCashModalShown');
 
             if (lastShown === today) {
-                // Modal already shown today, redirect to POS page
-                window.location.href = "{{ route('admin.store-billing') }}";
+                // Modal already shown today, open POS in new tab
+                window.open("{{ route('admin.store-billing') }}", '_blank');
             } else {
                 // First time today, show modal
                 const modal = new bootstrap.Modal(document.getElementById('editCashAdminModal'));
@@ -1527,8 +1576,8 @@
 
                         // Show success message
                         Swal.fire('Success!', 'Cash-in-Hand updated successfully!', 'success').then(() => {
-                            // Redirect to POS page
-                            window.location.href = "{{ route('admin.store-billing') }}";
+                            // Open POS in new tab
+                            window.open("{{ route('admin.store-billing') }}", '_blank');
                         });
                     } else {
                         Swal.fire('Error!', data.message || 'Failed to update cash-in-hand', 'error');

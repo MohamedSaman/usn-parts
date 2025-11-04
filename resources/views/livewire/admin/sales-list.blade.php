@@ -162,53 +162,17 @@
                             </td>
                             <td class="text-center" wire:click="viewSale({{ $sale->id }})"><span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span></td>
                             <td class="text-end pe-4">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                        type="button"
-                                        data-bs-toggle="dropdown"
-                                        aria-expanded="false">
-                                        <i class="bi bi-gear-fill"></i> Actions
+                                <div class="btn-group btn-group-sm">
+                                    <button class="text-success me-2 bg-opacity-0 border-0"
+                                            wire:click.stop="downloadInvoice({{ $sale->id }})"
+                                            title="Download Invoice">
+                                        <i class="bi bi-download"></i>
                                     </button>
-
-                                    <ul class="dropdown-menu dropdown-menu-end">
-
-                                        <!-- Download Invoice -->
-                                        <li>
-                                            <button class="dropdown-item"
-                                                wire:click="downloadInvoice({{ $sale->id }})"
-                                                wire:loading.attr="disabled"
-                                                wire:target="downloadInvoice({{ $sale->id }})">
-
-                                                <span wire:loading wire:target="downloadInvoice({{ $sale->id }})">
-                                                    <i class="spinner-border spinner-border-sm me-2"></i>
-                                                    Loading...
-                                                </span>
-                                                <span wire:loading.remove wire:target="downloadInvoice({{ $sale->id }})">
-                                                    <i class="bi bi-download text-success me-2"></i>
-                                                    Download Invoice
-                                                </span>
-                                            </button>
-                                        </li>
-
-                                        <!-- Delete Sale -->
-                                        <li>
-                                            <button class="dropdown-item"
-                                                wire:click="deleteSale({{ $sale->id }})"
-                                                wire:loading.attr="disabled"
-                                                wire:target="deleteSale({{ $sale->id }})">
-
-                                                <span wire:loading wire:target="deleteSale({{ $sale->id }})">
-                                                    <i class="spinner-border spinner-border-sm me-2"></i>
-                                                    Loading...
-                                                </span>
-                                                <span wire:loading.remove wire:target="deleteSale({{ $sale->id }})">
-                                                    <i class="bi bi-trash text-danger me-2"></i>
-                                                    Delete
-                                                </span>
-                                            </button>
-                                        </li>
-
-                                    </ul>
+                                    <button class="text-danger  me-2 bg-opacity-0 border-0"
+                                            wire:click.stop="deleteSale({{ $sale->id }})"
+                                            title="Delete Sale">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </div>
                             </td>
 
@@ -243,16 +207,16 @@
             <div class="modal-content" id="printableInvoice">
 
                 {{-- Header – logo + company name --}}
-                <div class="modal-header text-center border-0">
+                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                            class="img-fluid mb-2" style="max-height:60px;">
+                             class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
                         <p class="mb-0 small text-muted">
                         </p>
                     </div>
                     <button type="button" class="btn-close btn-close-white closebtn"
-                        wire:click="closeModals"></button>
+                            wire:click="closeModals"></button>
                 </div>
 
                 @if($selectedSale)
@@ -334,25 +298,67 @@
                         <div class="col-7"></div>
                         <div class="col-5">
                             <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td class="text-end"><strong>Total Amount (LKR)</strong></td>
-                                    <td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end"><strong>Returns</strong></td>
-                                    <td class="text-end">(0.00)</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end"><strong>Paid (LKR)</strong></td>
-                                    <td class="text-end">0.00</td>
-                                </tr>
-                                <tr>
-                                    <td class="text-end"><strong>Balance (LKR)</strong></td>
-                                    <td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td>
-                                </tr>
+                                <tr><td class="text-end"><strong>Total Amount (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td></tr>
+                                <tr><td class="text-end"><strong>Returns</strong></td><td class="text-end">(0.00)</td></tr>
+                                <tr><td class="text-end"><strong>Paid (LKR)</strong></td><td class="text-end">0.00</td></tr>
+                                <tr><td class="text-end"><strong>Balance (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td></tr>
                             </table>
                         </div>
                     </div>
+
+                    {{-- ==================== RETURNED ITEMS TABLE ==================== --}}
+                    @if(isset($selectedSale->returns) && count($selectedSale->returns) > 0)
+                    <h6 class="text-muted mb-3 mt-4">RETURNED ITEMS</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Code</th>
+                                    <th class="text-center">Return Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $returnAmount = 0; @endphp
+                                @foreach($selectedSale->returns as $rIndex => $return)
+                                @php $returnAmount += $return->total_amount; @endphp
+                                <tr>
+                                    <td>{{ $rIndex + 1 }}</td>
+                                    <td>{{ $return->product?->name ?? '-' }}</td>
+                                    <td class="text-center">{{ $return->product?->code ?? '-' }}</td>
+                                    <td class="text-center">{{ $return->return_quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
+                                    <td class="text-end">Rs.{{ number_format($return->total_amount, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Return Amount:</strong></td>
+                                    <td class="text-end">- Rs.{{ number_format($returnAmount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Net Amount:</strong></td>
+                                    <td class="text-end fw-bold">
+                                        Rs.{{ number_format(($selectedSale->subtotal ?? $selectedSale->total_amount) - ($selectedSale->discount_amount ?? 0) - $returnAmount, 2) }}
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @endif
+
+                    @if($selectedSale->notes)
+                    <h6 class="text-muted mb-2">NOTES</h6>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <p class="mb-0">{{ $selectedSale->notes }}</p>
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Footer – logos + address + note --}}
                     <div class="mt-4 text-center small">
@@ -374,13 +380,15 @@
                     <button type="button" class="btn btn-secondary" wire:click="closeModals">
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
+                    @if($selectedSale)
                     <div>
-
+                       
                         <button type="button" class="btn btn-outline-primary"
-                            onclick="window.print()">
+                                onclick="window.print()">
                             <i class="bi bi-printer me-1"></i> Print
                         </button>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -500,7 +508,7 @@
     </div>
 </div>
 
-{{-- ==================== STYLES (unchanged – only print tweaks) ==================== --}}
+{{-- ==================== STYLES ==================== --}}
 @push('styles')
 <style>
     .modal-header {
@@ -530,155 +538,83 @@
     }
 
     .table td {
-        vertical-align: middle;
-
-    }
+            vertical-align: middle;
+            
+        }
 
     @media print {
-        body * {
-            visibility: hidden;
-        }
-
-        #printableInvoice,
-        #printableInvoice * {
-            visibility: visible;
-        }
-
+        body * { visibility:hidden; }
+        #printableInvoice, #printableInvoice * { visibility:visible; }
         #printableInvoice {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm;
-            background: #fff;
-            font-size: 11pt;
-            color: #000;
+            position:absolute; left:0; top:0; width:210mm; min-height:297mm;
+            padding:15mm; background:#fff; font-size:11pt; color:#000;
         }
+        .modal, .modal-dialog, .modal-content { all:unset; }
+        .modal-footer, .btn, .btn-close { display:none !important; }
 
-        .modal,
-        .modal-dialog,
-        .modal-content {
-            all: unset;
-        }
+        .modal-header { border:none; padding:0; text-align:center; margin-bottom:1rem; }
+        .modal-header img { max-height:55px; }
+        .modal-header h4 { margin:4px 0; font-size:1.4rem; }
+        .modal-header p { margin:0; font-size:0.85rem; }
 
-        .modal-footer,
-        .btn,
-        .btn-close {
-            display: none !important;
-        }
+        .row > .col-6 { page-break-inside:avoid; }
+        .row > .col-6:first-child { text-align:left; }
+        .row > .col-6:last-child  { text-align:right; }
 
-        .modal-header {
-            border: none;
-            padding: 0;
-            text-align: center;
-            margin-bottom: 1rem;
-        }
+        .table { border-collapse:collapse; width:100%; margin-bottom:.8rem; }
+        .table th, .table td { border:1px solid #999; padding:4px 6px; }
+        .table th { background:#e9ecef; -webkit-print-color-adjust:exact; }
+        .table-sm { font-size:0.9rem; }
 
-        .modal-header img {
-            max-height: 55px;
-        }
+        .table-sm td { border:none; padding:2px 4px; }
+        .table-sm strong { min-width:110px; display:inline-block; }
 
-        .modal-header h4 {
-            margin: 4px 0;
-            font-size: 1.4rem;
-        }
-
-        .modal-header p {
-            margin: 0;
-            font-size: 0.85rem;
-        }
-
-        .row>.col-6 {
-            page-break-inside: avoid;
-        }
-
-        .row>.col-6:first-child {
-            text-align: left;
-        }
-
-        .row>.col-6:last-child {
-            text-align: right;
-        }
-
-        .table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-bottom: .8rem;
-        }
-
-        .table th,
-        .table td {
-            border: 1px solid #999;
-            padding: 4px 6px;
-        }
-
-        .table th {
-            background: #e9ecef;
-            -webkit-print-color-adjust: exact;
-        }
-
-        .table-sm {
-            font-size: 0.9rem;
-        }
-
-        .table-sm td {
-            border: none;
-            padding: 2px 4px;
-        }
-
-        .table-sm strong {
-            min-width: 110px;
-            display: inline-block;
-        }
-
-        .d-flex img {
-            height: 30px;
-            margin: 0 8px;
-        }
-
-        .text-muted {
-            font-size: 0.8rem;
-        }
+        .d-flex img { height:30px; margin:0 8px; }
+        .text-muted { font-size:0.8rem; }
     }
 </style>
 @endpush
 
-{{-- ==================== SCRIPTS (unchanged) ==================== --}}
+{{-- ==================== SCRIPTS ==================== --}}
 @push('scripts')
 <script>
+    // Print function
+    function printInvoice() {
+        window.print();
+    }
+
     document.addEventListener('livewire:initialized', () => {
         Livewire.on('showModal', (modalId) => {
             const el = document.getElementById(modalId);
             if (el) new bootstrap.Modal(el).show();
         });
+
         Livewire.on('hideModal', (modalId) => {
             const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
             if (modal) modal.hide();
         });
+
         Livewire.on('showToast', (e) => {
             const toast = document.getElementById('livewire-toast');
             toast.querySelector('.toast-body').textContent = e.message;
             toast.querySelector('.toast-header').className = 'toast-header text-white bg-' + e.type;
             new bootstrap.Toast(toast).show();
         });
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') Livewire.dispatch('closeModals');
-        });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') Livewire.dispatch('closeModals'); });
     });
 
+    // Handle download button state
     document.addEventListener('livewire:request-start', e => {
         if (e.detail.component.get('$wire').__instance.__livewire_requests?.downloadInvoice) {
             document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-                b.disabled = true;
-                b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
             });
         }
     });
+
     document.addEventListener('livewire:request-finish', () => {
         document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-            b.disabled = false;
-            b.innerHTML = '<i class="bi bi-download"></i>';
+            b.disabled = false; b.innerHTML = '<i class="bi bi-download"></i>';
         });
     });
 </script>

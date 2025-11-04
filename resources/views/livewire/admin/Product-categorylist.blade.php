@@ -48,64 +48,23 @@
                                                 <span class="fw-medium text-dark">{{ $category->category_name }}</span>
                                             </td>
                                             <td class="text-end pe-4">
-    <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-            <i class="bi bi-gear-fill"></i> Actions
-        </button>
-
-        <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Edit Category -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="editCategory({{ $category->id }})"
-                        wire:loading.attr="disabled"
-                        wire:target="editCategory({{ $category->id }})">
-                    
-                    <span wire:loading wire:target="editCategory({{ $category->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i>
-                        Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="editCategory({{ $category->id }})">
-                        <i class="bi bi-pencil-square text-primary me-2"></i>
-                        Edit
-                    </span>
-                </button>
-            </li>
-
-            <!-- Delete Category -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="confirmDelete({{ $category->id }})"
-                        wire:loading.attr="disabled"
-                        wire:target="confirmDelete({{ $category->id }})">
-                    
-                    <span wire:loading wire:target="confirmDelete({{ $category->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i>
-                        Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="confirmDelete({{ $category->id }})">
-                        <i class="bi bi-trash text-danger me-2"></i>
-                        Delete
-                    </span>
-                </button>
-            </li>
-        </ul>
-    </div>
-</td>
-
+                                                <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editCategory({{ $category->id }})">
+                                                    <i class="bi bi-pencil fs-6"></i>
+                                                </button>
+                                                <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $category->id }})">
+                                                    <i class="bi bi-trash fs-6"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     @endforeach
                                 @else
-                                    <tr>
-                                        <td colspan="3" class="text-center py-5">
-                                            <div class="alert alert-primary bg-opacity-10">
-                                                <i class="bi bi-info-circle me-2"></i> No product categories found.
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="alert alert-primary bg-opacity-10">
+                                            <i class="bi bi-info-circle me-2"></i> No product categories found.
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endif
                             </tbody>
                         </table>
@@ -131,7 +90,7 @@
                             <label class="form-label fw-semibold">Category Name</label>
                             <input type="text" class="form-control" wire:model="categoryName" placeholder="Enter category name" required>
                             @error('categoryName')
-                                <span class="text-danger small">* {{ $message }}</span>
+                            <span class="text-danger small">* {{ $message }}</span>
                             @enderror
                         </div>
                         <div class="d-grid">
@@ -156,12 +115,12 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form wire:submit.prevent="updateCategory({{ $editCategoryId }})">
+                    <form wire:submit.prevent="updateCategory">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Category Name</label>
-                            <input type="text" class="form-control" wire:model="editCategoryName" placeholder="Enter category name" required>
+                            <input type="text" class="form-control" wire:model.defer="editCategoryName" placeholder="Enter category name" required>
                             @error('editCategoryName')
-                                <span class="text-danger small">* {{ $message }}</span>
+                            <span class="text-danger small">* {{ $message }}</span>
                             @enderror
                         </div>
                         <div class="d-grid">
@@ -224,15 +183,15 @@
     }
 
     .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #ffffff;
-            background: #3B5B0C;
-            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        border-top: none;
+        font-weight: 600;
+        color: #ffffff;
+        background: #3B5B0C;
+        background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 
     .table td {
         vertical-align: middle;
@@ -299,30 +258,18 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 Livewire.dispatch('confirmDelete');
-                Swal.fire({
-                    title: "Deleted!",
-                    text: "Category has been deleted.",
-                    icon: "success"
-                });
             }
         });
     });
-</script>
-<script>
+
     window.addEventListener('edit-category', event => {
-        setTimeout(() => {
-            const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
-            modal.show();
-        }, 300);
+        const modal = new bootstrap.Modal(document.getElementById('editCategoryModal'));
+        modal.show();
     });
-</script>
-<script>
+
     window.addEventListener('create-category', event => {
-        @this.resetForm();
-        setTimeout(() => {
-            const modal = new bootstrap.Modal(document.getElementById('createCategoryModal'));
-            modal.show();
-        }, 300);
+        const modal = new bootstrap.Modal(document.getElementById('createCategoryModal'));
+        modal.show();
     });
 </script>
 @endpush

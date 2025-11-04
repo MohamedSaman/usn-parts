@@ -224,6 +224,24 @@ class StoreBilling extends Component
         }
     }
 
+    // Auto-update cash amount when cart changes (if payment method is cash)
+    public function updated($propertyName)
+    {
+        // If cart or discount changes, update payment amounts
+        if (
+            str_contains($propertyName, 'cart') ||
+            str_contains($propertyName, 'additionalDiscount') ||
+            str_contains($propertyName, 'additionalDiscountType')
+        ) {
+
+            if ($this->paymentMethod === 'cash') {
+                $this->cashAmount = $this->grandTotal;
+            } elseif ($this->paymentMethod === 'bank_transfer') {
+                $this->bankTransferAmount = $this->grandTotal;
+            }
+        }
+    }
+
     // Add Cheque
     public function addCheque()
     {
@@ -701,7 +719,9 @@ class StoreBilling extends Component
             return;
         }
 
-        $sale = Sale::with(['customer', 'items'])->find($this->lastSaleId);
+        $sale = Sale::with(['customer', 'items', 'returns' => function ($q) {
+            $q->with('product');
+        }])->find($this->lastSaleId);
 
         if (!$sale) {
             $this->js("Swal.fire('error', 'Sale not found.', 'error')");
