@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\ProductDetail;
 use App\Models\ProductPrice;
 use App\Models\ProductStock;
@@ -20,18 +21,24 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use App\Imports\ProductsImport;
+use App\Exports\ProductsTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 #[Title("Product List")]
 #[Layout('components.layouts.admin')]
 class Products extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
 
     // Create form fields
     public $code, $name, $model, $brand, $category, $image, $description, $barcode, $status, $supplier;
     public $supplier_price, $selling_price, $discount_price, $available_stock, $damage_stock;
+
+    // Import file
+    public $importFile;
 
     // Edit form fields
     public $editId, $editCode, $editName, $editModel, $editBrand, $editCategory, $editImage, $existingImage,
@@ -282,6 +289,72 @@ class Products extends Component
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to create product. Please try again.', 'error')");
         }
+    }
+
+    // 🔹 Import Products from Excel
+    public function importProducts()
+    {
+        // Validate file
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:10240', // Max 10MB
+        ], [
+            'importFile.required' => 'Please select an Excel file to import.',
+            'importFile.mimes' => 'File must be an Excel file (xlsx, xls, or csv).',
+            'importFile.max' => 'File size must not exceed 10MB.',
+        ]);
+
+        try {
+            // Create import instance
+            $import = new ProductsImport();
+            
+            // Import the file
+            Excel::import($import, $this->importFile->getRealPath());
+
+            // Get import statistics
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $failures = $import->failures();
+
+            // Build success message
+            $message = "Import completed! ";
+            $message .= "✅ {$successCount} product(s) imported successfully. ";
+            
+            if ($skipCount > 0) {
+                $message .= "⚠️ {$skipCount} product(s) skipped (duplicates or errors). ";
+            }
+
+            // Reset file input
+            $this->reset(['importFile']);
+
+            // Close modal and show success
+            $this->js("$('#importProductsModal').modal('hide')");
+            $this->js("Swal.fire('Import Complete!', '{$message}', 'success')");
+            
+            $this->dispatch('refreshPage');
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessage = "Import failed due to validation errors: <br>";
+            
+            foreach ($failures as $failure) {
+                $errorMessage .= "Row {$failure->row()}: " . implode(', ', $failure->errors()) . "<br>";
+            }
+            
+            $this->js("Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: '{$errorMessage}',
+                confirmButtonText: 'OK'
+            })");
+        } catch (\Exception $e) {
+            $this->js("Swal.fire('Error!', 'Failed to import products: {$e->getMessage()}', 'error')");
+        }
+    }
+
+    // 🔹 Download Excel Template
+    public function downloadTemplate()
+    {
+        return Excel::download(new ProductsTemplateExport(), 'products_import_template.xlsx');
     }
 
     // 🔹 Reset form fields

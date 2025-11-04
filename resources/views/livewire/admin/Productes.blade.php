@@ -506,7 +506,11 @@
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-md-end">
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importProductsModal">
+                            <i class="bi bi-file-earmark-excel"></i>
+                            <span class="d-none d-sm-inline">Import Excel</span>
+                        </button>
                         <button class="btn btn-primary add-product-btn" wire:click="openCreateModal">
                             <i class="bi bi-plus-lg"></i>
                             <span class="d-none d-sm-inline">Add Product</span>
@@ -701,28 +705,28 @@
             </div>
         </div>
 
-        <!-- View Product Modal -->
-        <div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
-    aria-labelledby="viewProductModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-xl">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
-                 style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); padding: 1.5rem;">
-                <h5 class="modal-title fw-bold d-flex align-items-center">
-                    <i class="bi bi-box-seam me-2 fs-4"></i> 
-                    <span>Product Details</span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
+                            <!-- View Product Modal -->
+                            <div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
+                                    aria-labelledby="viewProductModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-xl">
+                                        <div class="modal-content border-0 shadow-lg">
+                                            <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
+                                                style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); padding: 1.5rem;">
+                                                <h5 class="modal-title fw-bold d-flex align-items-center">
+                                                    <i class="bi bi-box-seam me-2 fs-4"></i> 
+                                                    <span>Product Details</span>
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
 
-            <div class="modal-body p-0">
-                @if($viewProduct)
-                <div class="row g-0">
-                    <div class="col-lg-4 bg-light border-end">
-                        <div class="p-4 text-center">
-                            <div class="product-image-container mb-4 position-relative">
-    <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://cdn-icons-png.flaticon.com/512/679/679922.png' }}"
-                                     alt="Product Image" 
+                                            <div class="modal-body p-0">
+                                                @if($viewProduct)
+                                                <div class="row g-0">
+                                                    <div class="col-lg-4 bg-light border-end">
+                                                        <div class="p-4 text-center">
+                                                            <div class="product-image-container mb-4 position-relative">
+                                    <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://cdn-icons-png.flaticon.com/512/679/679922.png' }}"
+                                                                    alt="Product Image" 
                                      class="img-fluid rounded-3 shadow-sm product-image"
                                      style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
                                 
@@ -1154,6 +1158,136 @@
         </div>
     </div>
 </div>
+
+        <!-- Import Products Modal -->
+        <div wire:ignore.self class="modal fade" id="importProductsModal" tabindex="-1"
+            aria-labelledby="importProductsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-file-earmark-excel me-2"></i> Import Products from Excel
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info border-0 mb-4">
+                            <h6 class="alert-heading fw-bold">
+                                <i class="bi bi-info-circle me-2"></i>Excel File Requirements
+                            </h6>
+                            <hr>
+                            <p class="mb-2">Your Excel file must contain the following columns:</p>
+                            <ul class="mb-2">
+                                <li><strong>CODE</strong> - Product code (required, unique)</li>
+                                <li><strong>NAME</strong> - Product name (required)</li>
+                            </ul>
+                            <p class="mb-2"><strong>Note:</strong> Other product fields will be set to default values:</p>
+                            <ul class="mb-0">
+                                <li>Brand: Default Brand</li>
+                                <li>Category: Default Category</li>
+                                <li>Supplier: Default Supplier</li>
+                                <li>Prices: Rs. 0.00</li>
+                                <li>Stock: 0</li>
+                                <li>Status: Active</li>
+                            </ul>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-table me-2"></i>Excel Format Example
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-outline-success" wire:click="downloadTemplate">
+                                    <i class="bi bi-download me-1"></i>Download Template
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>CODE</th>
+                                                <th>NAME</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>USN0001</td>
+                                                <td>Flasher Musical 12 V</td>
+                                            </tr>
+                                            <tr>
+                                                <td>USN0002</td>
+                                                <td>Flasher Musical 24 V</td>
+                                            </tr>
+                                            <tr>
+                                                <td>USN0003</td>
+                                                <td>Flasher Electrical 12 V</td>
+                                            </tr>
+                                            <tr>
+                                                <td>USN0004</td>
+                                                <td>Flasher Electrical 24 V</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label fw-semibold">
+                                <i class="bi bi-upload me-2"></i>Select Excel File
+                            </label>
+                            <input 
+                                type="file" 
+                                class="form-control" 
+                                id="importFile" 
+                                wire:model="importFile"
+                                accept=".xlsx,.xls,.csv">
+                            
+                            @error('importFile')
+                                <span class="text-danger small mt-1 d-block">
+                                    <i class="bi bi-exclamation-circle me-1"></i>{{ $message }}
+                                </span>
+                            @enderror
+
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Accepted formats: .xlsx, .xls, .csv (Max size: 10MB)
+                            </div>
+
+                            @if($importFile)
+                                <div class="alert alert-success mt-3 mb-0">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    File selected: <strong>{{ $importFile->getClientOriginalName() }}</strong>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="alert alert-warning border-0 mb-0">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Important:</strong> Duplicate product codes will be skipped. You can edit imported products later to add missing details.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button 
+                            type="button" 
+                            class="btn btn-success" 
+                            wire:click="importProducts"
+                            @if(!$importFile) disabled @endif>
+                            <span wire:loading wire:target="importProducts">
+                                <i class="spinner-border spinner-border-sm me-2"></i>Importing...
+                            </span>
+                            <span wire:loading.remove wire:target="importProducts">
+                                <i class="bi bi-upload me-2"></i>Import Products
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Edit Product Modal -->
         <div wire:ignore.self wire:key="edit-modal-{{ $editId ?? 'new' }}" class="modal fade" id="editProductModal" tabindex="-1"
