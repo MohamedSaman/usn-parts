@@ -366,11 +366,7 @@
                                                 <span class="fw-medium text-dark">{{ $product->model }}</span>
                                             </td>
                                             <td  wire:click="viewProductDetails({{ $product->id }})">
-                                                @if ($product->available_stock > 0)
-                                                <span class="badge bg-success">In Stock</span>
-                                                @else
-                                                <span class="badge bg-danger">Out of Stock</span>
-                                                @endif
+                                                <span class="fw-medium text-dark">{{ $product->stock->available_stock ?? 0 }}</span>
                                             </td>
                                             <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-bold text-dark">Rs.{{ number_format($product->supplier_price, 2) }}</span>
