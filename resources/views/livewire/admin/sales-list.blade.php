@@ -210,12 +210,9 @@
                 <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                             class="img-fluid mb-2" style="max-height:60px;">
-                        <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
-                        <p class="mb-0 small text-muted">
-                        </p>
+                             class="img-fluid mb-2" style="max-height:100px;">
                     </div>
-                    <button type="button" class="btn-close btn-close-white closebtn"
+                    <button type="button" class="btn-close btn-close-black closebtn"
                             wire:click="closeModals"></button>
                 </div>
 
@@ -298,10 +295,22 @@
                         <div class="col-7"></div>
                         <div class="col-5">
                             <table class="table table-sm table-borderless">
-                                <tr><td class="text-end"><strong>Total Amount (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td></tr>
-                                <tr><td class="text-end"><strong>Returns</strong></td><td class="text-end">(0.00)</td></tr>
-                                <tr><td class="text-end"><strong>Paid (LKR)</strong></td><td class="text-end">0.00</td></tr>
-                                <tr><td class="text-end"><strong>Balance (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td></tr>
+                                <tr>
+                                    <td><strong>Total Amount (LKR)</strong></td>
+                                    <td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Returns</strong></td>
+                                    <td class="text-end">({{ number_format($selectedSale->returns->sum('total_amount') ?? 0, 2) }})</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Paid (LKR)</strong></td>
+                                    <td class="text-end">{{ number_format($selectedSale->total_amount - $selectedSale->due_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Balance (LKR)</strong></td>
+                                    <td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -351,6 +360,27 @@
                     </div>
                     @endif
 
+                    {{-- ==================== GRAND TOTAL & DUE AMOUNT ==================== --}}
+                    <div class="row">
+                        <div class="col-7"></div>
+                        <div class="col-5">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Grand Total (LKR)</strong></td>
+                                    <td class="text-end fw-bold">
+                                        {{ number_format(($selectedSale->subtotal ?? $selectedSale->total_amount) - ($selectedSale->discount_amount ?? 0) - ($selectedSale->returns->sum('total_amount') ?? 0), 2) }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Due Amount (LKR)</strong></td>
+                                    <td class="text-end fw-bold text-danger">
+                                        {{ number_format($selectedSale->due_amount, 2) }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
                     @if($selectedSale->notes)
                     <h6 class="text-muted mb-2">NOTES</h6>
                     <div class="card bg-light">
@@ -382,9 +412,11 @@
                     </button>
                     @if($selectedSale)
                     <div>
-                       
+                        <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </button>
                         <button type="button" class="btn btn-outline-primary"
-                                onclick="window.print()">
+                                onclick="printInvoice()">
                             <i class="bi bi-printer me-1"></i> Print
                         </button>
                     </div>
@@ -511,24 +543,9 @@
 {{-- ==================== STYLES ==================== --}}
 @push('styles')
 <style>
-    .modal-header {
-        background: linear-gradient(90deg, #3b5b0c, #8eb922);
-        color: #fff;
-    }
-
-    .modal-title i {
-        color: #ffc107;
-    }
-
-    .closebtn {
-        top: 3%;
-        right: 3%;
-        position: absolute;
-    }
-
     .table th {
-        border-top: none;
         font-weight: 600;
+        border-top: none;
         color: #ffffff;
         background: #3B5B0C;
         background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
@@ -537,40 +554,279 @@
         letter-spacing: 0.5px;
     }
 
+    .closebtn {
+        top: 3%;
+        right: 3%;
+        position: absolute;
+    }
+
+    .btn-group-sm>.btn {
+        padding: 0.25rem 0.5rem;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #dee2e6;
+        background: linear-gradient(90deg, #3b5b0c, #8eb922);
+        color: #fff;
+    }
+
+    .badge {
+        font-size: 0.75em;
+    }
+
+    /* Hover effects */
+    .table-hover tbody tr:hover {
+        background-color: rgba(0, 0, 0, 0.025);
+    }
+
     .table td {
-            vertical-align: middle;
-            
-        }
+        vertical-align: middle;
+    }
+
+    /* Print styles */
+    @page {
+        size: A4;
+        margin: 0;
+    }
 
     @media print {
-        body * { visibility:hidden; }
-        #printableInvoice, #printableInvoice * { visibility:visible; }
-        #printableInvoice {
-            position:absolute; left:0; top:0; width:210mm; min-height:297mm;
-            padding:15mm; background:#fff; font-size:11pt; color:#000;
+
+        /* Remove browser header/footer */
+        @page {
+            margin: 0mm;
         }
-        .modal, .modal-dialog, .modal-content { all:unset; }
-        .modal-footer, .btn, .btn-close { display:none !important; }
 
-        .modal-header { border:none; padding:0; text-align:center; margin-bottom:1rem; }
-        .modal-header img { max-height:55px; }
-        .modal-header h4 { margin:4px 0; font-size:1.4rem; }
-        .modal-header p { margin:0; font-size:0.85rem; }
+        /* Hide everything except the invoice */
+        body * {
+            visibility: hidden;
+        }
 
-        .row > .col-6 { page-break-inside:avoid; }
-        .row > .col-6:first-child { text-align:left; }
-        .row > .col-6:last-child  { text-align:right; }
+        #printableInvoice,
+        #printableInvoice * {
+            visibility: visible;
+        }
 
-        .table { border-collapse:collapse; width:100%; margin-bottom:.8rem; }
-        .table th, .table td { border:1px solid #999; padding:4px 6px; }
-        .table th { background:#e9ecef; -webkit-print-color-adjust:exact; }
-        .table-sm { font-size:0.9rem; }
+        /* Position the invoice */
+        #printableInvoice {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 10mm 10mm 20mm 15mm !important;
+            background: #fff !important;
+            font-size: 10pt !important;
+            color: #000 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+        }
 
-        .table-sm td { border:none; padding:2px 4px; }
-        .table-sm strong { min-width:110px; display:inline-block; }
+        /* Reset modal styles for print */
+        .modal,
+        .modal-dialog,
+        .modal-content {
+            all: unset !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            position: static !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
 
-        .d-flex img { height:30px; margin:0 8px; }
-        .text-muted { font-size:0.8rem; }
+        /* Hide modal chrome */
+        .modal-footer,
+        .btn,
+        .btn-close,
+        .closebtn {
+            display: none !important;
+        }
+
+        /* Header styles - Fixed at top */
+        .modal-header {
+            border: none !important;
+            padding: 0 0 10px 0 !important;
+            text-align: center !important;
+            margin-bottom: 15px !important;
+            background: transparent !important;
+            border-bottom: 2px solid #3b5b0c !important;
+        }
+
+        .modal-header img {
+            max-height: 100px !important;
+            margin-bottom: 5px !important;
+        }
+
+        .modal-header h4 {
+            margin: 5px 0 !important;
+            font-size: 1rem !important;
+            color: #000 !important;
+            font-weight: bold !important;
+        }
+
+        .modal-header p {
+            margin: 2px 0 !important;
+            font-size: 0.8rem !important;
+            color: #000 !important;
+        }
+
+        /* Body content */
+        .modal-body {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Layout fixes */
+        .row {
+            display: flex !important;
+            margin: 0 !important;
+            page-break-inside: avoid !important;
+        }
+
+        .row>.col-6 {
+            page-break-inside: avoid !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+
+        .row>.col-6:first-child {
+            text-align: left !important;
+        }
+
+        .row>.col-6:last-child {
+            text-align: right !important;
+        }
+
+        .row>.col-7 {
+            display: none !important;
+        }
+
+        .row>.col-5 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Table styles */
+        .table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-bottom: 10px !important;
+            font-size: 9pt !important;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #999 !important;
+            padding: 4px 6px !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+
+        .table-light th,
+        .table-light td,
+        tfoot.table-light tr,
+        tfoot.table-light td {
+            background: #e9ecef !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .table-sm {
+            font-size: 8pt !important;
+        }
+
+        .table-borderless td {
+            border: none !important;
+            padding: 2px 4px !important;
+        }
+
+        .table-borderless strong {
+            min-width: 110px !important;
+            display: inline-block !important;
+        }
+
+        /* Compact spacing */
+        h6 {
+            color: #000 !important;
+            margin: 10px 0 5px 0 !important;
+            font-weight: bold !important;
+            font-size: 11pt !important;
+        }
+
+        /* Badge and color fixes */
+        .badge {
+            border: 1px solid #000 !important;
+            padding: 2px 6px !important;
+            border-radius: 3px !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+
+        .fw-bold,
+        strong {
+            font-weight: bold !important;
+            color: #000 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #198754 !important;
+        }
+
+        .text-muted {
+            font-size: 8pt !important;
+            color: #666 !important;
+        }
+
+        /* Card styles */
+        .card {
+            border: 1px solid #ddd !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 10px !important;
+        }
+
+        .card-body {
+            padding: 8px !important;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Remove extra spacing */
+        .mb-3,
+        .mb-4 {
+            margin-bottom: 8px !important;
+        }
+
+        .mt-4 {
+            margin-top: 15px !important;
+        }
+
+        /* Prevent page breaks */
+        .table-responsive {
+            page-break-inside: avoid !important;
+        }
+
+        /* Ensure single page */
+        html,
+        body {
+            height: 297mm !important;
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
     }
 </style>
 @endpush
@@ -584,37 +840,80 @@
     }
 
     document.addEventListener('livewire:initialized', () => {
+        // Modal management
         Livewire.on('showModal', (modalId) => {
-            const el = document.getElementById(modalId);
-            if (el) new bootstrap.Modal(el).show();
+            console.log('Showing modal:', modalId);
+            const modalElement = document.getElementById(modalId);
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+
+                // Close modal when hidden
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    Livewire.dispatch('closeModals');
+                });
+            }
         });
 
         Livewire.on('hideModal', (modalId) => {
-            const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
-            if (modal) modal.hide();
+            console.log('Hiding modal:', modalId);
+            const modalElement = document.getElementById(modalId);
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) {
+                    modal.hide();
+                }
+            }
         });
 
-        Livewire.on('showToast', (e) => {
-            const toast = document.getElementById('livewire-toast');
-            toast.querySelector('.toast-body').textContent = e.message;
-            toast.querySelector('.toast-header').className = 'toast-header text-white bg-' + e.type;
-            new bootstrap.Toast(toast).show();
+        // Toast notifications
+        Livewire.on('showToast', (event) => {
+            const toastElement = document.getElementById('livewire-toast');
+            if (toastElement) {
+                const toastBody = toastElement.querySelector('.toast-body');
+                const toastHeader = toastElement.querySelector('.toast-header');
+
+                if (toastBody) toastBody.textContent = event.message;
+                if (toastHeader) {
+                    // Remove existing color classes
+                    toastHeader.className = 'toast-header text-white';
+                    // Add new color class
+                    toastHeader.classList.add('bg-' + event.type);
+                }
+
+                const toast = new bootstrap.Toast(toastElement);
+                toast.show();
+            }
         });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') Livewire.dispatch('closeModals'); });
+
+        // Close modals when escape key is pressed
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                Livewire.dispatch('closeModals');
+            }
+        });
     });
 
     // Handle download button state
-    document.addEventListener('livewire:request-start', e => {
-        if (e.detail.component.get('$wire').__instance.__livewire_requests?.downloadInvoice) {
-            document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-                b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-            });
-        }
+    document.addEventListener('livewire:request-start', (event) => {
+        const buttons = document.querySelectorAll('[wire\\:click*="downloadInvoice"]');
+        buttons.forEach(button => {
+            button.disabled = true;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-hourglass-split me-1';
+            }
+        });
     });
 
-    document.addEventListener('livewire:request-finish', () => {
-        document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-            b.disabled = false; b.innerHTML = '<i class="bi bi-download"></i>';
+    document.addEventListener('livewire:request-finish', (event) => {
+        const buttons = document.querySelectorAll('[wire\\:click*="downloadInvoice"]');
+        buttons.forEach(button => {
+            button.disabled = false;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-download me-1';
+            }
         });
     });
 </script>
