@@ -23,7 +23,7 @@
 
     <div class="row">
         {{-- Customer Information --}}
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
