@@ -81,7 +81,6 @@
                         @else
                         Select existing customer or add new
                         @endif
->>>>>>> Stashed changes
                     </div>
                 </div>
               
