@@ -1,27 +1,65 @@
 <div class="container-fluid py-3">
 
-    {{-- Flash Messages --}}
-    @if (session()->has('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4">
-        <i class="bi bi-check-circle me-2"></i> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    @endif
+    <nav class="top-bar d-flex justify-content-between align-items-center">
+        <!-- Sidebar toggle button -->
+        <button id="sidebarToggler" class="btn btn-sm px-2 py-1  d-flex align-items-center" style="color:#ffffff; border-color:#ffffff;">
+            <i class="bi bi-list fs-5"></i>
+        </button>
 
-    @if (session()->has('error'))
-    <div class="alert alert-danger alert-dismissible fade show mb-4">
-        <i class="bi bi-exclamation-circle me-2"></i> {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    @endif
+        <!-- Centered Company Name (hidden on small screens) -->
+        <div class="flex-grow-1 d-none d-md-flex justify-content-center">
 
-    @if (session()->has('message'))
-    <div class="alert alert-info alert-dismissible fade show mb-4">
-        <i class="bi bi-info-circle me-2"></i> {{ session('message') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    @endif
+        </div>
+        @php
+        use App\Models\CashInHand as CashModel;
+        $cashInHand = CashModel::where('key', 'cash in hand')->value('value') ?? 0;
+        @endphp
 
+        <!-- Editable Cash in Hand Display -->
+        <div class="badge  bg-opacity-10 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2 "
+            style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem; cursor: pointer;"
+            onclick="handlePOSClick()"
+            role="button">
+            <div class="d-flex align-items-center gap-1 px-2 py-1 fs-6">
+                <i class="bi bi-plus-circle"></i>
+                <span class="fw-semibold">POS</span>
+            </div>
+        </div>
+
+
+
+        <!-- Admin dropdown -->
+        <div class="dropdown ms-auto">
+            <div class="admin-info dropdown-toggle" id="adminDropdown" role="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <div class="admin-avatar">A</div>
+                <div class="admin-name">Admin</div>
+            </div>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="bi bi-person me-2"></i>My Profile
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="#">
+                        <i class="bi bi-gear me-2"></i>Settings
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger">
+                            <i class="bi bi-box-arrow-right me-2"></i>Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </nav>
     <div class="row">
         {{-- Customer Information --}}
         <div class="col-6 mb-4">

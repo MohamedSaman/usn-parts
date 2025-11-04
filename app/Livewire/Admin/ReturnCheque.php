@@ -69,8 +69,21 @@ class ReturnCheque extends Component
     public function rechequeSubmit()
     {
         $this->validate();
+
+        // Check if cheque number already exists
+        $existingCheque = Cheque::where('cheque_number', $this->newChequeNumber)->first();
+        if ($existingCheque) {
+            $this->js("Swal.fire('Error!', 'Cheque number already exists. Please use a different cheque number.', 'error');");
+            return;
+        }
+
         $oldCheque = Cheque::find($this->selectedChequeId);
-        if ($oldCheque) {
+        if (!$oldCheque) {
+            $this->js("Swal.fire('Error!', 'Cheque not found.', 'error');");
+            return;
+        }
+
+        try {
             // Mark old cheque as cancelled
             $oldCheque->status = 'cancelled';
             $oldCheque->save();
@@ -86,10 +99,15 @@ class ReturnCheque extends Component
                 'payment_id' => $oldCheque->payment_id,
             ]);
 
-            // Reset form and close modal
+            // Reset form
             $this->resetForm();
-            $this->dispatch('show-toast', ['type' => 'success', 'message' => 'New cheque added and old cheque cancelled.']);
-            $this->dispatch('closeModal', ['rechequeModal']);
+
+            // Close modal and show success message
+            $this->js("bootstrap.Modal.getInstance(document.getElementById('rechequeModal')).hide();");
+            $this->js("Swal.fire('Success!', 'New cheque added and old cheque cancelled successfully.', 'success');");
+            $this->js("location.reload();");
+        } catch (\Exception $e) {
+            $this->js("Swal.fire('Error!', 'Failed to process re-cheque: " . addslashes($e->getMessage()) . "', 'error');");
         }
     }
 

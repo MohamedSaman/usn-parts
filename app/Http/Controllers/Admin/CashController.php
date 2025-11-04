@@ -20,7 +20,16 @@ class CashController extends Controller
         );
 
         $cashRecord->update(['value' => $request->newCashInHand]);
-        
+
+        // Check if request is AJAX
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Cash-in-Hand updated successfully',
+                'newValue' => $request->newCashInHand
+            ]);
+        }
+
         return redirect()->back();
     }
 }

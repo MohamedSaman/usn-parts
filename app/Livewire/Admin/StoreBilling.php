@@ -17,8 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-#[Layout('components.layouts.admin')]
-#[Title('Store Billing')]
+#[Title('POS')]
 class StoreBilling extends Component
 {
     use WithFileUploads;
@@ -27,14 +26,14 @@ class StoreBilling extends Component
     public $search = '';
     public $searchResults = [];
     public $customerId = '';
-    
+
     // Cart Items
     public $cart = [];
-    
+
     // Customer Properties
     public $customers = [];
     public $selectedCustomer = null;
-    
+
     // Customer Form (for new customer - only used in modal)
     public $customerName = '';
     public $customerPhone = '';
@@ -42,32 +41,32 @@ class StoreBilling extends Component
     public $customerAddress = '';
     public $customerType = 'retail';
     public $businessName = '';
-    
+
     // Sale Properties
     public $notes = '';
-    
+
     // Payment Properties
     public $paymentMethod = 'cash'; // 'cash', 'credit', 'cheque', 'bank_transfer'
     public $paidAmount = 0;
-    
+
     // Cash Payment
     public $cashAmount = 0;
-    
+
     // Cheque Payment
     public $cheques = [];
     public $tempChequeNumber = '';
     public $tempBankName = '';
     public $tempChequeDate = '';
     public $tempChequeAmount = 0;
-    
+
     // Bank Transfer Payment
     public $bankTransferFile = null;
     public $bankTransferAmount = 0;
-    
+
     // Discount Properties
     public $additionalDiscount = 0;
     public $additionalDiscountType = 'fixed'; // 'fixed' or 'percentage'
-    
+
     // Modals
     public $showSaleModal = false;
     public $showCustomerModal = false;
@@ -96,7 +95,7 @@ class StoreBilling extends Component
 
     public function getTotalDiscountProperty()
     {
-        return collect($this->cart)->sum(function($item) {
+        return collect($this->cart)->sum(function ($item) {
             return ($item['discount'] * $item['quantity']);
         });
     }
@@ -115,7 +114,7 @@ class StoreBilling extends Component
         if ($this->additionalDiscountType === 'percentage') {
             return ($this->subtotalAfterItemDiscounts * $this->additionalDiscount) / 100;
         }
-        
+
         return min($this->additionalDiscount, $this->subtotalAfterItemDiscounts);
     }
 
@@ -127,7 +126,7 @@ class StoreBilling extends Component
     public function getTotalPaidAmountProperty()
     {
         $total = 0;
-        
+
         if ($this->paymentMethod === 'cash') {
             $total = $this->cashAmount;
         } elseif ($this->paymentMethod === 'cheque') {
@@ -135,7 +134,7 @@ class StoreBilling extends Component
         } elseif ($this->paymentMethod === 'bank_transfer') {
             $total = $this->bankTransferAmount;
         }
-        
+
         return $total;
     }
 
@@ -192,7 +191,7 @@ class StoreBilling extends Component
         $this->cheques = [];
         $this->bankTransferFile = null;
         $this->bankTransferAmount = 0;
-        
+
         if ($value === 'cash') {
             $this->cashAmount = $this->grandTotal;
         } elseif ($value === 'bank_transfer') {
@@ -216,6 +215,13 @@ class StoreBilling extends Component
             'tempChequeAmount.min' => 'Cheque amount must be greater than 0',
         ]);
 
+        // Check if cheque number already exists
+        $existingCheque = Cheque::where('cheque_number', $this->tempChequeNumber)->first();
+        if ($existingCheque) {
+            $this->js("Swal.fire('Error!', 'Cheque number already exists. Please use a different cheque number.', 'error');");
+            return;
+        }
+
         $this->cheques[] = [
             'number' => $this->tempChequeNumber,
             'bank_name' => $this->tempBankName,
@@ -229,7 +235,7 @@ class StoreBilling extends Component
         $this->tempChequeDate = now()->format('Y-m-d');
         $this->tempChequeAmount = 0;
 
-        $this->js("Swal.fire('success', 'Cheque added successfully!', 'success')");
+        $this->js("Swal.fire('Success!', 'Cheque added successfully!', 'success')");
     }
 
     // Remove Cheque
@@ -290,11 +296,10 @@ class StoreBilling extends Component
             $this->customerId = $customer->id;
             $this->selectedCustomer = $customer;
             $this->closeCustomerModal();
-            
+
             $this->js("Swal.fire('success', 'Customer created successfully!', 'success')");
         } catch (\Exception $e) {
             $this->js("Swal.fire('error', 'Failed to create customer: ', 'error')");
-        
         }
     }
 
@@ -308,7 +313,7 @@ class StoreBilling extends Component
                 ->orWhere('model', 'like', '%' . $this->search . '%')
                 ->take(10)
                 ->get()
-                ->map(function($product) {
+                ->map(function ($product) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -333,14 +338,14 @@ class StoreBilling extends Component
         }
 
         $existing = collect($this->cart)->firstWhere('id', $product['id']);
-        
+
         if ($existing) {
             if (($existing['quantity'] + 1) > $product['stock']) {
                 $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
                 return;
             }
 
-            $this->cart = collect($this->cart)->map(function($item) use ($product) {
+            $this->cart = collect($this->cart)->map(function ($item) use ($product) {
                 if ($item['id'] == $product['id']) {
                     $item['quantity'] += 1;
                     $item['total'] = ($item['price'] - $item['discount']) * $item['quantity'];
@@ -349,7 +354,7 @@ class StoreBilling extends Component
             })->toArray();
         } else {
             $discountPrice = ProductDetail::find($product['id'])->price->discount_price ?? 0;
-            
+
             $this->cart[] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
@@ -362,23 +367,22 @@ class StoreBilling extends Component
                 'stock' => $product['stock']
             ];
         }
-        
+
         $this->search = '';
         $this->searchResults = [];
-        
     }
 
     // Update Quantity
     public function updateQuantity($index, $quantity)
     {
         if ($quantity < 1) $quantity = 1;
-        
+
         $productStock = $this->cart[$index]['stock'];
         if ($quantity > $productStock) {
             $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
-        
+
         $this->cart[$index]['quantity'] = $quantity;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $this->cart[$index]['discount']) * $quantity;
     }
@@ -388,12 +392,12 @@ class StoreBilling extends Component
     {
         $currentQuantity = $this->cart[$index]['quantity'];
         $productStock = $this->cart[$index]['stock'];
-        
+
         if (($currentQuantity + 1) > $productStock) {
             $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
-        
+
         $this->cart[$index]['quantity'] += 1;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $this->cart[$index]['discount']) * $this->cart[$index]['quantity'];
     }
@@ -414,7 +418,7 @@ class StoreBilling extends Component
         if ($discount > $this->cart[$index]['price']) {
             $discount = $this->cart[$index]['price'];
         }
-        
+
         $this->cart[$index]['discount'] = $discount;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $discount) * $this->cart[$index]['quantity'];
     }
@@ -459,7 +463,7 @@ class StoreBilling extends Component
             $this->additionalDiscount = 0;
             return;
         }
-        
+
         if ($this->additionalDiscountType === 'percentage' && $value > 100) {
             $this->additionalDiscount = 100;
             return;
@@ -626,7 +630,7 @@ class StoreBilling extends Component
                             'payment_id' => $payment->id,
                         ]);
                     }
-                    
+
                     $payment->update([
                         'payment_reference' => 'CHQ-' . collect($this->cheques)->pluck('number')->implode(','),
                         'bank_name' => collect($this->cheques)->pluck('bank_name')->unique()->implode(', '),
@@ -636,7 +640,7 @@ class StoreBilling extends Component
                     if ($this->bankTransferFile) {
                         $attachmentPath = $this->bankTransferFile->store('bank_transfers', 'public');
                     }
-                    
+
                     $payment->update([
                         'payment_reference' => 'BANK-' . now()->format('YmdHis'),
                         'due_payment_attachment' => $attachmentPath,
@@ -649,14 +653,13 @@ class StoreBilling extends Component
             $this->lastSaleId = $sale->id;
             $this->createdSale = Sale::with(['customer', 'items', 'payments'])->find($sale->id);
             $this->showSaleModal = true;
-            
+
             $statusMessage = 'Sale created successfully! Payment status: ' . ucfirst($this->paymentStatus);
             if ($this->dueAmount > 0) {
                 $statusMessage .= ' | Due Amount: Rs.' . number_format($this->dueAmount, 2);
             }
 
             $this->js("Swal.fire('success', '$statusMessage', 'success')");
-
         } catch (\Exception $e) {
             DB::rollBack();
             $this->js("Swal.fire('error', 'Failed to create sale: ' , 'error')");
@@ -672,14 +675,14 @@ class StoreBilling extends Component
         }
 
         $sale = Sale::with(['customer', 'items'])->find($this->lastSaleId);
-        
+
         if (!$sale) {
             $this->js("Swal.fire('error', 'Sale not found.', 'error')");
             return;
         }
 
         $pdf = PDF::loadView('admin.sales.invoice', compact('sale'));
-        
+
         return response()->streamDownload(
             function () use ($pdf) {
                 echo $pdf->output();

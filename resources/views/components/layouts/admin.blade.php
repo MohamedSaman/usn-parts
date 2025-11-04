@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ $title ?? 'Page Title' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/usnicon.png') }}">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -1049,7 +1050,10 @@
         @endphp
 
         <!-- Editable Cash in Hand Display -->
-        <div class="badge  bg-opacity-10 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2 " style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editCashAdminModal" role="button">
+        <div class="badge  bg-opacity-10 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2 "
+            style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem; cursor: pointer;"
+            onclick="handlePOSClick()"
+            role="button">
             <div class="d-flex align-items-center gap-1 px-2 py-1 fs-6">
                 <i class="bi bi-plus-circle"></i>
                 <span class="fw-semibold">POS</span>
@@ -1465,6 +1469,62 @@
             const modalId = event.detail.modalId;
             const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
             if (modal) modal.hide();
+        });
+
+        // Handle POS button click - show modal on first click of the day
+        function handlePOSClick() {
+            // Get today's date as a string (YYYY-MM-DD)
+            const today = new Date().toISOString().split('T')[0];
+
+            // Check if modal was already shown today
+            const lastShown = localStorage.getItem('posCashModalShown');
+
+            if (lastShown === today) {
+                // Modal already shown today, redirect to POS page
+                window.location.href = "{{ route('admin.store-billing') }}";
+            } else {
+                // First time today, show modal
+                const modal = new bootstrap.Modal(document.getElementById('editCashAdminModal'));
+                modal.show();
+
+                // Mark as shown for today
+                localStorage.setItem('posCashModalShown', today);
+            }
+        }
+
+        // Update the form submission to redirect to POS after updating cash
+        document.getElementById('cashInHandForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Close modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('editCashAdminModal'));
+                        modal.hide();
+
+                        // Show success message
+                        Swal.fire('Success!', 'Cash-in-Hand updated successfully!', 'success').then(() => {
+                            // Redirect to POS page
+                            window.location.href = "{{ route('admin.store-billing') }}";
+                        });
+                    } else {
+                        Swal.fire('Error!', data.message || 'Failed to update cash-in-hand', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    Swal.fire('Error!', 'An error occurred while updating cash-in-hand', 'error');
+                });
         });
     </script>
     @stack('scripts')
