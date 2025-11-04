@@ -94,7 +94,7 @@
             height: 100vh;
             background-color: #000000;
             color: #ffffff;
-           
+
             padding: 20px 0;
             position: fixed;
             transition: all 0.3s ease;
@@ -352,8 +352,8 @@
             width: calc(100% - 250px);
             transition: all 0.3s ease;
         }
-       
-        
+
+
 
         .main-content.collapsed {
             margin-left: 70px;
@@ -595,25 +595,86 @@
             font-weight: 600;
             color: #ffffff;
             background: #3B5B0C;
-            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
             font-size: 0.85rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .btn{
+        .btn {
             background: #8eb922;
-            background: linear-gradient(0deg,rgba(142, 185, 34, 1) 0%, rgba(59, 91, 12, 1) 100%);
+            background: linear-gradient(0deg, rgba(142, 185, 34, 1) 0%, rgba(59, 91, 12, 1) 100%);
             color: #ffffff;
         }
 
-        .modal-header{
+        .modal-header {
             background: #3B5B0C;
-            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+            background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
             color: #ffffff;
         }
 
-        
+        /* Commen styles */
+        .container-fluid,
+        .card,
+        .modal-content {
+            font-size: 13px !important;
+        }
+
+        .table th,
+        .table td {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+        .modal-header {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .modal-footer,
+        .card-header,
+        .card-body,
+        .row,
+        .col-md-6,
+        .col-md-4,
+        .col-md-2,
+        .col-md-12 {
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .form-control,
+        .form-select {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+        .btn,
+        .btn-sm,
+        .btn-primary,
+        .btn-secondary,
+        .btn-outline-danger,
+        .btn-outline-secondary {
+            font-size: 12px !important;
+            padding: 0.25rem 0.5rem !important;
+        }
+
+        .badge {
+            font-size: 11px !important;
+            padding: 0.25em 0.5em !important;
+        }
+
+        .list-group-item,
+        .dropdown-item {
+            font-size: 12px !important;
+            padding: 0.35rem 0.5rem !important;
+        }
+
+
+
         /* Responsive styles */
         @media (max-width: 767.98px) {
             .sidebar {
@@ -660,24 +721,26 @@
                 </div>
             </div>
             <ul class="nav flex-column">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ route('admin.dashboard') }}">
+
+                <li>
+                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
                         <i class="bi bi-speedometer2"></i> <span>Overview</span>
                     </a>
                 </li>
-                {{-- <li class="nav-item">
+                {{--
+                <li class="nav-item">
                     <a class="nav-link dropdown-toggle" href="#hrSubmenu" data-bs-toggle="collapse" role="button"
-                        aria-expanded="false" aria-controls="hrSubmenu">
-                        <i class="bi bi-people"></i> <span>HR Management</span>
+                    aria-expanded="false" aria-controls="hrSubmenu">
+                    <i class="bi bi-people"></i> <span>HR Management</span>
                     </a>
                     <div class="collapse" id="hrSubmenu">
-                        <ul class="nav flex-column ms-3">
-                            <li class="nav-item">
-                                <a class="nav-link py-2" href="{{ route('admin.manage-admin') }}"><i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
+                    <ul class="nav flex-column ms-3">
+                        <li class="nav-item">
+                        <a class="nav-link py-2" href="{{ route('admin.manage-admin') }}">
+                <i class="bi bi-shield-lock"></i> <span>Manage Admin</span>
                 </a>
                 </li>
                 <!-- Disabled: Manage Staff -->
-
                 <!-- Disabled: Staff Attendance -->
                 <li class="nav-item">
                     <a class="nav-link py-2 disabled" href="#">
@@ -703,7 +766,8 @@
                 </li>
             </ul>
         </div>
-        </li> --}}
+        </li>
+        --}}
         <li class="nav-item">
             <a class="nav-link dropdown-toggle" href="#inventorySubmenu" data-bs-toggle="collapse" role="button"
                 aria-expanded="false" aria-controls="inventorySubmenu">
@@ -716,7 +780,6 @@
                             <i class="bi bi-card-list"></i> <span>List Product</span>
                         </a>
                     </li>
-
                     <li class="nav-item">
                         <a class="nav-link py-2" href="{{ route('admin.Product-brand') }}">
                             <i class="bi bi-tags"></i> <span>Product Brand</span>
@@ -727,7 +790,6 @@
                             <i class="bi bi-tags-fill"></i> <span>Product Category</span>
                         </a>
                     </li>
-
                 </ul>
             </div>
         </li>
@@ -753,11 +815,10 @@
                             <i class="bi bi-shop"></i> <span>POS Sales</span>
                         </a>
                     </li>
-
                     {{-- no need him  --}}
-
-                    {{-- <li class="nav-item">
-                                        <a class="nav-link py-2" href="{{ route('admin.due-payments') }}">
+                    {{--
+                        <li class="nav-item">
+                        <a class="nav-link py-2" href="{{ route('admin.due-payments') }}">
                     <i class="bi bi-cash-coin"></i> <span>Due Payments</span>
                     </a>
         </li>
@@ -770,7 +831,8 @@
             <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
                 <i class="bi bi-collection"></i> <span>Return Product</span>
             </a>
-        </li> --}}
+        </li>
+        --}}
         </ul>
     </div>
     </li>
@@ -791,11 +853,13 @@
                         <i class="bi bi-card-list"></i> <span>List Quotation</span>
                     </a>
                 </li>
-                {{-- <li class="nav-item">
-                                            <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
+                {{--
+                        <li class="nav-item">
+                        <a class="nav-link py-2" href="{{ route('admin.Product-stock-details') }}">
                 <i class="bi bi-shield-lock"></i> <span>Product Stock</span>
                 </a>
-    </li> --}}
+    </li>
+    --}}
     </ul>
     </div>
     </li>
@@ -806,7 +870,6 @@
         </a>
         <div class="collapse" id="purchaseSubmenu">
             <ul class="nav flex-column ms-3">
-
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.purchase-order-list') }}">
                         <i class="bi bi-journal-bookmark"></i> <span>Purchase Order</span>
@@ -839,7 +902,6 @@
                 </li>
             </ul>
         </div>
-
     </li>
     {{-- // cheque / banks --}}
     <li class="nav-item">
@@ -857,24 +919,23 @@
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.cheque-list') }}">
                         <i class="bi bi-card-text"></i> <span>Cheque List</span>
-
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.return-cheque') }}">
                         <i class="bi bi-arrow-left-right"></i> <span>Return Cheque</span>
-
                     </a>
                 </li>
             </ul>
         </div>
     </li>
-    {{--<li class="nav-item">
+    {{--
+                <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.income') }}">
     <i class="bi bi-cash-stack"></i> <span>Income</span>
-
     </a>
-    </li>--}}
+    </li>
+    --}}
     {{-- // Expensive  --}}
     <li class="nav-item">
         <a class="nav-link dropdown-toggle" href="#expensesSubmenu" data-bs-toggle="collapse" role="button"
@@ -888,7 +949,6 @@
                         <i class="bi bi-wallet2"></i> <span>List Expenses</span>
                     </a>
                 </li>
-
             </ul>
         </div>
     </li>
@@ -912,12 +972,12 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.add-supplier-receipt') }}">
-                        <i class="bi bi-truck-flatbed"></i> <span>Add Supplier Receipt</span>
+                        <i class="bi bi-truck-flatbed"></i> <span>Add Supplier Payment</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.list-supplier-receipt') }}">
-                        <i class="bi bi-clipboard-data"></i> <span>List Supplier Receipt</span>
+                        <i class="bi bi-clipboard-data"></i> <span>List Supplier Payment</span>
                     </a>
                 </li>
             </ul>
@@ -981,7 +1041,7 @@
 
         <!-- Centered Company Name (hidden on small screens) -->
         <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-            
+
         </div>
         @php
         use App\Models\CashInHand as CashModel;
@@ -989,16 +1049,11 @@
         @endphp
 
         <!-- Editable Cash in Hand Display -->
-        <div class="badge  bg-opacity-10  px-3 py-2 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2" style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem;">
-            <i class="bi bi-lock-fill"></i>
-            <span class="fw-semibold">POS:</span>
-            <span class="fw-bold">Rs. {{ number_format($cashInHand, 2) }}</span>
-
-            <!-- Edit button -->
-            <button class="btn btn-sm  border-0 ms-2 p-0" data-bs-toggle="modal" data-bs-target="#editCashAdminModal" style="color:#8eb922;">
-                <i class="bi bi-pencil-square"></i>
-            </button>
-
+        <div class="badge  bg-opacity-10 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2 " style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editCashAdminModal" role="button">
+            <div class="d-flex align-items-center gap-1 px-2 py-1 fs-6">
+                <i class="bi bi-plus-circle"></i>
+                <span class="fw-semibold">POS</span>
+            </div>
         </div>
 
 

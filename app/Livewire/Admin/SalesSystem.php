@@ -162,9 +162,9 @@ class SalesSystem extends Component
             $this->selectedCustomer = $customer;
             $this->closeCustomerModal();
             
-            session()->flash('message', 'Customer created successfully!');
+            $this->js("Swal.fire('success', 'Customer created successfully!', 'success')");
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create customer: ' . $e->getMessage());
+            $this->js("Swal.fire('error', 'Failed to create customer: ', 'error')");
         }
     }
     
@@ -187,6 +187,7 @@ class SalesSystem extends Component
                         'model' => $product->model,
                         'price' => $product->price->selling_price ?? 0,
                         'stock' => $product->stock->available_stock ?? 0,
+                        'sold' => $product->stock->sold_count ?? 0,
                         'image' => $product->image
                     ];
                 });
@@ -200,7 +201,7 @@ class SalesSystem extends Component
     {
         // Check stock availability
         if (($product['stock'] ?? 0) <= 0) {
-            session()->flash('error', 'Product is out of stock!');
+            $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
             return;
         }
 
@@ -209,7 +210,7 @@ class SalesSystem extends Component
         if ($existing) {
             // Check if adding more exceeds stock
             if (($existing['quantity'] + 1) > $product['stock']) {
-                session()->flash('error', 'Not enough stock available!');
+                $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
                 return;
             }
 
@@ -250,7 +251,7 @@ class SalesSystem extends Component
         // Check stock availability
         $productStock = $this->cart[$index]['stock'];
         if ($quantity > $productStock) {
-            session()->flash('error', 'Not enough stock available! Maximum: ' . $productStock);
+            $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
         
@@ -265,7 +266,7 @@ class SalesSystem extends Component
         $productStock = $this->cart[$index]['stock'];
         
         if (($currentQuantity + 1) > $productStock) {
-            session()->flash('error', 'Not enough stock available! Maximum: ' . $productStock);
+            $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
         
@@ -299,7 +300,7 @@ class SalesSystem extends Component
     {
         unset($this->cart[$index]);
         $this->cart = array_values($this->cart);
-        session()->flash('message', 'Product removed from sale!');
+        $this->js("Swal.fire('success', 'Product removed from sale!', 'success')");
     }
 
     // Clear Cart
@@ -308,7 +309,7 @@ class SalesSystem extends Component
         $this->cart = [];
         $this->additionalDiscount = 0;
         $this->additionalDiscountType = 'fixed';
-        session()->flash('message', 'Cart cleared!');
+        $this->js("Swal.fire('success', 'Cart cleared!', 'success')");
     }
 
     // Update additional discount
@@ -344,19 +345,19 @@ class SalesSystem extends Component
     public function removeAdditionalDiscount()
     {
         $this->additionalDiscount = 0;
-        session()->flash('message', 'Additional discount removed!');
+        $this->js("Swal.fire('success', 'Additional discount removed!', 'success')");
     }
 
     // Create Sale
     public function createSale()
     {
         if (empty($this->cart)) {
-            session()->flash('error', 'Please add at least one product to the sale.');
+            $this->js("Swal.fire('error', 'Please add at least one product to the sale.', 'error')");
             return;
         }
 
         if (!$this->selectedCustomer && !$this->customerId) {
-            session()->flash('error', 'Please select a customer.');
+            $this->js("Swal.fire('error', 'Please select a customer.', 'error')");
             return;
         }
 
@@ -371,7 +372,7 @@ class SalesSystem extends Component
             }
 
             if (!$customer) {
-                session()->flash('error', 'Customer not found.');
+                $this->js("Swal.fire('error', 'Customer not found.', 'error')");
                 return;
             }
 
@@ -412,6 +413,7 @@ class SalesSystem extends Component
                 $product = ProductDetail::find($item['id']);
                 if ($product && $product->stock) {
                     $product->stock->available_stock -= $item['quantity'];
+                    $product->stock->sold_count += $item['quantity'];
                     $product->stock->save();
                 }
             }
@@ -421,13 +423,12 @@ class SalesSystem extends Component
             $this->lastSaleId = $sale->id;
             $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);
             $this->showSaleModal = true;
-            
-            session()->flash('success', 'Sale created successfully! Payment status: Pending');
+            $this->js("Swal.fire('success', 'Sale created successfully!', 'success')");
             
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Failed to create sale: ' . $e->getMessage());
+            $this->js("Swal.fire('error', 'Failed to create sale: ' , 'error')");
         }
     }
 
@@ -435,14 +436,14 @@ class SalesSystem extends Component
     public function downloadInvoice()
     {
         if (!$this->lastSaleId) {
-            session()->flash('error', 'No sale found to download.');
+            $this->js("Swal.fire('error', 'No sale found to download.', 'error')");
             return;
         }
 
         $sale = Sale::with(['customer', 'items'])->find($this->lastSaleId);
         
         if (!$sale) {
-            session()->flash('error', 'Sale not found.');
+            $this->js("Swal.fire('error', 'Sale not found.', 'error')");
             return;
         }
 

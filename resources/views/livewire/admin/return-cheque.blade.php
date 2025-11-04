@@ -170,7 +170,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Amount</label>
-                            <input type="number" step="0.01" class="form-control" wire:model.defer="newChequeAmount" required>
+                            <input type="number" step="0.01" class="form-control" wire:model.defer="newChequeAmount" readonly style="background-color: #e9ecef; cursor: not-allowed;" required>
+                            <small class="text-muted">Amount is automatically copied from the returned cheque</small>
                         </div>
                     </div>
                     <div class="modal-footer justify-content-center">

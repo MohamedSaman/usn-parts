@@ -58,6 +58,12 @@ class ReturnCheque extends Component
     public function setSelectedCheque($id)
     {
         $this->selectedChequeId = $id;
+
+        // Pre-fill the cheque amount from the selected cheque
+        $cheque = Cheque::find($id);
+        if ($cheque) {
+            $this->newChequeAmount = $cheque->cheque_amount;
+        }
     }
 
     public function rechequeSubmit()

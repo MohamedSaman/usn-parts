@@ -63,11 +63,11 @@ class PurchaseOrderList extends Component
 
     public function updatedSearch()
     {
-        if ($this->search != '') {
+        if (strlen($this->search) >= 2) {
             $this->products = ProductDetail::where('name', 'like', '%' . $this->search . '%')
                 ->orWhere('code', 'like', '%' . $this->search . '%')
-                ->with(['stock'])
-                ->limit(5)
+                ->with(['stock', 'price'])
+                ->limit(10)
                 ->get();
         } else {
             $this->products = [];
@@ -76,43 +76,67 @@ class PurchaseOrderList extends Component
 
     public function selectProduct($id)
     {
-        $this->selectedProduct = ProductDetail::with(['stock'])->find($id);
+        $product = ProductDetail::with(['stock', 'price'])->find($id);
 
-        if (!$this->selectedProduct) {
+        if (!$product) {
             Log::error("Product not found with ID: " . $id);
+            $this->js("Swal.fire('Error', 'Product not found!', 'error');");
             return;
+        }
+
+        // Check if product already exists in order items
+        $existingIndex = null;
+        foreach ($this->orderItems as $index => $item) {
+            if ($item['product_id'] == $id) {
+                $existingIndex = $index;
+                break;
+            }
         }
 
         // Get the price
         $price = \App\Models\ProductPrice::where('product_id', $id)->value('supplier_price');
 
         // If not found in product_prices, try other sources
-        if (!$price && isset($this->selectedProduct->price)) {
-            $price = $this->selectedProduct->price;
+        if (!$price && isset($product->price)) {
+            $price = $product->price;
         }
 
-        if (!$price && isset($this->selectedProduct->cost_price)) {
-            $price = $this->selectedProduct->cost_price;
+        if (!$price && isset($product->cost_price)) {
+            $price = $product->cost_price;
         }
 
-        if (!$price && isset($this->selectedProduct->purchase_price)) {
-            $price = $this->selectedProduct->purchase_price;
+        if (!$price && isset($product->purchase_price)) {
+            $price = $product->purchase_price;
         }
 
         // If still no price, use a default
         if (!$price) {
-            $price = $this->selectedProduct->selling_price ?? 0;
+            $price = $product->selling_price ?? 0;
         }
 
-        // Store the price in a separate property instead of on the model
-        $this->selectedProductPrice = $price;
+        if ($existingIndex !== null) {
+            // Product already exists, increment quantity
+            $this->orderItems[$existingIndex]['quantity'] += 1;
+            $this->orderItems[$existingIndex]['total_price'] =
+                $this->orderItems[$existingIndex]['quantity'] * $this->orderItems[$existingIndex]['supplier_price'];
+        } else {
+            // Add new product to order items directly
+            $this->orderItems[] = [
+                'product_id' => $product->id,
+                'code' => $product->code,
+                'name' => $product->name,
+                'quantity' => 1,
+                'supplier_price' => $price,
+                'total_price' => $price
+            ];
+        }
 
+        // Clear search
         $this->products = [];
         $this->search = '';
-        $this->quantity = 1;
-        $this->calculateTotalPrice();
+        $this->calculateGrandTotal();
 
-        Log::info("Product selected: " . $this->selectedProduct->name . ", Price: " . $this->selectedProductPrice);
+        Log::info("Product added: " . $product->name . ", Price: " . $price);
     }
 
     public function calculateTotalPrice()
@@ -126,25 +150,26 @@ class PurchaseOrderList extends Component
         $this->calculateTotalPrice();
     }
 
-    public function addItem()
+    // Update order item quantity
+    public function updateOrderItemQuantity($index, $quantity)
     {
-        if (!$this->selectedProduct || $this->quantity < 1) return;
+        if (isset($this->orderItems[$index]) && $quantity >= 1) {
+            $this->orderItems[$index]['quantity'] = $quantity;
+            $this->orderItems[$index]['total_price'] =
+                $quantity * $this->orderItems[$index]['supplier_price'];
+            $this->calculateGrandTotal();
+        }
+    }
 
-        $this->orderItems[] = [
-            'product_id' => $this->selectedProduct->id,
-            'code' => $this->selectedProduct->code,
-            'name' => $this->selectedProduct->name,
-            'quantity' => $this->quantity,
-            'supplier_price' => $this->selectedProductPrice,
-            'total_price' => $this->totalPrice
-        ];
-
-        $this->selectedProduct = null;
-        $this->selectedProductPrice = 0;
-        $this->search = '';
-        $this->quantity = 1;
-        $this->totalPrice = 0;
-        $this->calculateGrandTotal();
+    // Update order item price
+    public function updateOrderItemPrice($index, $price)
+    {
+        if (isset($this->orderItems[$index]) && $price >= 0) {
+            $this->orderItems[$index]['supplier_price'] = $price;
+            $this->orderItems[$index]['total_price'] =
+                $this->orderItems[$index]['quantity'] * $price;
+            $this->calculateGrandTotal();
+        }
     }
 
     public function removeItem($index)
@@ -159,7 +184,7 @@ class PurchaseOrderList extends Component
         if (!$this->supplier_id || count($this->orderItems) == 0) return;
 
         // Generate unique order code for the year
-        $year = date('Y');
+        $year = date('Ymd');
         $lastOrder = PurchaseOrder::where('order_code', 'like', 'ORD-' . $year . '-%')
             ->orderByDesc('order_code')
             ->first();
@@ -501,13 +526,23 @@ class PurchaseOrderList extends Component
         // Update order received date
         $this->selectedPO->received_date = now();
 
-        // Determine overall order status based on GRN items
-        $totalItems = count($this->grnItems);
-        if ($receivedItemsCount === $totalItems) {
-            $this->selectedPO->status = 'received';
-        } elseif ($receivedItemsCount > 0) {
+        // Determine overall order status based on ALL order items (not just grnItems)
+        $allOrderItems = PurchaseOrderItem::where('order_id', $this->selectedPO->id)->get();
+        $totalItemsCount = $allOrderItems->count();
+        $receivedItemsTotal = $allOrderItems->where('status', 'received')->count();
+        $notReceivedItemsTotal = $allOrderItems->where('status', 'notreceived')->count();
+        $pendingItemsTotal = $allOrderItems->whereNotIn('status', ['received', 'notreceived'])->count();
+
+        // If all items are received, mark order as complete
+        if ($receivedItemsTotal === $totalItemsCount && $totalItemsCount > 0) {
             $this->selectedPO->status = 'complete';
-        } else {
+        }
+        // If some items are received but others are pending/not received
+        elseif ($receivedItemsTotal > 0 && ($pendingItemsTotal > 0 || $notReceivedItemsTotal > 0)) {
+            $this->selectedPO->status = 'received'; // Partial receipt
+        }
+        // If no items received yet
+        else {
             $this->selectedPO->status = 'pending';
         }
 
@@ -706,6 +741,45 @@ class PurchaseOrderList extends Component
             ];
         }
 
+
+        // Open GRN modal using JavaScript
+        $this->js("new bootstrap.Modal(document.getElementById('grnModal')).show();");
+    }
+
+    // Re-Process GRN - Only load pending items
+    public function reProcessGRN($orderId)
+    {
+        $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product.detail'])->find($orderId);
+
+        if (!$this->selectedPO) {
+            $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+            return;
+        }
+
+        // Initialize GRN items from ONLY pending purchase order items
+        $this->grnItems = [];
+        foreach ($this->selectedPO->items as $item) {
+            // Only include items that are pending or not received
+            if (in_array(strtolower($item->status ?? 'pending'), ['pending', 'notreceived', ''])) {
+                $this->grnItems[] = [
+                    'id' => $item->id,
+                    'product_id' => $item->product_id,
+                    'code' => $item->product->code ?? 'N/A',
+                    'name' => $item->product->name ?? 'N/A',
+                    'ordered_qty' => $item->quantity,
+                    'received_qty' => $item->quantity, // Default to ordered quantity
+                    'unit_price' => $item->unit_price,
+                    'discount' => $item->discount ?? 0,
+                    'discount_type' => 'rs',
+                    'status' => 'pending'
+                ];
+            }
+        }
+
+        if (empty($this->grnItems)) {
+            $this->js("Swal.fire('Info', 'No pending items to process!', 'info');");
+            return;
+        }
 
         // Open GRN modal using JavaScript
         $this->js("new bootstrap.Modal(document.getElementById('grnModal')).show();");

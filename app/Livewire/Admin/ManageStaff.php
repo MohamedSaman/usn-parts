@@ -130,7 +130,7 @@ class ManageStaff extends Component
     {
         $this->validate([
             'name' => 'required',
-            'contactNumber' => 'required',
+            'contactNumber' => 'required| max:10',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8',
             'confirmPassword' => 'required|min:8|same:password',
@@ -221,7 +221,7 @@ class ManageStaff extends Component
     {
         $validationRules = [
             'editName' => 'required',
-            'editContactNumber' => 'required',
+            'editContactNumber' => 'required | max:10',
             'editEmail' => 'required|email|unique:users,email,' . $this->editStaffId,
             'editStatus' => 'required|in:active,inactive', // Add status validation
         ];

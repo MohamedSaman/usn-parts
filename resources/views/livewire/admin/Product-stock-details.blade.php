@@ -8,7 +8,7 @@
             <p class="text-muted mb-0">Manage and monitor product inventory levels</p>
         </div>
         <div class="d-flex gap-2">
-            <button wire:click="exportToCSV" class="btn btn-outline-primary">
+            <button wire:click="exportToCSV" class="btn btn-outline-primary text-white">
                 <i class="bi bi-download me-2"></i> Export
             </button>
             <button id="printButton" class="btn btn-primary">
@@ -241,14 +241,7 @@
         justify-content: center;
     }
 
-    .table th {
-        border-top: none;
-        font-weight: 600;
-        color: #6c757d;
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
+    
 
     .table td {
         vertical-align: middle;

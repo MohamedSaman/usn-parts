@@ -139,17 +139,17 @@
 
         .progress-bar {
             background-color: #007bff;
-            height: 0.5rem;
+            height: 4px;
         }
 
         /* Stats progress bars */
         .stat-card .progress {
-            height: 6px;
+            height: 4px;
             margin-bottom: 5px;
         }
 
         .stat-card .progress-bar {
-            height: 6px;
+            height: 4px;
         }
 
         .stat-info small,
@@ -264,6 +264,15 @@
 
     <!-- Overview Content -->
     <div class="container-fluid p-0">
+        <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div>
+                <h3 class="fw-bold text-dark mb-2">
+                    <i class="bi bi-speedometer2 text-success me-2"></i> Overview
+                </h3>
+                <p class="text-muted mb-0">Get a complete view of your product performance and stock activity.</p>
+            </div>
+        </div>
         <!-- Stats Cards Row - Updated to 3 cards -->
         <div class="row mb-4">
             <!-- Total Sold Stocks Card -->

@@ -25,7 +25,7 @@
 
     <div class="row">
         {{-- Customer Information --}}
-        <div class="col-6 mb-4">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -271,7 +271,7 @@
         </div>
 
         {{-- Create Sale Button --}}
-        <div class="col-6">
+        <div class="col-md-6">
             <div class="card">
                 <div class="card-body text-center">
                     <div class="mb-3">
@@ -503,6 +503,76 @@
 
 @push('styles')
 <style>
+    
+    .container-fluid,
+    .card,
+    .modal-content {
+        font-size: 13px !important;
+    }
+
+    .table th,
+    .table td {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .modal-header{
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .modal-footer,
+    .card-header,
+    .card-body,
+    .row,
+    .col-md-6,
+    .col-md-4,
+    .col-md-2,
+    .col-md-12 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .btn,
+    .btn-sm,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        font-size: 12px !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    .badge {
+        font-size: 11px !important;
+        padding: 0.25em 0.5em !important;
+    }
+
+    .list-group-item,
+    .dropdown-item {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .summary-card,
+    .card {
+        border-radius: 8px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .icon-container {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.1rem !important;
+    }
     .search-results {
         max-height: 300px;
         overflow-y: auto;

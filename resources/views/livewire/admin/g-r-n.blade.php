@@ -21,7 +21,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Awaiting Receipt</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Fully Received</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -87,9 +87,9 @@
                                 <td>{{ $po->supplier->name }}</td>
                                 <td>{{ $po->order_date }}</td>
                                 <td>
-                                    @if($po->status == 'complete')
+                                    @if($po->status == 'received')
                                     <span class="badge bg-warning">Awaiting Receipt</span>
-                                    @elseif($po->status == 'received')
+                                    @elseif($po->status == 'complete')
                                     <span class="badge bg-success">Fully Received</span>
                                     @elseif($po->status == 'pending')
                                     <span class="badge bg-secondary">Pending</span>
@@ -195,6 +195,76 @@
 
     @push('styles')
     <style>
+        
+    .container-fluid,
+    .card,
+    .modal-content {
+        font-size: 13px !important;
+    }
+
+    .table th,
+    .table td {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+     .modal-header{
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        margin-bottom: 0.25rem !important;
+     }
+   
+    .modal-footer,
+    .card-header,
+    .card-body,
+    .row,
+    .col-md-6,
+    .col-md-4,
+    .col-md-2,
+    .col-md-12 {
+        padding-top: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .btn,
+    .btn-sm,
+    .btn-primary,
+    .btn-secondary,
+    .btn-outline-danger,
+    .btn-outline-secondary {
+        font-size: 12px !important;
+        padding: 0.25rem 0.5rem !important;
+    }
+
+    .badge {
+        font-size: 11px !important;
+        padding: 0.25em 0.5em !important;
+    }
+
+    .list-group-item,
+    .dropdown-item {
+        font-size: 12px !important;
+        padding: 0.35rem 0.5rem !important;
+    }
+
+    .summary-card,
+    .card {
+        border-radius: 8px !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .icon-container {
+        width: 36px !important;
+        height: 36px !important;
+        font-size: 1.1rem !important;
+    }
         .summary-card {
             border-left: 4px solid;
             transition: all 0.3s ease;

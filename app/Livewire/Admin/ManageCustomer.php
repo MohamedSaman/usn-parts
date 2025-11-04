@@ -100,7 +100,7 @@ class ManageCustomer extends Component
         $this->validate([
             'name' => 'required',
             'customerType' => 'required',
-            'contactNumber' => 'required',
+            'contactNumber' => 'required | max:10',
             'address' => 'required',
             'email' => 'email|unique:customers,email',
             'businessName' => 'nullable',
@@ -152,7 +152,7 @@ class ManageCustomer extends Component
             'editName' => 'required',
             'editCustomerType' => 'required',
             'editBusinessName' => 'nullable',
-            'editContactNumber' => 'required',
+            'editContactNumber' => 'required | max:10',
             'editAddress' => 'required',
             'editEmail' => 'email|unique:customers,email,' . $this->editCustomerId,
         ]);

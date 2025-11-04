@@ -229,7 +229,7 @@ class StoreBilling extends Component
         $this->tempChequeDate = now()->format('Y-m-d');
         $this->tempChequeAmount = 0;
 
-        session()->flash('message', 'Cheque added successfully!');
+        $this->js("Swal.fire('success', 'Cheque added successfully!', 'success')");
     }
 
     // Remove Cheque
@@ -237,7 +237,7 @@ class StoreBilling extends Component
     {
         unset($this->cheques[$index]);
         $this->cheques = array_values($this->cheques);
-        session()->flash('message', 'Cheque removed!');
+        $this->js("Swal.fire('success', 'Cheque removed successfully!', 'success')");
     }
 
     // Reset customer fields
@@ -291,9 +291,10 @@ class StoreBilling extends Component
             $this->selectedCustomer = $customer;
             $this->closeCustomerModal();
             
-            session()->flash('message', 'Customer created successfully!');
+            $this->js("Swal.fire('success', 'Customer created successfully!', 'success')");
         } catch (\Exception $e) {
-            session()->flash('error', 'Failed to create customer: ' . $e->getMessage());
+            $this->js("Swal.fire('error', 'Failed to create customer: ', 'error')");
+        
         }
     }
 
@@ -327,7 +328,7 @@ class StoreBilling extends Component
     public function addToCart($product)
     {
         if (($product['stock'] ?? 0) <= 0) {
-            session()->flash('error', 'Product is out of stock!');
+            $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
             return;
         }
 
@@ -335,7 +336,7 @@ class StoreBilling extends Component
         
         if ($existing) {
             if (($existing['quantity'] + 1) > $product['stock']) {
-                session()->flash('error', 'Not enough stock available!');
+                $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
                 return;
             }
 
@@ -364,7 +365,7 @@ class StoreBilling extends Component
         
         $this->search = '';
         $this->searchResults = [];
-        session()->flash('message', 'Product added to sale!');
+        
     }
 
     // Update Quantity
@@ -374,7 +375,7 @@ class StoreBilling extends Component
         
         $productStock = $this->cart[$index]['stock'];
         if ($quantity > $productStock) {
-            session()->flash('error', 'Not enough stock available! Maximum: ' . $productStock);
+            $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
         
@@ -389,7 +390,7 @@ class StoreBilling extends Component
         $productStock = $this->cart[$index]['stock'];
         
         if (($currentQuantity + 1) > $productStock) {
-            session()->flash('error', 'Not enough stock available! Maximum: ' . $productStock);
+            $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
         
@@ -423,7 +424,7 @@ class StoreBilling extends Component
     {
         unset($this->cart[$index]);
         $this->cart = array_values($this->cart);
-        session()->flash('message', 'Product removed from sale!');
+        $this->js("Swal.fire('success', 'Product removed from sale!', 'success')");
     }
 
     // Clear Cart
@@ -433,7 +434,7 @@ class StoreBilling extends Component
         $this->additionalDiscount = 0;
         $this->additionalDiscountType = 'fixed';
         $this->resetPaymentFields();
-        session()->flash('message', 'Cart cleared!');
+        $this->js("Swal.fire('success', 'Cart cleared!', 'success')");
     }
 
     // Reset payment fields
@@ -479,36 +480,36 @@ class StoreBilling extends Component
     public function removeAdditionalDiscount()
     {
         $this->additionalDiscount = 0;
-        session()->flash('message', 'Additional discount removed!');
+        $this->js("Swal.fire('success', 'Additional discount removed!', 'success')");
     }
 
     // Validate Payment Before Creating Sale
     public function validateAndCreateSale()
     {
         if (empty($this->cart)) {
-            session()->flash('error', 'Please add at least one product to the sale.');
+            $this->js("Swal.fire('error', 'Please add at least one product to the sale.', 'error')");
             return;
         }
 
         if (!$this->selectedCustomer && !$this->customerId) {
-            session()->flash('error', 'Please select a customer.');
+            $this->js("Swal.fire('error', 'Please select a customer.', 'error')");
             return;
         }
 
         // Validate payment method specific fields
         if ($this->paymentMethod === 'cash') {
             if ($this->cashAmount <= 0) {
-                session()->flash('error', 'Please enter cash amount.');
+                $this->js("Swal.fire('error', 'Please enter cash amount.', 'error')");
                 return;
             }
         } elseif ($this->paymentMethod === 'cheque') {
             if (empty($this->cheques)) {
-                session()->flash('error', 'Please add at least one cheque.');
+                $this->js("Swal.fire('error', 'Please add at least one cheque.', 'error')");
                 return;
             }
         } elseif ($this->paymentMethod === 'bank_transfer') {
             if ($this->bankTransferAmount <= 0) {
-                session()->flash('error', 'Please enter bank transfer amount.');
+                $this->js("Swal.fire('error', 'Please enter bank transfer amount.', 'error')");
                 return;
             }
         }
@@ -551,7 +552,7 @@ class StoreBilling extends Component
             $customer = $this->selectedCustomer ?? Customer::find($this->customerId);
 
             if (!$customer) {
-                session()->flash('error', 'Customer not found.');
+                $this->js("Swal.fire('error', 'Customer not found.', 'error')");
                 return;
             }
 
@@ -654,11 +655,11 @@ class StoreBilling extends Component
                 $statusMessage .= ' | Due Amount: Rs.' . number_format($this->dueAmount, 2);
             }
 
-            session()->flash('success', $statusMessage);
+            $this->js("Swal.fire('success', '$statusMessage', 'success')");
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Failed to create sale: ' . $e->getMessage());
+            $this->js("Swal.fire('error', 'Failed to create sale: ' , 'error')");
         }
     }
 
@@ -666,14 +667,14 @@ class StoreBilling extends Component
     public function downloadInvoice()
     {
         if (!$this->lastSaleId) {
-            session()->flash('error', 'No sale found to download.');
+            $this->js("Swal.fire('error', 'No sale found to download.', 'error')");
             return;
         }
 
         $sale = Sale::with(['customer', 'items'])->find($this->lastSaleId);
         
         if (!$sale) {
-            session()->flash('error', 'Sale not found.');
+            $this->js("Swal.fire('error', 'Sale not found.', 'error')");
             return;
         }
 
