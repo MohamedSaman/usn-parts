@@ -84,25 +84,18 @@
                                 <td class="ps-4" wire:click="viewGRN({{ $po->id }})">
                                     <span class="fw-medium text-dark">{{ $po->order_code }}</span>
                                 </td>
-                                <td>{{ $po->supplier->name }}</td>
-                                <td>{{ $po->order_date }}</td>
-                                <td>
-                                    @if($po->status == 'received')
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->supplier->name }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->order_date }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">
-                                    @if($po->status == 'complete')
-                                    <span class="badge bg-warning">Awaiting Receipt</span>
-                                    @elseif($po->status == 'complete')
-                                    <span class="badge bg-success">Fully Received</span>
+                                    @if($po->status == 'received')
+                                        <span class="badge bg-success">Fully Received</span>
                                     @elseif($po->status == 'pending')
-                                    <span class="badge bg-secondary">Pending</span>
+                                        <span class="badge bg-warning">Awaiting Receipt</span>
                                     @else
-                                    <span class="badge bg-info">{{ ucfirst($po->status) }}</span>
+                                        <span class="badge bg-info">{{ ucfirst($po->status) }}</span>
                                     @endif
                                 </td>
                                 
-                               
                             </tr>
                             @endforeach
                         </tbody>
