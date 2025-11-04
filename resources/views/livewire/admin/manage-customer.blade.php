@@ -73,26 +73,64 @@
                                     @endif
                                 </td>
                                 <td>{{ $customer->address ?? '-' }}</td>
-                                <td class="text-end ">
-                                    <button class=" text-info me-2 bg-opacity-0 border-0" 
-                                            wire:click="viewDetails({{ $customer->id }})" 
-                                            wire:loading.attr="disabled"
-                                            title="View Details">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="text-primary me-2 bg-opacity-0 border-0" 
-                                            wire:click="editCustomer({{ $customer->id }})" 
-                                            wire:loading.attr="disabled"
-                                            title="Edit Customer">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="text-danger me-2 bg-opacity-0 border-0" 
-                                            wire:click="confirmDelete({{ $customer->id }})" 
-                                            wire:loading.attr="disabled"
-                                            title="Delete Customer">
-                                        <i class="bi bi-trash fs-6"></i>
-                                    </button>
-                                </td>
+                                <td class="text-end pe-2">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <!-- View Customer -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="viewDetails({{ $customer->id }})"
+                        wire:loading.attr="disabled"
+                        title="View Details">
+                    <span wire:loading wire:target="viewDetails({{ $customer->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="viewDetails({{ $customer->id }})">
+                        <i class="bi bi-eye text-info me-2"></i> View
+                    </span>
+                </button>
+            </li>
+
+            <!-- Edit Customer -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="editCustomer({{ $customer->id }})"
+                        wire:loading.attr="disabled"
+                        title="Edit Customer">
+                    <span wire:loading wire:target="editCustomer({{ $customer->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="editCustomer({{ $customer->id }})">
+                        <i class="bi bi-pencil text-primary me-2"></i> Edit
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Customer -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDelete({{ $customer->id }})"
+                        wire:loading.attr="disabled"
+                        title="Delete Customer">
+                    <span wire:loading wire:target="confirmDelete({{ $customer->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDelete({{ $customer->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i> Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                             </tr>
                             @endforeach
                         @else
@@ -109,89 +147,89 @@
         </div>
     </div>
 
-    {{-- Create Customer Modal --}}
-    @if($showCreateModal)
-    <div class="modal fade show d-block" tabindex="-1" aria-labelledby="createCustomerModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-plus-circle text-white me-2"></i> Create Customer
-                    </h5>
-                    <button type="button" class="btn-close" wire:click="closeModal"></button>
-                </div>
-                <div class="modal-body">
-                    <form wire:submit.prevent="saveCustomer">
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Customer Name</label>
-                                    <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                           wire:model="name" placeholder="Enter customer name" required>
-                                    @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Contact Number</label>
-                                    <input type="text" class="form-control @error('contactNumber') is-invalid @enderror" 
-                                           wire:model="contactNumber" placeholder="Enter contact number" required>
-                                    @error('contactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
+ {{-- Create Customer Modal --}}
+@if($showCreateModal)
+<div class="modal fade show d-block" tabindex="-1" aria-labelledby="createCustomerModalLabel" aria-hidden="false" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle text-white me-2"></i> Create Customer
+                </h5>
+                <button type="button" class="btn-close" wire:click="closeModal"></button>
+            </div>
+            <div class="modal-body">
+                <form wire:submit.prevent="saveCustomer">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Customer Name</label>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                       wire:model="name" placeholder="Enter customer name" required>
+                                @error('name') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Email</label>
-                                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                           wire:model="email" placeholder="Enter email">
-                                    @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Business Name</label>
-                                    <input type="text" class="form-control @error('businessName') is-invalid @enderror" 
-                                           wire:model="businessName" placeholder="Enter Business Name">
-                                    @error('businessName') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Contact Number</label>
+                                <input type="text" class="form-control @error('contactNumber') is-invalid @enderror" 
+                                       wire:model="contactNumber" placeholder="Enter contact number" required>
+                                @error('contactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        <div class="row g-3">
-                            <div class="col-12 col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Customer Type</label>
-                                    <select class="form-select @error('customerType') is-invalid @enderror" wire:model="customerType" required>
-                                        <option value="">Select customer type</option>
-                                        <option value="retail">Retail</option>
-                                        <option value="wholesale">Wholesale</option>
-                                    </select>
-                                    @error('customerType') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Address</label>
-                                    <input type="text" class="form-control @error('address') is-invalid @enderror" 
-                                           wire:model="address" placeholder="Enter address">
-                                    @error('address') <span class="text-danger small">{{ $message }}</span> @enderror
-                                </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Email</label>
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" 
+                                       wire:model="email" placeholder="Enter email">
+                                @error('email') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
-                                <i class="bi bi-check2-circle me-1"></i>
-                                <span wire:loading.remove>Save Customer</span>
-                                <span wire:loading>Saving...</span>
-                            </button>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Business Name</label>
+                                <input type="text" class="form-control @error('businessName') is-invalid @enderror" 
+                                       wire:model="businessName" placeholder="Enter Business Name">
+                                @error('businessName') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Customer Type</label>
+                                <select class="form-select @error('customerType') is-invalid @enderror" wire:model="customerType" required>
+                                    <option value="">Select customer type</option>
+                                    <option value="retail">Retail</option>
+                                    <option value="wholesale">Wholesale</option>
+                                </select>
+                                @error('customerType') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Address</label>
+                                <input type="text" class="form-control @error('address') is-invalid @enderror" 
+                                       wire:model="address" placeholder="Enter address">
+                                @error('address') <span class="text-danger small">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled">
+                            <i class="bi bi-check2-circle me-1"></i>
+                            <span wire:loading.remove>Save Customer</span>
+                            <span wire:loading>Saving...</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-    @endif
+</div>
+@endif
 
     {{-- Edit Customer Modal --}}
     @if($showEditModal)

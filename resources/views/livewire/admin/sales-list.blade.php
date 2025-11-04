@@ -82,8 +82,8 @@
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-search"></i></span>
                         <input type="text" class="form-control"
-                               placeholder="Search by invoice, customer name or phone..."
-                               wire:model.live="search">
+                            placeholder="Search by invoice, customer name or phone..."
+                            wire:model.live="search">
                     </div>
                 </div>
 
@@ -105,7 +105,7 @@
                 <div class="col-md-2">
                     <label class="form-label fw-semibold invisible">Actions</label>
                     <button class="btn btn-outline-secondary w-100"
-                            wire:click="$set('dateFilter', '')">
+                        wire:click="$set('dateFilter', '')">
                         <i class="bi bi-arrow-clockwise me-1"></i> Reset
                     </button>
                 </div>
@@ -140,12 +140,12 @@
                         @forelse($sales as $sale)
                         <tr wire:key="sale-{{ $sale->id }}"
                             style="cursor:pointer;"
-                            wire:click="viewSale({{ $sale->id }})">
-                            <td class="ps-4">
+                            >
+                            <td class="ps-4" wire:click="viewSale({{ $sale->id }})">
                                 <div class="fw-bold text-primary">{{ $sale->invoice_number }}</div>
                                 <small class="text-muted">#{{ $sale->sale_id }}</small>
                             </td>
-                            <td>
+                            <td wire:click="viewSale({{ $sale->id }})">
                                 @if($sale->customer)
                                 <div class="fw-medium">{{ $sale->customer->name }}</div>
                                 <small class="text-muted">{{ $sale->customer->phone }}</small>
@@ -153,28 +153,65 @@
                                 <span class="text-muted">Walk-in Customer</span>
                                 @endif
                             </td>
-                            <td class="text-center">{{ $sale->created_at->format('M d, Y') }}</td>
-                            <td class="text-center fw-bold">Rs.{{ number_format($sale->total_amount, 2) }}</td>
-                            <td class="text-center">
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">{{ $sale->created_at->format('M d, Y') }}</td>
+                            <td class="text-center fw-bold" wire:click="viewSale({{ $sale->id }})">Rs.{{ number_format($sale->total_amount, 2) }}</td>
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <span class="badge bg-{{ $sale->payment_status == 'paid' ? 'success' : ($sale->payment_status == 'partial' ? 'warning' : 'danger') }}">
                                     {{ ucfirst($sale->payment_status) }}
                                 </span>
                             </td>
-                            <td class="text-center"><span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span></td>
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})"><span class="badge bg-warning">{{ strtoupper($sale->sale_type) }}</span></td>
                             <td class="text-end pe-4">
-                                <div class="btn-group btn-group-sm">
-                                    <button class="text-success me-2 bg-opacity-0 border-0"
-                                            wire:click.stop="downloadInvoice({{ $sale->id }})"
-                                            title="Download Invoice">
-                                        <i class="bi bi-download"></i>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <i class="bi bi-gear-fill"></i> Actions
                                     </button>
-                                    <button class="text-danger  me-2 bg-opacity-0 border-0"
-                                            wire:click.stop="deleteSale({{ $sale->id }})"
-                                            title="Delete Sale">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
+
+                                    <ul class="dropdown-menu dropdown-menu-end">
+
+                                        <!-- Download Invoice -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                wire:click="downloadInvoice({{ $sale->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="downloadInvoice({{ $sale->id }})">
+
+                                                <span wire:loading wire:target="downloadInvoice({{ $sale->id }})">
+                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                    Loading...
+                                                </span>
+                                                <span wire:loading.remove wire:target="downloadInvoice({{ $sale->id }})">
+                                                    <i class="bi bi-download text-success me-2"></i>
+                                                    Download Invoice
+                                                </span>
+                                            </button>
+                                        </li>
+
+                                        <!-- Delete Sale -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                wire:click="deleteSale({{ $sale->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="deleteSale({{ $sale->id }})">
+
+                                                <span wire:loading wire:target="deleteSale({{ $sale->id }})">
+                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                    Loading...
+                                                </span>
+                                                <span wire:loading.remove wire:target="deleteSale({{ $sale->id }})">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    Delete
+                                                </span>
+                                            </button>
+                                        </li>
+
+                                    </ul>
                                 </div>
                             </td>
+
                         </tr>
                         @empty
                         <tr>
@@ -201,7 +238,7 @@
 
     {{-- ==================== VIEW SALE MODAL (same structure as the photo) ==================== --}}
     <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1"
-         aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableInvoice">
 
@@ -209,13 +246,13 @@
                 <div class="modal-header text-center border-0">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                             class="img-fluid mb-2" style="max-height:60px;">
+                            class="img-fluid mb-2" style="max-height:60px;">
                         <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
                         <p class="mb-0 small text-muted">
                         </p>
                     </div>
                     <button type="button" class="btn-close btn-close-white closebtn"
-                            wire:click="closeModals"></button>
+                        wire:click="closeModals"></button>
                 </div>
 
                 @if($selectedSale)
@@ -231,12 +268,30 @@
                         </div>
                         <div class="col-6 text-end">
                             <table class="table table-sm table-borderless">
-                                <tr><td><strong>Invoice No :</strong></td><td>{{ $selectedSale->invoice_number }}</td></tr>
-                                <tr><td><strong>Sale Status :</strong></td><td>Completed</td></tr>
-                                <tr><td><strong>Payment Status :</strong></td><td>Pending</td></tr>
-                                <tr><td><strong>Invoice Date :</strong></td><td>{{ $selectedSale->created_at->format('d/m/Y H:i') }}</td></tr>
-                                <tr><td><strong>Due Date :</strong></td><td>00-00-00</td></tr>
-                                <tr><td><strong>Sales Person :</strong></td><td>ART STORE</td></tr>
+                                <tr>
+                                    <td><strong>Invoice No :</strong></td>
+                                    <td>{{ $selectedSale->invoice_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sale Status :</strong></td>
+                                    <td>Completed</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Payment Status :</strong></td>
+                                    <td>Pending</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Invoice Date :</strong></td>
+                                    <td>{{ $selectedSale->created_at->format('d/m/Y H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Due Date :</strong></td>
+                                    <td>00-00-00</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sales Person :</strong></td>
+                                    <td>ART STORE</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
@@ -266,7 +321,9 @@
                                 </tr>
                                 @endforeach
                                 @if($selectedSale->items->count() == 0)
-                                <tr><td colspan="6" class="text-center text-muted">No items</td></tr>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">No items</td>
+                                </tr>
                                 @endif
                             </tbody>
                         </table>
@@ -277,17 +334,29 @@
                         <div class="col-7"></div>
                         <div class="col-5">
                             <table class="table table-sm table-borderless">
-                                <tr><td class="text-end"><strong>Total Amount (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td></tr>
-                                <tr><td class="text-end"><strong>Returns</strong></td><td class="text-end">(0.00)</td></tr>
-                                <tr><td class="text-end"><strong>Paid (LKR)</strong></td><td class="text-end">0.00</td></tr>
-                                <tr><td class="text-end"><strong>Balance (LKR)</strong></td><td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td></tr>
+                                <tr>
+                                    <td class="text-end"><strong>Total Amount (LKR)</strong></td>
+                                    <td class="text-end">{{ number_format($selectedSale->total_amount,2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>Returns</strong></td>
+                                    <td class="text-end">(0.00)</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>Paid (LKR)</strong></td>
+                                    <td class="text-end">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-end"><strong>Balance (LKR)</strong></td>
+                                    <td class="text-end">{{ number_format($selectedSale->due_amount,2) }}</td>
+                                </tr>
                             </table>
                         </div>
                     </div>
 
                     {{-- Footer – logos + address + note --}}
                     <div class="mt-4 text-center small">
-                        
+
                         <p class="mb-0">
                             <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
                             <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
@@ -306,9 +375,9 @@
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
                     <div>
-                       
+
                         <button type="button" class="btn btn-outline-primary"
-                                onclick="window.print()">
+                            onclick="window.print()">
                             <i class="bi bi-printer me-1"></i> Print
                         </button>
                     </div>
@@ -319,7 +388,7 @@
 
     {{-- ==================== EDIT SALE MODAL (unchanged) ==================== --}}
     <div wire:ignore.self class="modal fade" id="editModal" tabindex="-1"
-         aria-labelledby="editModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        aria-labelledby="editModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
@@ -348,7 +417,7 @@
                         <div class="col-12">
                             <label class="form-label fw-semibold">Notes</label>
                             <textarea class="form-control" rows="3" wire:model="editNotes"
-                                      placeholder="Additional notes..."></textarea>
+                                placeholder="Additional notes..."></textarea>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Due Amount</label>
@@ -365,9 +434,9 @@
                         <div class="col-12">
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-outline-primary btn-sm"
-                                        wire:click="payFullBalance">Pay Full Balance</button>
+                                    wire:click="payFullBalance">Pay Full Balance</button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm"
-                                        wire:click="resetPayBalance">Reset Payment</button>
+                                    wire:click="resetPayBalance">Reset Payment</button>
                             </div>
                         </div>
                     </div>
@@ -384,7 +453,7 @@
 
     {{-- ==================== DELETE CONFIRM MODAL (unchanged) ==================== --}}
     <div wire:ignore.self class="modal fade" id="deleteModal" tabindex="-1"
-         aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        aria-labelledby="deleteModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
@@ -434,53 +503,143 @@
 {{-- ==================== STYLES (unchanged – only print tweaks) ==================== --}}
 @push('styles')
 <style>
-    .modal-header { background: linear-gradient(90deg, #3b5b0c, #8eb922); color:#fff; }
-    .modal-title i { color:#ffc107; }
-    .closebtn { top:3%; right:3%; position:absolute; }
+    .modal-header {
+        background: linear-gradient(90deg, #3b5b0c, #8eb922);
+        color: #fff;
+    }
+
+    .modal-title i {
+        color: #ffc107;
+    }
+
+    .closebtn {
+        top: 3%;
+        right: 3%;
+        position: absolute;
+    }
+
     .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #ffffff;
-            background: #3B5B0C;
-            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        border-top: none;
+        font-weight: 600;
+        color: #ffffff;
+        background: #3B5B0C;
+        background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
     .table td {
-            vertical-align: middle;
-            
-        }
+        vertical-align: middle;
+
+    }
 
     @media print {
-        body * { visibility:hidden; }
-        #printableInvoice, #printableInvoice * { visibility:visible; }
-        #printableInvoice {
-            position:absolute; left:0; top:0; width:210mm; min-height:297mm;
-            padding:15mm; background:#fff; font-size:11pt; color:#000;
+        body * {
+            visibility: hidden;
         }
-        .modal, .modal-dialog, .modal-content { all:unset; }
-        .modal-footer, .btn, .btn-close { display:none !important; }
 
-        .modal-header { border:none; padding:0; text-align:center; margin-bottom:1rem; }
-        .modal-header img { max-height:55px; }
-        .modal-header h4 { margin:4px 0; font-size:1.4rem; }
-        .modal-header p { margin:0; font-size:0.85rem; }
+        #printableInvoice,
+        #printableInvoice * {
+            visibility: visible;
+        }
 
-        .row > .col-6 { page-break-inside:avoid; }
-        .row > .col-6:first-child { text-align:left; }
-        .row > .col-6:last-child  { text-align:right; }
+        #printableInvoice {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            background: #fff;
+            font-size: 11pt;
+            color: #000;
+        }
 
-        .table { border-collapse:collapse; width:100%; margin-bottom:.8rem; }
-        .table th, .table td { border:1px solid #999; padding:4px 6px; }
-        .table th { background:#e9ecef; -webkit-print-color-adjust:exact; }
-        .table-sm { font-size:0.9rem; }
+        .modal,
+        .modal-dialog,
+        .modal-content {
+            all: unset;
+        }
 
-        .table-sm td { border:none; padding:2px 4px; }
-        .table-sm strong { min-width:110px; display:inline-block; }
+        .modal-footer,
+        .btn,
+        .btn-close {
+            display: none !important;
+        }
 
-        .d-flex img { height:30px; margin:0 8px; }
-        .text-muted { font-size:0.8rem; }
+        .modal-header {
+            border: none;
+            padding: 0;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .modal-header img {
+            max-height: 55px;
+        }
+
+        .modal-header h4 {
+            margin: 4px 0;
+            font-size: 1.4rem;
+        }
+
+        .modal-header p {
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .row>.col-6 {
+            page-break-inside: avoid;
+        }
+
+        .row>.col-6:first-child {
+            text-align: left;
+        }
+
+        .row>.col-6:last-child {
+            text-align: right;
+        }
+
+        .table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: .8rem;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #999;
+            padding: 4px 6px;
+        }
+
+        .table th {
+            background: #e9ecef;
+            -webkit-print-color-adjust: exact;
+        }
+
+        .table-sm {
+            font-size: 0.9rem;
+        }
+
+        .table-sm td {
+            border: none;
+            padding: 2px 4px;
+        }
+
+        .table-sm strong {
+            min-width: 110px;
+            display: inline-block;
+        }
+
+        .d-flex img {
+            height: 30px;
+            margin: 0 8px;
+        }
+
+        .text-muted {
+            font-size: 0.8rem;
+        }
     }
 </style>
 @endpush
@@ -503,19 +662,23 @@
             toast.querySelector('.toast-header').className = 'toast-header text-white bg-' + e.type;
             new bootstrap.Toast(toast).show();
         });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') Livewire.dispatch('closeModals'); });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') Livewire.dispatch('closeModals');
+        });
     });
 
     document.addEventListener('livewire:request-start', e => {
         if (e.detail.component.get('$wire').__instance.__livewire_requests?.downloadInvoice) {
             document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-                b.disabled = true; b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
+                b.disabled = true;
+                b.innerHTML = '<i class="bi bi-hourglass-split"></i>';
             });
         }
     });
     document.addEventListener('livewire:request-finish', () => {
         document.querySelectorAll('[wire\\:click="downloadInvoice"]').forEach(b => {
-            b.disabled = false; b.innerHTML = '<i class="bi bi-download"></i>';
+            b.disabled = false;
+            b.innerHTML = '<i class="bi bi-download"></i>';
         });
     });
 </script>

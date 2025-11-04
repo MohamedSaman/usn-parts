@@ -53,6 +53,30 @@ class SalesSystem extends Component
     public function mount()
     {
         $this->loadCustomers();
+        $this->setDefaultCustomer();
+    }
+
+    // Set default walking customer
+    public function setDefaultCustomer()
+    {
+        // Find or create walking customer (only one)
+        $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
+        
+        if (!$walkingCustomer) {
+            $walkingCustomer = Customer::create([
+                'name' => 'Walking Customer',
+                'phone' => 'xxxxx', // Empty phone number
+                'email' => null,
+                'address' => 'xxxxx',
+                'type' => 'retail',
+                'business_name' => null,
+            ]);
+            
+            $this->loadCustomers(); // Reload customers after creating new one
+        }
+        
+        $this->customerId = $walkingCustomer->id;
+        $this->selectedCustomer = $walkingCustomer;
     }
 
     // Load customers for dropdown
@@ -77,7 +101,6 @@ class SalesSystem extends Component
     public function getSubtotalAfterItemDiscountsProperty()
     {
         return $this->subtotal;
-        dd($this->subtotal);
     }
 
     public function getAdditionalDiscountAmountProperty()
@@ -107,7 +130,8 @@ class SalesSystem extends Component
                 $this->selectedCustomer = $customer;
             }
         } else {
-            $this->selectedCustomer = null;
+            // If customer is deselected, set back to walking customer
+            $this->setDefaultCustomer();
         }
     }
 
@@ -141,7 +165,7 @@ class SalesSystem extends Component
     {
         $this->validate([
             'customerName' => 'required|string|max:255',
-            'customerPhone' => 'required|string|max:20|unique:customers,phone',
+            'customerPhone' => 'nullable|string|max:20|unique:customers,phone',
             'customerEmail' => 'nullable|email|unique:customers,email',
             'customerAddress' => 'required|string',
             'customerType' => 'required|in:retail,wholesale,business',
@@ -150,7 +174,7 @@ class SalesSystem extends Component
         try {
             $customer = Customer::create([
                 'name' => $this->customerName,
-                'phone' => $this->customerPhone,
+                'phone' => $this->customerPhone ?: null,
                 'email' => $this->customerEmail,
                 'address' => $this->customerAddress,
                 'type' => $this->customerType,
@@ -167,7 +191,6 @@ class SalesSystem extends Component
             $this->js("Swal.fire('error', 'Failed to create customer: ', 'error')");
         }
     }
-    
 
     // Search Products
     public function updatedSearch()
@@ -237,10 +260,8 @@ class SalesSystem extends Component
             ];
         }
         
-        
         $this->search = '';
         $this->searchResults = [];
-    
     }
 
     // Update Quantity
@@ -356,15 +377,18 @@ class SalesSystem extends Component
             return;
         }
 
+        // If no customer selected, use walking customer
         if (!$this->selectedCustomer && !$this->customerId) {
+
             $this->js("Swal.fire('error', 'Please select a customer.', 'error')");
             return;
+            $this->setDefaultCustomer();
         }
 
         try {
             DB::beginTransaction();
 
-            // Get customer data
+            // Get customer data - now guaranteed to have a customer
             if ($this->selectedCustomer) {
                 $customer = $this->selectedCustomer;
             } else {
@@ -425,6 +449,8 @@ class SalesSystem extends Component
             $this->showSaleModal = true;
             $this->js("Swal.fire('success', 'Sale created successfully!', 'success')");
             
+            
+            session()->flash('success', 'Sale created successfully! Payment status: Pending');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -463,7 +489,6 @@ class SalesSystem extends Component
         $this->showSaleModal = false;
         $this->lastSaleId = null;
         $this->createdSale = null;
-        
     }
 
     // Continue creating new sale
@@ -471,9 +496,8 @@ class SalesSystem extends Component
     {
         $this->resetExcept(['customers']);
         $this->loadCustomers();
+        $this->setDefaultCustomer(); // Set walking customer again for new sale
         $this->showSaleModal = false;
-         
-        
     }
 
     public function render()

@@ -189,6 +189,59 @@
             transform: translateY(-2px);
         }
 
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+            border-color: #e0a800;
+            transform: translateY(-2px);
+            color: #000;
+        }
+
+        /* History Modal Styles */
+        .nav-tabs-custom .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: #4361ee;
+            border-bottom-color: #4361ee;
+            background-color: transparent;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            color: #4361ee;
+            border-bottom-color: #dee2e6;
+        }
+
+        /* History Table Styles */
+        .history-table th {
+            background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .history-table td {
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+
+        /* Badge styles for counts */
+        .badge {
+            font-size: 0.7em;
+            padding: 0.35em 0.65em;
+        }
+
         /* Responsive design */
         @media (max-width: 576px) {
             .content-tabs {
@@ -246,6 +299,15 @@
             .badge {
                 font-size: 0.75rem;
             }
+
+            .nav-tabs-custom .nav-link {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .history-table {
+                font-size: 0.85rem;
+            }
         }
 
         @media (max-width: 767.98px) {
@@ -269,14 +331,155 @@
                 min-width: 120px;
             }
         }
+        
+        /* Dropdown Styles */
+        .dropdown-toggle::after {
+            margin-left: 0.5em;
+        }
+
+        .dropdown-menu {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            position: absolute;
+            z-index: 1000;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item:active {
+            background-color: #e9ecef;
+        }
+
+        /* Table responsive for dropdowns */
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        .table td .dropdown {
+            position: static;
+        }
+
+        /* Stock Adjustment Modal Styles */
+        #stockAdjustmentModal .modal-header {
+            background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%) !important;
+        }
+
+        #stockAdjustmentModal .alert-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #17a2b8;
+        }
+
+        #stockAdjustmentModal .preview-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+        }
+
+        /* Stock level indicators */
+        .stock-low {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .stock-medium {
+            color: #fe9604ff;
+            font-weight: bold;
+        }
+
+        .stock-high {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        /* Modal Enhancements */
+        #viewProductModal .modal-content {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+
+        #viewProductModal .product-image {
+            transition: transform 0.3s ease;
+        }
+
+        #viewProductModal .product-image:hover {
+            transform: scale(1.05);
+        }
+
+        #viewProductModal .info-section {
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #viewProductModal .info-item,
+        #viewProductModal .price-card,
+        #viewProductModal .stock-card {
+            transition: all 0.3s ease;
+        }
+
+        #viewProductModal .info-item:hover,
+        #viewProductModal .price-card:hover,
+        #viewProductModal .stock-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+
+        #viewProductModal .section-header {
+            position: relative;
+        }
+
+        #viewProductModal .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #1536c7ff, #2143ebff);
+            border-radius: 2px;
+        }
+
+        #viewProductModal .badge {
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+
+        #viewProductModal .icon-box i {
+            font-size: 1.25rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 991px) {
+            #viewProductModal .col-lg-4 {
+                border-bottom: 1px solid #dee2e6;
+                border-right: none;
+            }
+        }
+
     </style>
     @endpush
 
     <div class="container-fluid p-3">
 
-        <!-- Products Content -->
         <div id="products" class="tab-content active">
-            <!-- Header Section -->
             <div class="d-flex justify-content-between align-items-center mb-5">
                 <div>
                     <h3 class="fw-bold text-dark mb-2">
@@ -286,11 +489,9 @@
                 </div>
             </div>
 
-            <!-- Search and Actions -->
             <div class="inventory-header w-100 mb-3">
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center w-100 gap-3">
 
-                    <!-- 🔍 Search Bar -->
                     <div class="search-bar flex-grow-1">
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0">
@@ -305,7 +506,6 @@
                         </div>
                     </div>
 
-                    <!-- ➕ Add Button -->
                     <div class="d-flex justify-content-md-end">
                         <button class="btn btn-primary add-product-btn" wire:click="openCreateModal">
                             <i class="bi bi-plus-lg"></i>
@@ -316,7 +516,6 @@
                 </div>
             </div>
 
-            <!-- Products Table -->
             <div class="row g-4">
                 <div class="col-12">
                     <div class="card h-100">
@@ -356,17 +555,31 @@
                                             <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->product_name }}</span>
                                             </td>
-                                            <td     wire:click="viewProductDetails({{ $product->id }})">
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->code }}</span>
                                             </td>
-                                            <td   wire:click="viewProductDetails({{ $product->id }})">
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->brand }}</span>
                                             </td>
-                                            <td   wire:click="viewProductDetails({{ $product->id }})">
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $product->model }}</span>
                                             </td>
-                                            <td  wire:click="viewProductDetails({{ $product->id }})">
-                                                <span class="fw-medium text-dark">{{ $product->stock->available_stock ?? 0 }}</span>
+                                            <td wire:click="viewProductDetails({{ $product->id }})">
+                                                @php
+                                                    $availableStock = $product->available_stock ?? 0;
+                                                    $stockClass = 'stock-high';
+                                                    if ($availableStock <= 5) {
+                                                        $stockClass = 'stock-low';
+                                                    } elseif ($availableStock <= 15) {
+                                                        $stockClass = 'stock-medium';
+                                                    }
+                                                @endphp
+                                                <span class="fw-medium {{ $stockClass }}">
+                                                    {{ $availableStock }}
+                                                    @if($availableStock <= 5)
+                                                    <i class="bi bi-exclamation-triangle-fill ms-1"></i>
+                                                    @endif
+                                                </span>
                                             </td>
                                             <td wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-bold text-dark">Rs.{{ number_format($product->supplier_price, 2) }}</span>
@@ -381,27 +594,86 @@
                                                 <span class="badge bg-danger">Inactive</span>
                                                 @endif
                                             </td>
-                                            <td class="text-end pe-1">
-                                                <div class="action-btns">
-                                                
-                                                    <button class="btn action-btn edit" title="Edit"
-                                                        wire:click="editProduct({{ $product->id }})"
-                                                        wire:loading.attr="disabled">
-                                                        <i class="bi bi-pencil" wire:loading.class="d-none"
-                                                            wire:target="editProduct({{ $product->id }})"></i>
-                                                        <span wire:loading wire:target="editProduct({{ $product->id }})">
-                                                            <i class="spinner-border spinner-border-sm"></i>
-                                                        </span>
+                                            
+                                            <td class="text-end pe-4">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                                        type="button"
+                                                        data-bs-toggle="dropdown"
+                                                        aria-expanded="false">
+                                                        <i class="bi bi-gear-fill"></i> Actions
                                                     </button>
-                                                    <button class="btn action-btn delete" title="Delete"
-                                                        wire:click="confirmDeleteProduct({{ $product->id }})"
-                                                        wire:loading.attr="disabled">
-                                                        <i class="bi bi-trash" wire:loading.class="d-none"
-                                                            wire:target="confirmDeleteProduct({{ $product->id }})"></i>
-                                                        <span wire:loading wire:target="confirmDeleteProduct({{ $product->id }})">
-                                                            <i class="spinner-border spinner-border-sm"></i>
-                                                        </span>
-                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <button class="dropdown-item"
+                                                                    wire:click="editProduct({{ $product->id }})"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="editProduct({{ $product->id }})">
+                                                                
+                                                                <span wire:loading wire:target="editProduct({{ $product->id }})">
+                                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                                    Loading...
+                                                                </span>
+                                                                <span wire:loading.remove wire:target="editProduct({{ $product->id }})">
+                                                                    <i class="bi bi-pencil-square text-warning me-2"></i>
+                                                                    Edit
+                                                                </span>
+                                                            </button>
+                                                        </li>
+                                                        
+                                                        <!-- Stock Adjustment Button -->
+                                                        <li>
+                                                            <button class="dropdown-item"
+                                                                    wire:click="openStockAdjustment({{ $product->id }})"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="openStockAdjustment({{ $product->id }})">
+                                                                
+                                                                <span wire:loading wire:target="openStockAdjustment({{ $product->id }})">
+                                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                                    Loading...
+                                                                </span>
+                                                                <span wire:loading.remove wire:target="openStockAdjustment({{ $product->id }})">
+                                                                    <i class="bi bi-clipboard-plus text-info me-2"></i>
+                                                                    Stock Adjustment
+                                                                </span>
+                                                            </button>
+                                                        </li>
+
+                                                        <!-- History Button -->
+                                                        <li>
+                                                            <button class="dropdown-item"
+                                                                    wire:click="openProductHistory({{ $product->id }})"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="openProductHistory({{ $product->id }})">
+                                                                
+                                                                <span wire:loading wire:target="openProductHistory({{ $product->id }})">
+                                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                                    Loading...
+                                                                </span>
+                                                                <span wire:loading.remove wire:target="openProductHistory({{ $product->id }})">
+                                                                    <i class="bi bi-clock-history text-info me-2"></i>
+                                                                    View History
+                                                                </span>
+                                                            </button>
+                                                        </li>
+                                            
+                                                        <li>
+                                                            <button class="dropdown-item"
+                                                                    wire:click="confirmDeleteProduct({{ $product->id }})"
+                                                                    wire:loading.attr="disabled"
+                                                                    wire:target="confirmDeleteProduct({{ $product->id }})">
+                                            
+                                                                <span wire:loading wire:target="confirmDeleteProduct({{ $product->id }})">
+                                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                                    Loading...
+                                                                </span>
+                                                                <span wire:loading.remove wire:target="confirmDeleteProduct({{ $product->id }})">
+                                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                                    Delete
+                                                                </span>
+                                                            </button>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </td>
                                         </tr>
@@ -427,13 +699,13 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-           <!-- View Product Modal -->
-<div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
+        <!-- View Product Modal -->
+        <div wire:ignore.self class="modal fade" id="viewProductModal" tabindex="-1"
     aria-labelledby="viewProductModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
         <div class="modal-content border-0 shadow-lg">
-            <!-- Modern Header with Gradient -->
             <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
                  style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); padding: 1.5rem;">
                 <h5 class="modal-title fw-bold d-flex align-items-center">
@@ -446,17 +718,14 @@
             <div class="modal-body p-0">
                 @if($viewProduct)
                 <div class="row g-0">
-                    <!-- Left Side - Product Image & Quick Info -->
                     <div class="col-lg-4 bg-light border-end">
                         <div class="p-4 text-center">
-                            <!-- Product Image -->
                             <div class="product-image-container mb-4 position-relative">
     <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://cdn-icons-png.flaticon.com/512/679/679922.png' }}"
-                                    alt="Product Image" 
-                                    class="img-fluid rounded-3 shadow-sm product-image"
-                                    style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
+                                     alt="Product Image" 
+                                     class="img-fluid rounded-3 shadow-sm product-image"
+                                     style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
                                 
-                                <!-- Status Badge Overlay -->
                                 <div class="position-absolute top-0 end-0 m-3">
                                     @if($viewProduct->status == 'active')
                                     <span class="badge bg-success shadow-sm px-3 py-2">
@@ -470,14 +739,12 @@
                                 </div>
                             </div>
 
-                            <!-- Product Title & Code -->
                             <h4 class="fw-bold text-dark mb-1">{{ $viewProduct->name }}</h4>
                             <p class="text-muted mb-3">
                                 <i class="bi bi-upc-scan me-1"></i>
                                 <span class="font-monospace">{{ $viewProduct->code }}</span>
                             </p>
 
-                            <!-- Quick Stats Cards -->
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
                                     <div class="card border-0 shadow-sm bg-white">
@@ -503,7 +770,6 @@
                                 </div>
                             </div>
 
-                            <!-- Stock Status Alert -->
                             @if(($viewProduct->stock->available_stock ?? 0) > 0)
                             <div class="alert alert-success border-0 shadow-sm mb-0" role="alert">
                                 <i class="bi bi-check-circle-fill me-2"></i>
@@ -518,10 +784,8 @@
                         </div>
                     </div>
 
-                    <!-- Right Side - Detailed Information -->
                     <div class="col-lg-8">
                         <div class="p-4">
-                            <!-- Basic Information -->
                             <div class="info-section mb-4">
                                 <div class="section-header d-flex align-items-center mb-3">
                                     <div class="icon-box bg-primary bg-opacity-10 text-primary rounded-circle me-3" 
@@ -562,14 +826,10 @@
                                                 <span class="fw-semibold text-dark">{{ $viewProduct->category ?? '-' }}</span>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                           
-                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Pricing Information -->
                             <div class="info-section mb-4">
                                 <div class="section-header d-flex align-items-center mb-3">
                                     <div class="icon-box bg-success bg-opacity-10 text-success rounded-circle me-3" 
@@ -606,7 +866,6 @@
                                 </div>
                             </div>
 
-                            <!-- Stock Information -->
                             <div class="info-section mb-4">
                                 <div class="section-header d-flex align-items-center mb-3">
                                     <div class="icon-box bg-warning bg-opacity-10 text-warning rounded-circle me-3" 
@@ -616,31 +875,23 @@
                                     <h6 class="fw-bold mb-0 text-dark">Stock Information</h6>
                                 </div>
                                 <div class="row g-3">
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="stock-card p-3 border rounded-3 text-center">
                                             <i class="bi bi-box-seam text-success fs-3 mb-2"></i>
                                             <h5 class="fw-bold mb-1">{{ $viewProduct->stock->available_stock ?? 0 }}</h5>
                                             <small class="text-muted">Available Stock</small>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-6">
                                         <div class="stock-card p-3 border rounded-3 text-center">
                                             <i class="bi bi-exclamation-triangle text-danger fs-3 mb-2"></i>
                                             <h5 class="fw-bold mb-1">{{ $viewProduct->stock->damage_stock ?? 0 }}</h5>
                                             <small class="text-muted">Damaged Stock</small>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
-                                        <div class="stock-card p-3 border rounded-3 text-center">
-                                            <i class="bi bi-stack text-primary fs-3 mb-2"></i>
-                                            <h5 class="fw-bold mb-1">{{ $viewProduct->stock->total_stock ?? 0 }}</h5>
-                                            <small class="text-muted">Total Stock</small>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Description -->
                             @if($viewProduct->description)
                             <div class="info-section">
                                 <div class="section-header d-flex align-items-center mb-3">
@@ -666,7 +917,6 @@
                 @endif
             </div>
 
-            <!-- Footer -->
             <div class="modal-footer border-0 bg-light">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-2"></i>Close
@@ -676,534 +926,805 @@
     </div>
 </div>
 
-<style>
-/* Modal Enhancements */
-#viewProductModal .modal-content {
-    border-radius: 1rem;
-    overflow: hidden;
-}
-
-#viewProductModal .product-image {
-    transition: transform 0.3s ease;
-}
-
-#viewProductModal .product-image:hover {
-    transform: scale(1.05);
-}
-
-#viewProductModal .info-section {
-    animation: fadeInUp 0.5s ease;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-#viewProductModal .info-item,
-#viewProductModal .price-card,
-#viewProductModal .stock-card {
-    transition: all 0.3s ease;
-}
-
-#viewProductModal .info-item:hover,
-#viewProductModal .price-card:hover,
-#viewProductModal .stock-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-}
-
-#viewProductModal .section-header {
-    position: relative;
-}
-
-#viewProductModal .section-header::after {
-    content: '';
-    position: absolute;
-    bottom: -8px;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: linear-gradient(90deg, #1536c7ff, #2143ebff);
-    border-radius: 2px;
-}
-
-#viewProductModal .badge {
-    font-size: 0.85rem;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-}
-
-#viewProductModal .icon-box i {
-    font-size: 1.25rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 991px) {
-    #viewProductModal .col-lg-4 {
-        border-bottom: 1px solid #dee2e6;
-        border-right: none;
-    }
-}
-</style
-
-            <!-- Create Product Modal -->
-            <div wire:ignore.self class="modal fade" id="createProductModal" tabindex="-1"
-                aria-labelledby="createProductModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title fw-bold">
-                                <i class="bi bi-plus-circle text-white me-2"></i> Create New Product
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-4">
-                            <!-- Basic Information Card -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="code" class="form-label fw-semibold">Code:</label>
-                                                <input type="text" class="form-control" id="code" wire:model="code">
-                                                @error('code')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="name" class="form-label fw-semibold">Name:</label>
-                                                <input type="text" class="form-control" id="name" wire:model="name">
-                                                @error('name')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="model" class="form-label fw-semibold">Model:</label>
-                                                <input type="text" class="form-control" id="model" wire:model="model">
-                                                @error('model')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
+        <!-- Create Product Modal -->
+<div wire:ignore.self class="modal fade" id="createProductModal" tabindex="-1"
+    aria-labelledby="createProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle text-white me-2"></i> Create New Product
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="code" class="form-label fw-semibold">Code:</label>
+                                    <input type="text" class="form-control" id="code" wire:model="code">
+                                    @error('code')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
-
-                            <!-- Classification Card -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-diagram-3 text-primary me-2"></i> Classification
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="brand" class="form-label fw-semibold">Brand:</label>
-                                                <select class="form-select" id="brand" wire:model="brand">
-                                                    <option value="">Select Brand</option>
-                                                    @foreach ($brands as $brand)
-                                                    <option value="{{ $brand->id }}">{{ $brand->brand_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('brand')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="category" class="form-label fw-semibold">Category:</label>
-                                                <select class="form-select" id="category" wire:model="category">
-                                                    <option value="">Select Category</option>
-                                                    @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('category')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="supplier" class="form-label fw-semibold">Supplier:</label>
-                                                <select class="form-select" id="supplier" wire:model="supplier">
-                                                    <option value="">Select Supplier</option>
-                                                    @foreach ($suppliers as $supplier)
-                                                    <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('supplier')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label fw-semibold">Name:</label>
+                                    <input type="text" class="form-control" id="name" wire:model="name">
+                                    @error('name')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
-
-                            <!-- Product Information Card -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-card-text text-primary me-2"></i> Product Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="image" class="form-label fw-semibold">Image:</label>
-                                                <input type="text" class="form-control" id="image" wire:model="image">
-                                                @error('image')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="mb-3">
-                                                <label for="description" class="form-label fw-semibold">Description:</label>
-                                                <textarea class="form-control" id="description" rows="3" wire:model="description"></textarea>
-                                                @error('description')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pricing and Inventory Card -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-cash text-primary me-2"></i> Pricing and Inventory
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="supplier_price" class="form-label fw-semibold">Supplier Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="supplier_price" wire:model="supplier_price">
-                                                </div>
-                                                @error('supplier_price')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="selling_price" class="form-label fw-semibold">Selling Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="selling_price" wire:model="selling_price">
-                                                </div>
-                                                @error('selling_price')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="discount_price" class="form-label fw-semibold">Discount Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="discount_price" wire:model="discount_price">
-                                                </div>
-                                                @error('discount_price')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="available_stock" class="form-label fw-semibold">Available Stock:</label>
-                                                <input type="number" class="form-control" id="available_stock" wire:model="available_stock">
-                                                @error('available_stock')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="damage_stock" class="form-label fw-semibold">Damage Stock:</label>
-                                                <input type="number" class="form-control" id="damage_stock" wire:model="damage_stock">
-                                                @error('damage_stock')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="model" class="form-label fw-semibold">Model:</label>
+                                    <input type="text" class="form-control" id="model" wire:model="model">
+                                    @error('model')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" wire:click="createProduct">
-                                <span wire:loading wire:target="createProduct">
-                                    <i class="spinner-border spinner-border-sm"></i> Creating...
-                                </span>
-                                <span wire:loading.remove wire:target="createProduct">
-                                    Save Product
-                                </span>
-                            </button>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-diagram-3 text-primary me-2"></i> Classification
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="brand" class="form-label fw-semibold">Brand:</label>
+                                    <select class="form-select" id="brand" wire:model="brand">
+                                        <option value="">Select Brand</option>
+                                        @foreach ($brands as $brand)
+                                        <option value="{{ $brand->id }}" {{ $brand->id == 'Default Brand' ? 'selected' : '' }}>
+                                            {{ $brand->brand_name }}
+                                            @if($brand->id == 'Default Brand') (Default) @endif
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('brand')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label fw-semibold">Category:</label>
+                                    <select class="form-select" id="category" wire:model="category">
+                                        <option value="">Select Category</option>
+                                        @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}" {{ $category->id == 'Default Category' ? 'selected' : '' }}>
+                                            {{ $category->category_name }}
+                                            @if($category->id == 'Default Category') (Default) @endif    
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('category')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="supplier" class="form-label fw-semibold">Supplier:</label>
+                                    <select class="form-select" id="supplier" wire:model="supplier">
+                                        <option value="">Select Supplier</option>
+                                        @foreach ($suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}" {{ $supplier->id == 'Default Supplier' ? 'selected' : '' }}>
+                                            {{ $supplier->name }}
+                                            @if($supplier->id == 'Default Supplier') (Default) @endif
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    @error('supplier')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-card-text text-primary me-2"></i> Product Information
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="image" class="form-label fw-semibold">Image:</label>
+                                    <input type="text" class="form-control" id="image" wire:model="image">
+                                    @error('image')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label fw-semibold">Description:</label>
+                                    <textarea class="form-control" id="description" rows="3" wire:model="description"></textarea>
+                                    @error('description')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-cash text-primary me-2"></i> Pricing and Inventory
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="supplier_price" class="form-label fw-semibold">Supplier Price:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rs.</span>
+                                        <input type="number" step="0.01" class="form-control" id="supplier_price" wire:model="supplier_price">
+                                    </div>
+                                    @error('supplier_price')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="selling_price" class="form-label fw-semibold">Selling Price:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rs.</span>
+                                        <input type="number" step="0.01" class="form-control" id="selling_price" wire:model="selling_price">
+                                    </div>
+                                    @error('selling_price')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="discount_price" class="form-label fw-semibold">Discount Price:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Rs.</span>
+                                        <input type="number" step="0.01" class="form-control" id="discount_price" wire:model="discount_price">
+                                    </div>
+                                    @error('discount_price')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="available_stock" class="form-label fw-semibold">Available Stock:</label>
+                                    <input type="number" class="form-control" id="available_stock" wire:model="available_stock">
+                                    @error('available_stock')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="damage_stock" class="form-label fw-semibold">Damage Stock:</label>
+                                    <input type="number" class="form-control" id="damage_stock" wire:model="damage_stock">
+                                    @error('damage_stock')
+                                    <span class="text-danger small">* {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Edit Product Modal -->
-            <div wire:ignore.self wire:key="edit-modal-{{ $editId ?? 'new' }}" class="modal fade" id="editProductModal" tabindex="-1"
-                aria-labelledby="editProductModalLabel" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title fw-bold">
-                                <i class="bi bi-pencil-square text-white me-2"></i> Edit Product
-                            </h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body p-4">
-    <!-- Basic Information -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
-            </h5>
-        </div>
-
-        <div class="card-body p-4">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="editCode" class="form-label fw-semibold">Code:</label>
-                        <input type="text" class="form-control" id="editCode" wire:model="editCode">
-                        @error('editCode')
-                            <span class="text-danger small">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="editName" class="form-label fw-semibold">Name:</label>
-                        <input type="text" class="form-control" id="editName" wire:model="editName">
-                        @error('editName')
-                            <span class="text-danger small">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-
-                <div class="col-md-4">
-                    <div class="mb-3">
-                        <label for="editModel" class="form-label fw-semibold">Model:</label>
-                        <input type="text" class="form-control" id="editModel" wire:model="editModel">
-                        @error('editModel')
-                            <span class="text-danger small">* {{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-            </div> <!-- /.row -->
-        </div> <!-- /.card-body -->
-    </div> <!-- /.card -->
-
-
-
-                            <!-- Classification -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-diagram-3 text-primary me-2"></i> Classification
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editCategory" class="form-label fw-semibold">Category:</label>
-                                                <select class="form-select" id="editCategory" wire:model="editCategory">
-                                                    <option value="">Select Category</option>
-                                                    @foreach ($categories as $category)
-                                                    <option value="{{ $category->id }}">{{ $category->category_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('editCategory')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editBrand" class="form-label fw-semibold">Brand:</label>
-                                                <select class="form-select" id="editBrand" wire:model="editBrand">
-                                                    <option value="">Select Brand</option>
-                                                    @foreach ($brands as $brand)
-                                                    <option value="{{ $brand->id }}">{{ $brand->brand_name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                @error('editBrand')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Product Information -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-card-text text-primary me-2"></i> Product Information
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editImage" class="form-label fw-semibold">Image:</label>
-                                                <input type="text" class="form-control" id="editImage" wire:model="editImage">
-                                                @error('editImage')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                           
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <div class="mb-3">
-                                                <label for="editDescription" class="form-label fw-semibold">Description:</label>
-                                                <textarea class="form-control" id="editDescription" rows="3" wire:model="editDescription"></textarea>
-                                                @error('editDescription')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Pricing and Inventory -->
-                            <div class="card mb-4">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0">
-                                        <i class="bi bi-cash text-primary me-2"></i> Pricing and Inventory
-                                    </h5>
-                                </div>
-                                <div class="card-body p-4">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editSupplierPrice" class="form-label fw-semibold">Supplier Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="editSupplierPrice" wire:model="editSupplierPrice">
-                                                </div>
-                                                @error('editSupplierPrice')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editSellingPrice" class="form-label fw-semibold">Selling Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="editSellingPrice" wire:model="editSellingPrice">
-                                                </div>
-                                                @error('editSellingPrice')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editDiscountPrice" class="form-label fw-semibold">Discount Price:</label>
-                                                <div class="input-group">
-                                                    <span class="input-group-text">Rs.</span>
-                                                    <input type="number" step="0.01" class="form-control" id="editDiscountPrice" wire:model="editDiscountPrice">
-                                                </div>
-                                                @error('editDiscountPrice')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editDamageStock" class="form-label fw-semibold">Damage Stock:</label>
-                                                <input type="number" class="form-control" id="editDamageStock" wire:model="editDamageStock">
-                                                @error('editDamageStock')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="mb-3">
-                                                <label for="editStatus" class="form-label fw-semibold">Status:</label>
-                                                <select class="form-select" id="editStatus" wire:model="editStatus">
-                                                    <option value="active">Active</option>
-                                                    <option value="inactive">Inactive</option>
-                                                    <option value="discontinued">Discontinued</option>
-                                                </select>
-                                                @error('editStatus')
-                                                <span class="text-danger small">* {{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" wire:click="updateProduct">
-                                <span wire:loading wire:target="updateProduct">
-                                    <i class="spinner-border spinner-border-sm"></i> Updating...
-                                </span>
-                                <span wire:loading.remove wire:target="updateProduct">
-                                    Update Product
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" wire:click="createProduct">
+                    <span wire:loading wire:target="createProduct">
+                        <i class="spinner-border spinner-border-sm"></i> Creating...
+                    </span>
+                    <span wire:loading.remove wire:target="createProduct">
+                        Save Product
+                    </span>
+                </button>
             </div>
         </div>
     </div>
-    </div> <!-- /.modal-body -->
+</div>
+
+        <!-- Edit Product Modal -->
+        <div wire:ignore.self wire:key="edit-modal-{{ $editId ?? 'new' }}" class="modal fade" id="editProductModal" tabindex="-1"
+            aria-labelledby="editProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-pencil-square text-white me-2"></i> Edit Product
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-info-circle text-primary me-2"></i> Basic Information
+                                </h5>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editCode" class="form-label fw-semibold">Code:</label>
+                                            <input type="text" class="form-control" id="editCode" wire:model="editCode">
+                                            @error('editCode')
+                                                <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editName" class="form-label fw-semibold">Name:</label>
+                                            <input type="text" class="form-control" id="editName" wire:model="editName">
+                                            @error('editName')
+                                                <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editModel" class="form-label fw-semibold">Model:</label>
+                                            <input type="text" class="form-control" id="editModel" wire:model="editModel">
+                                            @error('editModel')
+                                                <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-diagram-3 text-primary me-2"></i> Classification
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editCategory" class="form-label fw-semibold">Category:</label>
+                                            <select class="form-select" id="editCategory" wire:model="editCategory">
+                                                <option value="">Select Category</option>
+                                                @foreach ($categories as $category)
+                                                <option value="{{ $category->id }}" {{ $category->id == 1 ? 'selected' : '' }}>{{ $category->category_name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('editCategory')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editBrand" class="form-label fw-semibold">Brand:</label>
+                                            <select class="form-select" id="editBrand" wire:model="editBrand">
+                                                <option value="">Select Brand</option>
+                                                @foreach ($brands as $brand)
+                                                <option value="{{ $brand->id }}" {{ $brand->id == 1 ? 'selected' : '' }}>{{ $brand->brand_name }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error('editBrand')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-card-text text-primary me-2"></i> Product Information
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editImage" class="form-label fw-semibold">Image:</label>
+                                            <input type="text" class="form-control" id="editImage" wire:model="editImage">
+                                            @error('editImage')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="mb-3">
+                                            <label for="editDescription" class="form-label fw-semibold">Description:</label>
+                                            <textarea class="form-control" id="editDescription" rows="3" wire:model="editDescription"></textarea>
+                                            @error('editDescription')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="bi bi-cash text-primary me-2"></i> Pricing and Inventory
+                                </h5>
+                            </div>
+                            <div class="card-body p-4">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editSupplierPrice" class="form-label fw-semibold">Supplier Price:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">Rs.</span>
+                                                <input type="number" step="0.01" class="form-control" id="editSupplierPrice" wire:model="editSupplierPrice">
+                                            </div>
+                                            @error('editSupplierPrice')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editSellingPrice" class="form-label fw-semibold">Selling Price:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">Rs.</span>
+                                                <input type="number" step="0.01" class="form-control" id="editSellingPrice" wire:model="editSellingPrice">
+                                            </div>
+                                            @error('editSellingPrice')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editDiscountPrice" class="form-label fw-semibold">Discount Price:</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">Rs.</span>
+                                                <input type="number" step="0.01" class="form-control" id="editDiscountPrice" wire:model="editDiscountPrice">
+                                            </div>
+                                            @error('editDiscountPrice')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            <label for="editStatus" class="form-label fw-semibold">Status:</label>
+                                            <select class="form-select" id="editStatus" wire:model="editStatus">
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="discontinued">Discontinued</option>
+                                            </select>
+                                            @error('editStatus')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" wire:click="updateProduct">
+                            <span wire:loading wire:target="updateProduct">
+                                <i class="spinner-border spinner-border-sm"></i> Updating...
+                            </span>
+                            <span wire:loading.remove wire:target="updateProduct">
+                                Update Product
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Adjustment Modal -->
+        <div wire:ignore.self class="modal fade" id="stockAdjustmentModal" tabindex="-1"
+            aria-labelledby="stockAdjustmentModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning text-white">
+                        <h5 class="modal-title fw-bold">
+                            <i class="bi bi-clipboard-plus text-white me-2"></i> Stock Adjustment
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        @if($adjustmentProductId)
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-box me-2"></i> Product Information
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Product:</strong> {{ $adjustmentProductName }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Available Stock:</strong> 
+                                        <span class="badge bg-success">{{ $adjustmentAvailableStock }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <strong>Damage Stock:</strong> 
+                                        <span class="badge bg-danger">{{ $adjustmentDamageStock }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">
+                                    <i class="bi bi-gear me-2"></i> Adjustment Details
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+    
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="adjustmentQuantity" class="form-label fw-semibold"> Damage Quantity:</label>
+                                            <input type="number" class="form-control" id="adjustmentQuantity" 
+                                                   wire:model="adjustmentQuantity" min="1">
+                                            @error('adjustmentQuantity')
+                                            <span class="text-danger small">* {{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-warning" wire:click="adjustStock">
+                            <span wire:loading wire:target="adjustStock">
+                                <i class="spinner-border spinner-border-sm"></i> Processing...
+                            </span>
+                            <span wire:loading.remove wire:target="adjustStock" >
+                                <i class="bi bi-check-lg"></i> Apply Adjustment
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product History Modal -->
+        <div wire:ignore.self class="modal fade" id="productHistoryModal" tabindex="-1"
+            aria-labelledby="productHistoryModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-header border-0 bg-gradient-primary text-white position-relative" 
+                         style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); padding: 1.5rem;">
+                        <h5 class="modal-title fw-bold d-flex align-items-center">
+                            <i class="bi bi-clock-history me-2 fs-4"></i> 
+                            <span>Product History - {{ $historyProductName ?? '' }}</span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body p-0">
+                        @if($historyProductId)
+                        <!-- History Tabs -->
+                        <div class="border-bottom">
+                            <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $historyTab === 'sales' ? 'active' : '' }}" 
+                                            wire:click="switchHistoryTab('sales')"
+                                            type="button"
+                                            wire:key="sales-tab">
+                                        <i class="bi bi-cart-check me-2"></i>
+                                        Sales History
+                                        <span class="badge bg-primary ms-2">{{ count($salesHistory) }}</span>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $historyTab === 'purchases' ? 'active' : '' }}" 
+                                            wire:click="switchHistoryTab('purchases')"
+                                            type="button"
+                                            wire:key="purchases-tab">
+                                        <i class="bi bi-truck me-2"></i>
+                                        Purchase History
+                                        <span class="badge bg-success ms-2">{{ count($purchasesHistory) }}</span>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $historyTab === 'returns' ? 'active' : '' }}" 
+                                            wire:click="switchHistoryTab('returns')"
+                                            type="button"
+                                            wire:key="returns-tab">
+                                        <i class="bi bi-arrow-return-left me-2"></i>
+                                        Returns History
+                                        <span class="badge bg-warning ms-2">{{ count($returnsHistory) }}</span>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link {{ $historyTab === 'quotations' ? 'active' : '' }}" 
+                                            wire:click="switchHistoryTab('quotations')"
+                                            type="button"
+                                            wire:key="quotations-tab">
+                                        <i class="bi bi-file-text me-2"></i>
+                                        Quotations History
+                                        <span class="badge bg-info ms-2">{{ count($quotationsHistory) }}</span>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content p-4" wire:key="history-content-{{ $historyTab }}">
+                            
+                            <!-- Sales History Tab -->
+                            <div class="tab-pane fade {{ $historyTab === 'sales' ? 'show active' : '' }}" wire:key="sales-content">
+                                @if(count($salesHistory) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover history-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Invoice No</th>
+                                                <th>Date</th>
+                                                <th>Customer</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Price</th>
+                                                <th>Total</th>
+                                                <th>Payment Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($salesHistory as $sale)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold text-primary">{{ $sale['invoice_number'] }}</span>
+                                                </td>
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($sale['sale_date'])->format('M d, Y') }}
+                                                </td>
+                                                <td>{{ $sale['customer_name'] }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ $sale['quantity'] }}</span>
+                                                </td>
+                                                <td>Rs.{{ number_format($sale['unit_price'], 2) }}</td>
+                                                <td>
+                                                    <span class="fw-bold text-success">Rs.{{ number_format($sale['total'], 2) }}</span>
+                                                </td>
+                                                <td>
+                                                    @if($sale['payment_status'] === 'paid')
+                                                    <span class="badge bg-success">Paid</span>
+                                                    @else
+                                                    <span class="badge bg-warning">{{ ucfirst($sale['payment_status']) }}</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @else
+                                <div class="text-center py-5">
+                                    <i class="bi bi-cart-x text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No sales history found for this product.</p>
+                                </div>
+                                @endif
+                            </div>
+
+                            <!-- Purchase History Tab -->
+                            <div class="tab-pane fade {{ $historyTab === 'purchases' ? 'show active' : '' }}" wire:key="purchases-content">
+                                @if(count($purchasesHistory) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover history-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Order Code</th>
+                                                <th>Order Date</th>
+                                                <th>Supplier</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Price</th>
+                                                <th>Total</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($purchasesHistory as $purchase)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold text-primary">{{ $purchase['order_code'] }}</span>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($purchase['order_date'])->format('M d, Y') }}</td>
+                                                <td>{{ $purchase['supplier_name'] }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ $purchase['quantity'] }}</span>
+                                                </td>
+                                                <td>Rs.{{ number_format($purchase['unit_price'], 2) }}</td>
+                                                <td>
+                                                    <span class="fw-bold text-success">
+                                                        Rs.{{ number_format($purchase['total'], 2) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if($purchase['order_status'] === 'completed')
+                                                    <span class="badge bg-success">Completed</span>
+                                                    @elseif($purchase['order_status'] === 'pending')
+                                                    <span class="badge bg-warning">Pending</span>
+                                                    @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($purchase['order_status']) }}</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @else
+                                <div class="text-center py-5">
+                                    <i class="bi bi-truck text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No purchase history found for this product.</p>
+                                </div>
+                                @endif
+                            </div>
+
+                            <!-- Returns History Tab -->
+                            <div class="tab-pane fade {{ $historyTab === 'returns' ? 'show active' : '' }}" wire:key="returns-content">
+                                @if(count($returnsHistory) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover history-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Return Date</th>
+                                                <th>Invoice No</th>
+                                                <th>Customer</th>
+                                                <th>Quantity</th>
+                                                <th>Reason</th>
+                                                <th>Total Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($returnsHistory as $return)
+                                            <tr>
+                                                <td>{{ \Carbon\Carbon::parse($return['return_date'])->format('M d, Y') }}</td>
+                                                <td>
+                                                    <span class="fw-semibold text-primary">{{ $return['invoice_number'] }}</span>
+                                                </td>
+                                                <td>{{ $return['customer_name'] }}</td>
+                                                <td>
+                                                    <span class="badge bg-warning">{{ $return['return_quantity'] }}</span>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ $return['notes'] ?? 'No reason provided' }}</small>
+                                                </td>
+                                                <td>
+                                                    <span class="fw-bold text-danger">Rs.{{ number_format($return['total_amount'], 2) }}</span>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @else
+                                <div class="text-center py-5">
+                                    <i class="bi bi-arrow-return-left text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No returns history found for this product.</p>
+                                </div>
+                                @endif
+                            </div>
+
+                            <!-- Quotations History Tab -->
+                            <div class="tab-pane fade {{ $historyTab === 'quotations' ? 'show active' : '' }}" wire:key="quotations-content">
+                                @if(count($quotationsHistory) > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover history-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Quotation No</th>
+                                                <th>Date</th>
+                                                <th>Customer</th>
+                                                <th>Quantity</th>
+                                                <th>Unit Price</th>
+                                                <th>Total</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($quotationsHistory as $quotation)
+                                            <tr>
+                                                <td>
+                                                    <span class="fw-semibold text-primary">{{ $quotation['quotation_number'] }}</span>
+                                                </td>
+                                                <td>{{ \Carbon\Carbon::parse($quotation['quotation_date'])->format('M d, Y') }}</td>
+                                                <td>{{ $quotation['customer_name'] }}</td>
+                                                <td>
+                                                    <span class="badge bg-secondary">{{ $quotation['quantity'] }}</span>
+                                                </td>
+                                                <td>Rs.{{ number_format($quotation['unit_price'], 2) }}</td>
+                                                <td>
+                                                    <span class="fw-bold text-info">Rs.{{ number_format($quotation['total'], 2) }}</span>
+                                                </td>
+                                                <td>
+                                                    @if($quotation['status'] === 'accepted')
+                                                    <span class="badge bg-success">Accepted</span>
+                                                    @elseif($quotation['status'] === 'sent')
+                                                    <span class="badge bg-info">Sent</span>
+                                                    @elseif($quotation['status'] === 'rejected')
+                                                    <span class="badge bg-danger">Rejected</span>
+                                                    @else
+                                                    <span class="badge bg-secondary">{{ ucfirst($quotation['status']) }}</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @else
+                                <div class="text-center py-5">
+                                    <i class="bi bi-file-text text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted mt-3">No quotations history found for this product.</p>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                        @else
+                        <div class="text-center py-5">
+                            <i class="bi bi-exclamation-circle text-muted" style="font-size: 4rem;"></i>
+                            <p class="text-muted mt-3 fs-5">Product not found.</p>
+                        </div>
+                        @endif
+                    </div>
+
+                    <div class="modal-footer border-0 bg-light">
+                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
 
     @push('scripts')
     <script>
@@ -1234,6 +1755,26 @@
                     modal.hide();
                 }
             });
+
+            // Real-time validation for stock adjustment
+            Livewire.on('adjustmentValidation', (data) => {
+                if (data.error) {
+                    Swal.fire('Error!', data.error, 'error');
+                }
+            });
+
+            // Handle history tab switching
+            Livewire.on('historyTabSwitched', (tab) => {
+                // Any additional JavaScript for tab switching if needed
+            });
+
+            // Refresh history data when modal is shown
+            const historyModal = document.getElementById('productHistoryModal');
+            if (historyModal) {
+                historyModal.addEventListener('shown.bs.modal', function () {
+                    // Trigger any refresh if needed
+                });
+            }
         });
     </script>
     @endpush

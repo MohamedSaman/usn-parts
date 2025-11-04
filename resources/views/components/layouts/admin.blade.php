@@ -893,14 +893,27 @@
             <ul class="nav flex-column ms-3">
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.return-product') }}">
-                        <i class="bi bi-wallet2"></i> <span>Add Return</span>
+                        <i class="bi bi-arrow-return-left"></i> <span>Add Customer Return</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link py-2" href="{{ route('admin.return-list') }}">
-                        <i class="bi bi-wallet2"></i> <span>List Return</span>
+                        <i class="bi bi-list-check"></i> <span>List Customer Return</span>
                     </a>
                 </li>
+
+                <li class="nav-item">
+                    <a class="nav-link py-2" href="">
+                        <i class="bi bi-arrow-return-left"></i> <span>Add Supplier Return</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link py-2" href="">
+                        <i class="bi bi-list-check"></i> <span>List Supplier Return</span>
+                    </a>
+                </li>
+
             </ul>
         </div>
     </li>

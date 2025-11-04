@@ -154,12 +154,12 @@ use App\Models\Sale;
                     </thead>
                     <tbody>
                         @forelse($sales as $sale)
-                        <tr wire:key="sale-{{ $sale->id }}" style="cursor:pointer" wire:click="viewSale({{ $sale->id }})">
-                            <td class="ps-4">
+                        <tr wire:key="sale-{{ $sale->id }}" style="cursor:pointer">
+                            <td class="ps-4"  wire:click="viewSale({{ $sale->id }})">
                                 <div class="fw-bold text-primary">{{ $sale->invoice_number }}</div>
                                 <small class="text-muted">#{{ $sale->sale_id }}</small>
                             </td>
-                            <td>
+                            <td  wire:click="viewSale({{ $sale->id }})">
                                 @if($sale->customer)
                                 <div class="fw-medium">{{ $sale->customer->name }}</div>
                                 <small class="text-muted">{{ $sale->customer->phone }}</small>
@@ -167,37 +167,73 @@ use App\Models\Sale;
                                 <span class="text-muted">Walk-in Customer</span>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <div>{{ $sale->created_at->format('M d, Y') }}</div>
                             </td>
 
-                            <td class="text-center">
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <div class="fw-bold">Rs.{{ number_format($sale->total_amount, 2) }}</div>
                                 @if($sale->due_amount > 0)
                                 <small class="text-danger">Due: Rs.{{ number_format($sale->due_amount, 2) }}</small>
                                 @endif
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <span class="badge bg-{{ $sale->payment_status == 'paid' ? 'success' : ($sale->payment_status == 'partial' ? 'warning' : 'danger') }}">
                                     {{ ucfirst($sale->payment_status) }}
                                 </span>
                             </td>
-                            <td class="text-center">
+                            <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <span class="badge bg-primary">{{ strtoupper($sale->sale_type) }}</span>
                             </td>
-                            <td class="text-end pe-4">
-                                <div class="btn-group btn-group-sm">
-                                    <button class=" text-success me-2 bg-opacity-0 border-0" wire:click.stop="downloadInvoice({{ $sale->id }})"
-                                        wire:target="downloadInvoice({{ $sale->id }})"
-                                        title="Download Invoice">
-                                        <i class="bi bi-download"></i>
-                                    </button>
-                                    <button class="text-danger me-2 bg-opacity-0 border-0" wire:click.stop="deleteSale({{ $sale->id }})"
-                                        title="Delete Sale">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
+                          <td class="text-end pe-4">
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <!-- Download Invoice -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="downloadInvoice({{ $sale->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="downloadInvoice({{ $sale->id }})">
+                    
+                    <span wire:loading wire:target="downloadInvoice({{ $sale->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="downloadInvoice({{ $sale->id }})">
+                        <i class="bi bi-download text-success me-2"></i>
+                        Download Invoice
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Sale -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="deleteSale({{ $sale->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="deleteSale({{ $sale->id }})">
+                    
+                    <span wire:loading wire:target="deleteSale({{ $sale->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="deleteSale({{ $sale->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i>
+                        Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                         </tr>
                         @empty
                         <tr>

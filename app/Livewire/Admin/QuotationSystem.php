@@ -55,6 +55,30 @@ class QuotationSystem extends Component
     {
         $this->validUntil = now()->addDays(30)->format('Y-m-d');
         $this->loadCustomers();
+        $this->setDefaultCustomer();
+    }
+
+    // Set default walking customer
+    public function setDefaultCustomer()
+    {
+        // Find or create walking customer (only one)
+        $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
+        
+        if (!$walkingCustomer) {
+            $walkingCustomer = Customer::create([
+                'name' => 'Walking Customer',
+                'phone' => 'xxxxx', // Empty phone number
+                'email' => null,
+                'address' => 'xxxxx',
+                'type' => 'retail',
+                'business_name' => null,
+            ]);
+            
+            $this->loadCustomers(); // Reload customers after creating new one
+        }
+        
+        $this->customerId = $walkingCustomer->id;
+        $this->selectedCustomer = $walkingCustomer;
     }
 
     // Load customers for dropdown
@@ -111,7 +135,8 @@ class QuotationSystem extends Component
                 $this->selectedCustomer = $customer;
             }
         } else {
-            $this->selectedCustomer = null;
+            // If customer is deselected, set back to walking customer
+            $this->setDefaultCustomer();
         }
     }
 
@@ -145,7 +170,7 @@ class QuotationSystem extends Component
     {
         $this->validate([
             'customerName' => 'required|string|max:255',
-            'customerPhone' => 'required|string|max:20|unique:customers,phone',
+            'customerPhone' => 'nullable|string|max:20|unique:customers,phone',
             'customerEmail' => 'nullable|email|unique:customers,email',
             'customerAddress' => 'required|string',
             'customerType' => 'required|in:retail,wholesale,business',
@@ -154,7 +179,7 @@ class QuotationSystem extends Component
         try {
             $customer = Customer::create([
                 'name' => $this->customerName,
-                'phone' => $this->customerPhone,
+                'phone' => $this->customerPhone ?: null,
                 'email' => $this->customerEmail,
                 'address' => $this->customerAddress,
                 'type' => $this->customerType,
@@ -369,9 +394,9 @@ public function createQuotation()
         return;
     }
 
+    // If no customer selected, use walking customer
     if (!$this->selectedCustomer && !$this->customerId) {
-        session()->flash('error', 'Please select a customer.');
-        return;
+        $this->setDefaultCustomer();
     }
 
     try {
@@ -508,6 +533,7 @@ public function createQuotation()
     {
         $this->resetExcept(['customers', 'validUntil']);
         $this->validUntil = now()->addDays(30)->format('Y-m-d');
+        $this->setDefaultCustomer(); // Set walking customer again for new quotation
         $this->showQuotationModal = false;
         session()->flash('message', 'Ready to create new quotation!');
     }
