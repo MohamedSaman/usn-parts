@@ -23,7 +23,10 @@ class Payment extends Model
         'due_payment_attachment',
         'status',
         'customer_id',
-        
+        'transfer_date',
+        'transfer_reference',
+        'notes',
+        'created_by',
     ];
 
     protected $casts = [
@@ -35,6 +38,16 @@ class Payment extends Model
     public function sale()
     {
         return $this->belongsTo(Sale::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function cheques()
+    {
+        return $this->hasMany(Cheque::class);
     }
 
     public function getStatusBadgeAttribute()
