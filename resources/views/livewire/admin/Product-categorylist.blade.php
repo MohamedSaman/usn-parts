@@ -48,13 +48,54 @@
                                                 <span class="fw-medium text-dark">{{ $category->category_name }}</span>
                                             </td>
                                             <td class="text-end pe-4">
-                                                <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editCategory({{ $category->id }})">
-                                                    <i class="bi bi-pencil fs-6"></i>
-                                                </button>
-                                                <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $category->id }})">
-                                                    <i class="bi bi-trash fs-6"></i>
-                                                </button>
-                                            </td>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <!-- Edit Category -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="editCategory({{ $category->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="editCategory({{ $category->id }})">
+                    
+                    <span wire:loading wire:target="editCategory({{ $category->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="editCategory({{ $category->id }})">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>
+                        Edit
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Category -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDelete({{ $category->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="confirmDelete({{ $category->id }})">
+                    
+                    <span wire:loading wire:target="confirmDelete({{ $category->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDelete({{ $category->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i>
+                        Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                                         </tr>
                                     @endforeach
                                 @else

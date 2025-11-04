@@ -47,23 +47,65 @@
                                 <td>{{ $supplier->businessname }}</td>
                                 <td>{{ $supplier->contact }}</td>
                                 <td>{{ $supplier->email }}</td>
-                                <td class="text-end pe-4">
-                                    <!-- View Button -->
-                                    <button class="text-info me-2 bg-opacity-0 border-0" wire:click="view({{ $supplier->id }})" 
-                                            title="View Supplier Details">
-                                        <i class="bi bi-eye fs-6"></i>
-                                    </button>
-                                    <!-- Edit Button -->
-                                    <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="edit({{ $supplier->id }})"
-                                            title="Edit Supplier">
-                                        <i class="bi bi-pencil fs-6"></i>
-                                    </button>
-                                    <!-- Delete Button -->
-                                    <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $supplier->id }})"
-                                            title="Delete Supplier">
-                                        <i class="bi bi-trash fs-6"></i>
-                                    </button>
-                                </td>
+                               <td class="text-end pe-2">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <!-- View Supplier -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="view({{ $supplier->id }})"
+                        wire:loading.attr="disabled"
+                        title="View Supplier Details">
+                    <span wire:loading wire:target="view({{ $supplier->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="view({{ $supplier->id }})">
+                        <i class="bi bi-eye text-info me-2"></i> View
+                    </span>
+                </button>
+            </li>
+
+            <!-- Edit Supplier -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="edit({{ $supplier->id }})"
+                        wire:loading.attr="disabled"
+                        title="Edit Supplier">
+                    <span wire:loading wire:target="edit({{ $supplier->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="edit({{ $supplier->id }})">
+                        <i class="bi bi-pencil text-primary me-2"></i> Edit
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Supplier -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDelete({{ $supplier->id }})"
+                        wire:loading.attr="disabled"
+                        title="Delete Supplier">
+                    <span wire:loading wire:target="confirmDelete({{ $supplier->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDelete({{ $supplier->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i> Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
+
                             </tr>
                             @empty
                             <tr>
@@ -291,68 +333,70 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
     }
-    
+
     .card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
     }
-    
+
     .card-header {
         background-color: white;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         border-radius: 12px 12px 0 0 !important;
         padding: 1.25rem 1.5rem;
     }
-    
+
     .table td {
         vertical-align: middle;
         padding: 1rem 0.75rem;
     }
-    
+
     .btn-link {
         text-decoration: none;
         transition: all 0.2s ease;
     }
-    
+
     .btn-link:hover {
         transform: scale(1.1);
     }
-    
+
     .modal-content {
         border: none;
         border-radius: 12px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     }
-    
-    .form-control, .form-select {
+
+    .form-control,
+    .form-select {
         border-radius: 8px;
         padding: 0.75rem 1rem;
         border: 1px solid #e2e8f0;
     }
-    
-    .form-control:focus, .form-select:focus {
+
+    .form-control:focus,
+    .form-select:focus {
         box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
         border-color: #4361ee;
     }
-    
+
     .btn {
         border-radius: 8px;
         font-weight: 500;
         padding: 0.75rem 1.5rem;
         transition: all 0.3s ease;
     }
-    
+
     .btn-primary {
         background-color: #4361ee;
         border-color: #4361ee;
     }
-    
+
     .btn-primary:hover {
         background-color: #3f37c9;
         border-color: #3f37c9;
         transform: translateY(-2px);
     }
-    
+
     .form-control-plaintext {
         padding: 0.5rem 0;
         border: none;
@@ -374,11 +418,11 @@
                 showConfirmButton: false
             });
         });
- Livewire.on('refreshPage', () => {
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500); // Refresh after 1.5 seconds to show success message
-            });
+        Livewire.on('refreshPage', () => {
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500); // Refresh after 1.5 seconds to show success message
+        });
         // Delete confirmation
         Livewire.on('swal:confirm', ([data]) => {
             Swal.fire({
@@ -391,7 +435,9 @@
                 confirmButtonText: 'Yes, delete it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Livewire.dispatch('delete-supplier', { id: data.id });
+                    Livewire.dispatch('delete-supplier', {
+                        id: data.id
+                    });
                 }
             });
         });

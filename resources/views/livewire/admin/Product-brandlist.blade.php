@@ -48,13 +48,54 @@
                                         <span class="fw-medium text-dark">{{ $brand->brand_name }}</span>
                                     </td>
                                     <td class="text-end pe-4">
-                                        <button class="text-primary me-2 bg-opacity-0 border-0" wire:click="editBrand({{ $brand->id }})">
-                                            <i class="bi bi-pencil fs-6"></i>
-                                        </button>
-                                        <button class="text-danger me-2 bg-opacity-0 border-0" wire:click="confirmDelete({{ $brand->id }})">
-                                            <i class="bi bi-trash fs-6"></i>
-                                        </button>
-                                    </td>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+            <!-- Edit Brand -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="editBrand({{ $brand->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="editBrand({{ $brand->id }})">
+                    
+                    <span wire:loading wire:target="editBrand({{ $brand->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="editBrand({{ $brand->id }})">
+                        <i class="bi bi-pencil-square text-primary me-2"></i>
+                        Edit
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Brand -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDelete({{ $brand->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="confirmDelete({{ $brand->id }})">
+                    
+                    <span wire:loading wire:target="confirmDelete({{ $brand->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDelete({{ $brand->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i>
+                        Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                                 </tr>
                                 @endforeach
                                 @else

@@ -31,8 +31,8 @@ class ManageCustomer extends Component
     public $showEditModal = false;
     public $showCreateModal = false;
     public $showDeleteModal = false;
-    public $showViewModal = false; // Add this
-    public $viewCustomerDetail = []; // Add this
+    public $showViewModal = false;
+    public $viewCustomerDetail = [];
 
     public function render()
     {
@@ -66,14 +66,14 @@ class ManageCustomer extends Component
         $this->showCreateModal = false;
         $this->showEditModal = false;
         $this->showDeleteModal = false;
-        $this->showViewModal = false; // Add this
+        $this->showViewModal = false;
         $this->resetForm();
     }
 
     /** ----------------------------
      * View Customer Details
      * ---------------------------- */
-    public function viewDetails($id) // Add this method
+    public function viewDetails($id)
     {
         $customer = Customer::find($id);
         if (!$customer) {
@@ -200,7 +200,9 @@ class ManageCustomer extends Component
         try {
             Customer::where('id', $this->deleteId)->delete();
             $this->js("Swal.fire('Success!', 'Customer deleted successfully.', 'success')");
+             $this->dispatch('refreshPage');
             $this->cancelDelete();
+           
         } catch (Exception $e) {
             $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
         }

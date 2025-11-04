@@ -78,7 +78,31 @@ class StoreBilling extends Component
     public function mount()
     {
         $this->loadCustomers();
+        $this->setDefaultCustomer();
         $this->tempChequeDate = now()->format('Y-m-d');
+    }
+
+    // Set default walking customer
+    public function setDefaultCustomer()
+    {
+        // Find or create walking customer (only one)
+        $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
+        
+        if (!$walkingCustomer) {
+            $walkingCustomer = Customer::create([
+                'name' => 'Walking Customer',
+                'phone' => 'xxxxx', // Empty phone number
+                'email' => null,
+                'address' => 'xxxxx',
+                'type' => 'retail',
+                'business_name' => null,
+            ]);
+            
+            $this->loadCustomers(); // Reload customers after creating new one
+        }
+        
+        $this->customerId = $walkingCustomer->id;
+        $this->selectedCustomer = $walkingCustomer;
     }
 
     // Load customers for dropdown
@@ -179,7 +203,8 @@ class StoreBilling extends Component
                 $this->selectedCustomer = $customer;
             }
         } else {
-            $this->selectedCustomer = null;
+            // If customer is deselected, set back to walking customer
+            $this->setDefaultCustomer();
         }
     }
 
@@ -276,7 +301,7 @@ class StoreBilling extends Component
     {
         $this->validate([
             'customerName' => 'required|string|max:255',
-            'customerPhone' => 'required|string|max:20|unique:customers,phone',
+            'customerPhone' => 'nullable|string|max:20|unique:customers,phone',
             'customerEmail' => 'nullable|email|unique:customers,email',
             'customerAddress' => 'required|string',
             'customerType' => 'required|in:retail,wholesale,business',
@@ -285,7 +310,7 @@ class StoreBilling extends Component
         try {
             $customer = Customer::create([
                 'name' => $this->customerName,
-                'phone' => $this->customerPhone,
+                'phone' => $this->customerPhone ?: null,
                 'email' => $this->customerEmail,
                 'address' => $this->customerAddress,
                 'type' => $this->customerType,
@@ -495,9 +520,11 @@ class StoreBilling extends Component
             return;
         }
 
+        // If no customer selected, use walking customer
         if (!$this->selectedCustomer && !$this->customerId) {
             $this->js("Swal.fire('error', 'Please select a customer.', 'error')");
             return;
+            $this->setDefaultCustomer();
         }
 
         // Validate payment method specific fields
@@ -704,6 +731,7 @@ class StoreBilling extends Component
     {
         $this->resetExcept(['customers']);
         $this->loadCustomers();
+        $this->setDefaultCustomer(); // Set walking customer again for new sale
         $this->showSaleModal = false;
     }
 

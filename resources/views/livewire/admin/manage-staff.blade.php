@@ -75,23 +75,64 @@
                                     <span class="badge bg-secondary">Inactive</span>
                                     @endif
                                 </td>
-                                <td class="text-end pe-4">
-                                    <button class=" text-info  me-2 bg-opacity-0 border-0" 
-                                            wire:click="viewDetails({{ $staff->id }})" 
-                                            wire:loading.attr="disabled">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                    <button class="text-primary me-2 bg-opacity-0 border-0" 
-                                            wire:click="editStaff({{ $staff->id }})" 
-                                            wire:loading.attr="disabled">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="text-danger me-2 bg-opacity-0 border-0" 
-                                            wire:click="confirmDelete({{ $staff->id }})" 
-                                            wire:loading.attr="disabled">
-                                        <i class="bi bi-trash fs-6"></i>
-                                    </button>
-                                </td>
+                               <td class="text-end pe-4">
+    <div class="dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <!-- View Staff -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="viewDetails({{ $staff->id }})"
+                        wire:loading.attr="disabled"
+                        title="View Staff Details">
+                    <span wire:loading wire:target="viewDetails({{ $staff->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="viewDetails({{ $staff->id }})">
+                        <i class="bi bi-eye text-info me-2"></i> View
+                    </span>
+                </button>
+            </li>
+
+            <!-- Edit Staff -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="editStaff({{ $staff->id }})"
+                        wire:loading.attr="disabled"
+                        title="Edit Staff">
+                    <span wire:loading wire:target="editStaff({{ $staff->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="editStaff({{ $staff->id }})">
+                        <i class="bi bi-pencil text-primary me-2"></i> Edit
+                    </span>
+                </button>
+            </li>
+
+            <!-- Delete Staff -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDelete({{ $staff->id }})"
+                        wire:loading.attr="disabled"
+                        title="Delete Staff">
+                    <span wire:loading wire:target="confirmDelete({{ $staff->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDelete({{ $staff->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i> Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                             </tr>
                             @endforeach
                         @else

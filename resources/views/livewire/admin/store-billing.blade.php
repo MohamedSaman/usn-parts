@@ -61,35 +61,48 @@
         </div>
     </nav>
     <div class="row">
-        {{-- Customer Information --}}
-        <div class="col-6 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-person me-2"></i>Customer Information
-                    </h5>
-                    <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
-                        <i class="bi bi-plus-circle me-1"></i> Add New Customer
-                    </button>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Select Customer *</label>
-                            <select class="form-select" wire:model.live="customerId">
-                                <option value="">-- Select Customer --</option>
-                                @foreach($customers as $customer)
-                                <option value="{{ $customer->id }}">
-                                    {{ $customer->name }} - {{ $customer->phone }}
-                                </option>
-                                @endforeach
-                            </select>
-                            <div class="form-text">Select existing customer</div>
-                        </div>
+       {{-- Customer Information --}}
+<div class="col-6 mb-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-person me-2"></i>Customer Information
+            </h5>
+            <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
+                <i class="bi bi-plus-circle me-1"></i> Add New Customer
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label">Select Customer *</label>
+                    <select class="form-select" wire:model.live="customerId">
+                        @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
+                            {{ $customer->name }}
+                            @if($customer->phone)
+                             - {{ $customer->phone }}
+                            @endif
+                            @if($customer->name === 'Walking Customer') (Default) @endif
+                        </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">
+                        @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
+                        <span class="text-info">
+                            <i class="bi bi-info-circle"></i> Using default walking customer
+                        </span>
+                        @else
+                        Select existing customer or add new
+                        @endif
                     </div>
                 </div>
+
+               
             </div>
         </div>
+    </div>
+</div>
 
         {{-- Add Products Card --}}
         <div class="col-md-6 mb-4">

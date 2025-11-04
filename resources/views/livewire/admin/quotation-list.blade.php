@@ -98,34 +98,58 @@
                                             {{ ucfirst($quotation->status) }}
                                         </span>
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <div class="action-btns">
+                                   <td class="text-end pe-4">
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
 
+        <ul class="dropdown-menu dropdown-menu-end">
 
-                                            @if($quotation->status !== 'converted')
-                                            <button class="action-btn sale  me-2 bg-opacity-0 border-0" title="Create Sale"
-                                                wire:click="openCreateSaleModal({{ $quotation->id }})"
-                                                wire:loading.attr="disabled">
-                                                <i class="bi bi-cart-check" wire:loading.class="d-none"
-                                                    wire:target="openCreateSaleModal({{ $quotation->id }})"></i>
-                                                <span wire:loading wire:target="openCreateSaleModal({{ $quotation->id }})">
-                                                    <i class="spinner-border spinner-border-sm"></i>
-                                                </span>
-                                            </button>
+            <!-- Create Sale (only if not converted) -->
+            @if($quotation->status !== 'converted')
+            <li>
+                <button class="dropdown-item"
+                        wire:click="openCreateSaleModal({{ $quotation->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="openCreateSaleModal({{ $quotation->id }})">
 
-                                            @endif
+                    <span wire:loading wire:target="openCreateSaleModal({{ $quotation->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="openCreateSaleModal({{ $quotation->id }})">
+                        <i class="bi bi-cart-check text-success me-2"></i>
+                        Create Sale
+                    </span>
+                </button>
+            </li>
+            @endif
 
-                                            <button class="action-btn delete  me-2 bg-opacity-0 border-0" title="Delete Quotation"
-                                                wire:click="confirmDeleteQuotation({{ $quotation->id }})"
-                                                wire:loading.attr="disabled">
-                                                <i class="bi bi-trash" wire:loading.class="d-none"
-                                                    wire:target="confirmDeleteQuotation({{ $quotation->id }})"></i>
-                                                <span wire:loading wire:target="confirmDeleteQuotation({{ $quotation->id }})">
-                                                    <i class="spinner-border spinner-border-sm"></i>
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </td>
+            <!-- Delete Quotation -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="confirmDeleteQuotation({{ $quotation->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="confirmDeleteQuotation({{ $quotation->id }})">
+
+                    <span wire:loading wire:target="confirmDeleteQuotation({{ $quotation->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="confirmDeleteQuotation({{ $quotation->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i>
+                        Delete
+                    </span>
+                </button>
+            </li>
+        </ul>
+    </div>
+</td>
+
                                 </tr>
                                 @endforeach
                                 @else
@@ -448,7 +472,7 @@
                             <tr><td><strong>Valid Until :</strong></td><td>{{ \Carbon\Carbon::parse($selectedQuotation->valid_until)->format('d/m/Y') }}</td></tr>
                             @endif
                             <tr><td><strong>Status :</strong></td><td>{{ ucfirst($selectedQuotation->status) }}</td></tr>
-                            <tr><td><strong>Sales Person :</strong></td><td>ART STORE</td></tr>
+                           
                         </table>
                     </div>
                 </div>

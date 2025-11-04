@@ -67,7 +67,7 @@
                                 <th>Order Date</th>
                                 <th>Status</th>
                                 
-                                <th class="text-end pe-4">Actions</th>
+                              
                             </tr>
                         </thead>
                         <tbody>
@@ -81,13 +81,20 @@
                             $progressPercentage = $totalItems > 0 ? ($receivedItems / $totalItems) * 100 : 0;
                             @endphp
                             <tr>
-                                <td class="ps-4">
+                                <td class="ps-4" wire:click="viewGRN({{ $po->id }})">
                                     <span class="fw-medium text-dark">{{ $po->order_code }}</span>
                                 </td>
+<<<<<<< Updated upstream
                                 <td>{{ $po->supplier->name }}</td>
                                 <td>{{ $po->order_date }}</td>
                                 <td>
                                     @if($po->status == 'received')
+=======
+                                <td wire:click="viewGRN({{ $po->id }})">{{ $po->supplier->name }}</td>
+                                <td wire:click="viewGRN({{ $po->id }})">{{ $po->order_date }}</td>
+                                <td wire:click="viewGRN({{ $po->id }})">
+                                    @if($po->status == 'complete')
+>>>>>>> Stashed changes
                                     <span class="badge bg-warning">Awaiting Receipt</span>
                                     @elseif($po->status == 'complete')
                                     <span class="badge bg-success">Fully Received</span>
@@ -98,14 +105,7 @@
                                     @endif
                                 </td>
                                 
-                                <td class="text-end pe-4">
-                                    <button class="btn-link text-info  me-2 bg-opacity-0 border-0"
-                                        wire:click="viewGRN({{ $po->id }})"
-                                        title="View GRN Details">
-                                        <i class="bi bi-eye fs-5"></i>
-                                    </button>
-
-                                </td>
+                               
                             </tr>
                             @endforeach
                         </tbody>
@@ -123,7 +123,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-eye text-info me-2"></i> GRN Details - {{ $selectedPO?->order_code }}
+                        <i class="bi bi-eye text-white me-2"></i> GRN Details - {{ $selectedPO?->order_code }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>

@@ -1,6 +1,4 @@
 <div class="container-fluid py-3">
-
-
     {{-- Flash Messages --}}
     @if (session()->has('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4">
@@ -24,6 +22,7 @@
     @endif
 
     <div class="row">
+<<<<<<< Updated upstream
         {{-- Customer Information --}}
         <div class="col-md-6">
             <div class="card">
@@ -49,10 +48,49 @@
                             </select>
                             <div class="form-text">Select existing customer</div>
                         </div>
+=======
+       {{-- Customer Information --}}
+<div class="col-6 mb-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-person me-2"></i>Customer Information
+            </h5>
+            <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
+                <i class="bi bi-plus-circle me-1"></i> Add New Customer
+            </button>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label">Select Customer *</label>
+                    <select class="form-select" wire:model.live="customerId">
+                        @foreach($customers as $customer)
+                        <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
+                            {{ $customer->name }}
+                            @if($customer->phone)
+                             - {{ $customer->phone }}
+                            @endif
+                            @if($customer->name === 'Walking Customer') (Default) @endif
+                        </option>
+                        @endforeach
+                    </select>
+                    <div class="form-text">
+                        @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
+                        <span class="text-info">
+                            <i class="bi bi-info-circle"></i> Using default walking customer
+                        </span>
+                        @else
+                        Select existing customer or add new
+                        @endif
+>>>>>>> Stashed changes
                     </div>
                 </div>
+              
             </div>
         </div>
+    </div>
+</div>
 
         {{-- Add Products Card --}}
         <div class="col-md-6 mb-4">
@@ -182,7 +220,6 @@
                                     <td></td>
                                 </tr>
 
-
                                 {{-- Additional Discount Section --}}
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold align-middle">
@@ -228,13 +265,6 @@
                                     </td>
                                     <td></td>
                                 </tr>
-
-                                {{-- Grand Total
-                                <tr>
-                                    <td colspan="5" class="text-end fw-bold fs-5">Grand Total:</td>
-                                    <td class="fw-bold fs-5 text-primary">Rs.{{ number_format($grandTotal, 2) }}</td>
-                                    <td></td>
-                                </tr> --}}
                             </tfoot>
                         </table>
                     </div>
@@ -292,7 +322,7 @@
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header  text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
                         <i class="bi bi-person-plus me-2"></i>Add New Customer
                     </h5>
@@ -398,7 +428,6 @@
                                         <p class="mb-1"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
                                         <p class="mb-1"><strong>Invoice No:</strong> {{ $createdSale->invoice_number }}</p>
                                         <p class="mb-1"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-
                                     </div>
                                 </div>
                             </div>
@@ -463,7 +492,6 @@
                                             {{ number_format($createdSale->total_amount, 2) }}
                                         </td>
                                     </tr>
-
                                 </tfoot>
                             </table>
                         </div>

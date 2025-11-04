@@ -43,16 +43,38 @@
                             <td wire:click="showReceipt({{ $return->id }})">Rs.{{ number_format($return->total_amount, 2) }}</td>
                             <td wire:click="showReceipt({{ $return->id }})">{{ $return->created_at?->format('M d, Y') }}</td>
                             <td class="text-end pe-4">
-                                <div class="btn-group btn-group-sm">
-                                    
-                                    
-                                    <button class=" text-danger  me-2 bg-opacity-0 border-0"
-                                            wire:click="deleteReturn({{ $return->id }})"
-                                            title="Delete Return">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
+            <i class="bi bi-gear-fill"></i> Actions
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+
+            <!-- Delete Return -->
+            <li>
+                <button class="dropdown-item"
+                        wire:click="deleteReturn({{ $return->id }})"
+                        wire:loading.attr="disabled"
+                        wire:target="deleteReturn({{ $return->id }})">
+
+                    <span wire:loading wire:target="deleteReturn({{ $return->id }})">
+                        <i class="spinner-border spinner-border-sm me-2"></i>
+                        Loading...
+                    </span>
+                    <span wire:loading.remove wire:target="deleteReturn({{ $return->id }})">
+                        <i class="bi bi-trash text-danger me-2"></i>
+                        Delete
+                    </span>
+                </button>
+            </li>
+
+        </ul>
+    </div>
+</td>
+
                         </tr>
                         @empty
                         <tr>

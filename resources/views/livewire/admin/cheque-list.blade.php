@@ -112,27 +112,46 @@
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-                                @if($cheque->status == 'pending' || $cheque->status == 'overdue')
-                                <div class="btn-group btn-group-sm">
-                                    <!-- Button triggers -->
-                                    <button class="btn btn-outline-success"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#confirmCompleteModal"
-                                        wire:click="setSelectedCheque({{ $cheque->id }})">
-                                        <i class="bi bi-check2-circle"></i> Complete
-                                    </button>
+    @if($cheque->status == 'pending' || $cheque->status == 'overdue')
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                <i class="bi bi-gear-fill"></i> Actions
+            </button>
 
-                                    <button class="btn btn-outline-danger"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#confirmReturnModal"
-                                        wire:click="setSelectedCheque({{ $cheque->id }})">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Return
-                                    </button>
-                                </div>
-                                @else
-                                <span class="text-muted">-</span>
-                                @endif
-                            </td>
+            <ul class="dropdown-menu dropdown-menu-end">
+
+                <!-- Mark as Complete -->
+                <li>
+                    <button class="dropdown-item"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmCompleteModal"
+                            wire:click="setSelectedCheque({{ $cheque->id }})">
+                        <i class="bi bi-check2-circle text-success me-2"></i>
+                        Complete
+                    </button>
+                </li>
+
+                <!-- Return Cheque -->
+                <li>
+                    <button class="dropdown-item"
+                            data-bs-toggle="modal"
+                            data-bs-target="#confirmReturnModal"
+                            wire:click="setSelectedCheque({{ $cheque->id }})">
+                        <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>
+                        Return
+                    </button>
+                </li>
+
+            </ul>
+        </div>
+    @else
+        <span class="text-muted">-</span>
+    @endif
+</td>
+
                         </tr>
                         @empty
                         <tr>
