@@ -176,6 +176,13 @@
                                                     <i class="bi bi-arrow-clockwise text-success me-2"></i> Re-Process GRN
                                                 </button>
                                             </li>
+
+                                            <!-- Force Complete Order - Mark pending items as not received -->
+                                            <li>
+                                                <button class="dropdown-item" wire:click="confirmForceComplete({{ $order->id }})">
+                                                    <i class="bi bi-check-circle text-primary me-2"></i> Force Complete Order
+                                                </button>
+                                            </li>
                                             @endif
 
                                             <!-- Download PDF -->
@@ -236,6 +243,7 @@
                             <ul class="list-group mt-1 position-absolute w-100 me-4 z-3 shadow-lg" style="max-height: 300px; overflow-y: auto;">
                                 @foreach($products as $product)
                                 <li class="list-group-item list-group-item-action p-2"
+                                    wire:key="search-product-{{ $product->id }}"
                                     wire:click="selectProduct({{ $product->id }})"
                                     style="cursor: pointer;">
                                     <div class="d-flex align-items-center">
@@ -445,6 +453,7 @@
                                     <ul class="list-group position-absolute z-10 shadow-lg mt-1" style="min-width: 350px; max-width: 450px; left: 0;">
                                         @foreach($searchResults[$index] as $product)
                                         <li class="list-group-item list-group-item-action p-2"
+                                            wire:key="grn-search-{{ $index }}-{{ $product->id }}"
                                             wire:click="selectGRNProduct({{ $index }}, {{ $product->id }})"
                                             style="cursor: pointer;">
                                             <div class="d-flex align-items-center">

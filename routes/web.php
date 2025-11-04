@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CashController;
+use App\Http\Controllers\ProductApiController;
 use Illuminate\Http\Request;
 use App\Livewire\CustomLogin;
 use App\Livewire\Admin\Products;
@@ -94,7 +95,9 @@ Route::post('/logout', function (Request $request) {
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     
     // Settings route - accessible to all authenticated users
-  
+    
+    // API route for products (client-side caching)
+    Route::get('/api/products/all', [ProductApiController::class, 'getAllProducts'])->name('api.products.all');
 
     // !! Admin routes
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {

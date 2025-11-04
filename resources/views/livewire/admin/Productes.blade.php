@@ -552,7 +552,7 @@
                                     <tbody>
                                         @if ($products->count() > 0)
                                         @foreach ($products as $product)
-                                        <tr>
+                                        <tr wire:key="product-{{ $product->id }}-{{ $products->currentPage() }}">
                                             <td class="ps-4" wire:click="viewProductDetails({{ $product->id }})">
                                                 <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
                                             </td>

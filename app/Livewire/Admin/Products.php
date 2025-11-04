@@ -24,6 +24,7 @@ use Livewire\Attributes\Layout;
 use App\Imports\ProductsImport;
 use App\Exports\ProductsTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\ProductApiController;
 
 #[Title("Product List")]
 #[Layout('components.layouts.admin')]
@@ -63,6 +64,15 @@ class Products extends Component
     {
         $this->setDefaultIds();
         $this->setDefaultValues();
+    }
+
+    /**
+     * Reset component state when pagination changes
+     * This fixes the issue where wrong product shows in modal on different pages
+     */
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
     /**
@@ -284,6 +294,9 @@ class Products extends Component
             $this->js("$('#createProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product created successfully!', 'success')");
             
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+            
             $this->dispatch('refreshPage');
 
         } catch (\Exception $e) {
@@ -325,6 +338,9 @@ class Products extends Component
 
             // Reset file input
             $this->reset(['importFile']);
+
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
 
             // Close modal and show success
             $this->js("$('#importProductsModal').modal('hide')");
@@ -461,6 +477,9 @@ class Products extends Component
                 'damage_stock' => $this->editDamageStock,
             ]);
 
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
             $this->js("$('#editProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product updated successfully!', 'success')");
             $this->dispatch('refreshPage');
@@ -507,6 +526,9 @@ class Products extends Component
 
             // Delete the product
             $product->delete();
+
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
 
             $this->js("Swal.fire('Success!', 'Product deleted successfully!', 'success')");
             $this->dispatch('refreshPage');
@@ -843,6 +865,14 @@ class Products extends Component
     // 🔹 Real-time validation for specific fields
     public function updated($propertyName)
     {
+        // Clear view/edit state when page changes to fix modal showing wrong product
+        if ($propertyName === 'page' || $propertyName === 'search') {
+            $this->viewProduct = null;
+            $this->editId = null;
+            $this->historyProductId = null;
+            $this->adjustmentProductId = null;
+        }
+        
         // Only validate specific fields in real-time to improve performance
         if (in_array($propertyName, [
             'name', 'code', 'brand', 'category', 'supplier_price', 'selling_price', 
