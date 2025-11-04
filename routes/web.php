@@ -68,6 +68,9 @@ use App\Livewire\Admin\ListCustomerReceipt;
 use App\Livewire\Admin\ListSupplierReceipt;
 use App\Livewire\Admin\ReturnCheque;
 
+use App\Livewire\Admin\ReturnSupplier;
+use App\Livewire\Admin\ListSupplierReturn;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -145,6 +148,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-customer-receipt', ListCustomerReceipt::class)->name('list-customer-receipt');
         Route::get('/add-supplier-receipt', AddSupplierReceipt::class)->name('add-supplier-receipt');
         Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
+        Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
+        Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
 
 
 
