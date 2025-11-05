@@ -57,4 +57,15 @@ class ProductDetail extends Model
     return $this->hasOne(ProductDetail::class, 'code');
 }
 
+    /**
+     * Get the product image URL or default image
+     *
+     * @return string
+     */
+    public function getImageAttribute($value)
+    {
+        // If image exists, return it; otherwise return default image path
+        return $value ?: 'images/product.jpg';
+    }
+
 }

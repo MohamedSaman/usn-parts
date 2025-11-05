@@ -306,18 +306,89 @@ class PurchaseOrderList extends Component
         $this->editOrderItems = [];
         foreach ($order->items as $item) {
             $this->editOrderItems[] = [
-                'item_id' => $item->id,
+                'id' => $item->id,
                 'product_id' => $item->product_id,
+                'code' => $item->product->code ?? 'N/A',
                 'name' => $item->product->name ?? 'N/A',
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-
             ];
         }
 
+        // Clear search to avoid conflicts
+        $this->search = '';
+        $this->products = [];
+
         // Open modal using JavaScript
         $this->js("new bootstrap.Modal(document.getElementById('editOrderModal')).show();");
+    }
+
+    // Add product to edit order items
+    public function addProductToEdit($id)
+    {
+        $product = ProductDetail::with(['stock', 'price'])->find($id);
+
+        if (!$product) {
+            Log::error("Product not found with ID: " . $id);
+            $this->js("Swal.fire('Error', 'Product not found!', 'error');");
+            return;
+        }
+
+        // Check if product already exists in edit items
+        $existingIndex = null;
+        foreach ($this->editOrderItems as $index => $item) {
+            if ($item['product_id'] == $id) {
+                $existingIndex = $index;
+                break;
+            }
+        }
+
+        // Get the price
+        $price = \App\Models\ProductPrice::where('product_id', $id)->value('supplier_price');
+
+        if (!$price && isset($product->price)) {
+            $price = $product->price;
+        }
+
+        if (!$price && isset($product->cost_price)) {
+            $price = $product->cost_price;
+        }
+
+        if (!$price && isset($product->purchase_price)) {
+            $price = $product->purchase_price;
+        }
+
+        if (!$price) {
+            $price = $product->selling_price ?? 0;
+        }
+
+        if ($existingIndex !== null) {
+            // Product already exists, increment quantity
+            $this->editOrderItems[$existingIndex]['quantity'] += 1;
+        } else {
+            // Add new product to edit items
+            $this->editOrderItems[] = [
+                'id' => null, // New item, no database ID yet
+                'product_id' => $product->id,
+                'code' => $product->code,
+                'name' => $product->name,
+                'quantity' => 1,
+                'unit_price' => $price,
+            ];
+        }
+
+        // Clear search
+        $this->products = [];
+        $this->search = '';
+
+        Log::info("Product added to edit order: " . $product->name);
+    }
+
+    // Update total when quantity or price changes in edit modal
+    public function updateEditItemTotal($index)
+    {
+        // This method is called automatically when wire:model.live triggers
+        // No calculation needed here as it's done in the blade template
     }
 
     public function removeEditItem($index)
@@ -702,6 +773,7 @@ class PurchaseOrderList extends Component
                         $orderItem->quantity = $receivedQty;
                         $orderItem->unit_price = $item['unit_price'];
                         $orderItem->discount = $item['discount'];
+                        $orderItem->discount_type = $item['discount_type'] ?? 'rs';
                         $orderItem->status = $status;
                         $orderItem->save();
                         
@@ -717,6 +789,7 @@ class PurchaseOrderList extends Component
                         'quantity' => $receivedQty,
                         'unit_price' => $item['unit_price'] ?? 0,
                         'discount' => $item['discount'] ?? 0,
+                        'discount_type' => $item['discount_type'] ?? 'rs',
                         'status' => 'received',
                     ]);
                     

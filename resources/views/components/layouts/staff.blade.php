@@ -895,8 +895,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Include jQuery (required by Bootstrap 4 modal) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- In your main layout file -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

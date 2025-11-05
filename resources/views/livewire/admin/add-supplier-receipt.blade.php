@@ -362,16 +362,29 @@
             {{-- Due Orders List --}}
             <div class="col-lg-8">
                 <div class="card mb-4">
-                    <div class="card-header bg-warning text-white">
+                    <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">
                             <i class="bi bi-receipt me-2"></i> Due Orders - {{ $selectedSupplier->name }}
                         </h5>
+                        <div>
+                            @if(count($selectedOrders) > 0)
+                                <button class="btn btn-light btn-sm me-2" wire:click="clearOrderSelection">
+                                    <i class="bi bi-x-circle me-1"></i> Clear Selection
+                                </button>
+                            @endif
+                            <button class="btn btn-light btn-sm" wire:click="selectAllOrders">
+                                <i class="bi bi-check-all me-1"></i> Select All
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
                                     <tr>
+                                        <th class="text-center" width="50">
+                                            <i class="bi bi-check-square"></i>
+                                        </th>
                                         <th>Order Code</th>
                                         <th>Date</th>
                                         <th>Total Amount</th>
@@ -381,17 +394,57 @@
                                 </thead>
                                 <tbody>
                                     @foreach($supplierOrders as $order)
-                                    <tr>
-                                        <td>{{ $order->order_code }}</td>
+                                    @php
+                                        $isSelected = in_array($order->id, $selectedOrders);
+                                    @endphp
+                                    <tr 
+                                        wire:key="order-{{ $order->id }}" 
+                                        class="{{ $isSelected ? 'table-success' : '' }}"
+                                        style="cursor: pointer;"
+                                        wire:click="toggleOrderSelection({{ $order->id }})">
+                                        <td class="text-center">
+                                            <div class="form-check d-flex justify-content-center">
+                                                <input 
+                                                    class="form-check-input" 
+                                                    type="checkbox" 
+                                                    {{ $isSelected ? 'checked' : '' }}
+                                                    style="pointer-events: none;">
+                                            </div>
+                                        </td>
+                                        <td class="fw-bold">{{ $order->order_code }}</td>
                                         <td>{{ $order->order_date ? date('M d, Y', strtotime($order->order_date)) : '-' }}</td>
                                         <td>Rs.{{ number_format($order->total_amount, 2) }}</td>
-                                        <td>Rs.{{ number_format($order->due_amount, 2) }}</td>
-                                        <td>{{ ucfirst($order->status) }}</td>
+                                        <td class="fw-bold {{ $isSelected ? 'text-success' : 'text-danger' }}">
+                                            Rs.{{ number_format($order->due_amount, 2) }}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $order->status === 'completed' ? 'success' : 'warning' }}">
+                                                {{ ucfirst($order->status) }}
+                                            </span>
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+                        @if(count($selectedOrders) > 0)
+                            <div class="card-footer bg-light">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-semibold">
+                                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                        {{ count($selectedOrders) }} order(s) selected
+                                    </span>
+                                    <span class="fw-bold text-success">
+                                        Total Due: Rs.{{ number_format($totalDueAmount, 2) }}
+                                    </span>
+                                </div>
+                            </div>
+                        @else
+                            <div class="card-footer bg-light text-center text-muted">
+                                <i class="bi bi-hand-index me-2"></i>
+                                Click on rows to select orders for payment
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -405,41 +458,57 @@
                         </h5>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info mb-4">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>Total Due</span>
-                                <span class="fw-bold text-danger">Rs.{{ number_format($totalDueAmount, 2) }}</span>
+                        @if(count($selectedOrders) > 0)
+                            <div class="alert alert-info mb-4">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Total Due (Selected)</span>
+                                    <span class="fw-bold text-danger">Rs.{{ number_format($totalDueAmount, 2) }}</span>
+                                </div>
+                                <small class="text-muted d-block mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ count($selectedOrders) }} order(s) selected for payment
+                                </small>
                             </div>
-                            <small class="text-muted d-block mt-2">This is the total outstanding amount for this supplier.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Enter Payment Amount <span class="text-danger">*</span></label>
-                            <div class="input-group input-group-lg">
-                                <input type="number" class="form-control" wire:model.lazy="totalPaymentAmount" min="0" max="{{ $totalDueAmount }}" step="0.01" placeholder="Enter amount...">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Enter Payment Amount <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" class="form-control" wire:model.lazy="totalPaymentAmount" min="0" max="{{ $totalDueAmount }}" step="0.01" placeholder="Enter amount...">
+                                </div>
+                                <small class="text-muted">Maximum: Rs.{{ number_format($totalDueAmount, 2) }}</small>
+                                @error('totalPaymentAmount')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </div>
-                            <small class="text-muted">Maximum: Rs.{{ number_format($totalDueAmount, 2) }}</small>
-                            @error('totalPaymentAmount')
-                            <div class="text-danger small mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        @if($totalPaymentAmount > 0)
-                        <div class="alert alert-{{ $remainingAmount > 0 ? 'warning' : 'success' }} mb-3">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span>Remaining Amount</span>
-                                <span class="fw-bold">Rs.{{ number_format($remainingAmount, 2) }}</span>
+                            @if($totalPaymentAmount > 0)
+                            <div class="alert alert-{{ $remainingAmount > 0 ? 'warning' : 'success' }} mb-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span>Remaining Amount</span>
+                                    <span class="fw-bold">Rs.{{ number_format($remainingAmount, 2) }}</span>
+                                </div>
                             </div>
-                        </div>
+                            @endif
+                            <div class="d-grid mt-3">
+                                <button class="btn btn-success btn-lg" wire:click="openPaymentModal" wire:loading.attr="disabled" wire:loading.class="disabled">
+                                    <span wire:loading.remove wire:target="openPaymentModal">
+                                        <i class="bi bi-credit-card me-1"></i> Process Payment
+                                    </span>
+                                    <span wire:loading wire:target="openPaymentModal">
+                                        <span class="spinner-border spinner-border-sm"></span> Processing...
+                                    </span>
+                                </button>
+                            </div>
+                        @else
+                            <div class="alert alert-warning text-center">
+                                <i class="bi bi-exclamation-triangle-fill display-4 d-block mb-3"></i>
+                                <h6 class="fw-bold mb-2">No Orders Selected</h6>
+                                <p class="mb-0 small">Please select at least one order from the list to make a payment.</p>
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-secondary btn-lg" disabled>
+                                    <i class="bi bi-lock me-1"></i> Select Orders First
+                                </button>
+                            </div>
                         @endif
-                        <div class="d-grid mt-3">
-                            <button class="btn btn-success btn-lg" wire:click="openPaymentModal" wire:loading.attr="disabled" wire:loading.class="disabled">
-                                <span wire:loading.remove wire:target="openPaymentModal">
-                                    <i class="bi bi-credit-card me-1"></i> Process Payment
-                                </span>
-                                <span wire:loading wire:target="openPaymentModal">
-                                    <span class="spinner-border spinner-border-sm"></span> Processing...
-                                </span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -483,6 +552,25 @@
     .input-group-lg .form-control {
         font-size: 1.25rem;
         font-weight: 600;
+    }
+
+    /* Order selection styles */
+    .table tbody tr[style*="cursor: pointer"]:hover {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .table tbody tr.table-success {
+        background-color: rgba(25, 135, 84, 0.15) !important;
+    }
+
+    .table tbody tr.table-success:hover {
+        background-color: rgba(25, 135, 84, 0.25) !important;
+    }
+
+    .form-check-input {
+        width: 1.2em;
+        height: 1.2em;
+        cursor: pointer;
     }
 </style>
 @endpush

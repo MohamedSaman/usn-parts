@@ -247,7 +247,7 @@
                                     wire:click="selectProduct({{ $product->id }})"
                                     style="cursor: pointer;">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $product->image ?? asset('images/default-product.png') }}"
+                                        <img src="{{ $product->image ? asset($product->image) : asset('images/product.jpg') }}"
                                             alt="{{ $product->name }}"
                                             class="me-2"
                                             style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">
@@ -457,7 +457,7 @@
                                             wire:click="selectGRNProduct({{ $index }}, {{ $product->id }})"
                                             style="cursor: pointer;">
                                             <div class="d-flex align-items-center">
-                                                <img src="{{ $product->image }}"
+                                                <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/product.jpg') }}"
                                                     alt="{{ $product->name }}"
                                                     class="me-2"
                                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
@@ -663,43 +663,135 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+                {{-- Search and Add Product Section --}}
+                <div class="row mb-3">
+                    <div class="col-md-12 position-relative">
+                        <label class="form-label fw-semibold">Search & Add Product</label>
+                        <input type="text"
+                            class="form-control"
+                            wire:model.live.debounce.300ms="search"
+                            placeholder="Type product name or code (min 2 characters)..."
+                            autocomplete="off">
+                        @if(!empty($products) && count($products) > 0)
+                        <ul class="list-group mt-1 position-absolute w-100 z-3 shadow-lg" style="max-height: 300px; overflow-y: auto;">
+                            @foreach($products as $product)
+                            <li class="list-group-item list-group-item-action p-2"
+                                wire:key="edit-search-product-{{ $product->id }}"
+                                wire:click="addProductToEdit({{ $product->id }})"
+                                style="cursor: pointer;">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/product.jpg') }}"
+                                        alt="{{ $product->name }}"
+                                        class="me-3"
+                                        style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    <div class="flex-grow-1">
+                                        <div class="fw-semibold">{{ $product->name }}</div>
+                                        <small class="text-muted">
+                                            <span class="badge bg-secondary">{{ $product->code }}</span>
+                                            @if($product->stock)
+                                            <span class="ms-2">Stock: {{ $product->stock->quantity ?? 0 }}</span>
+                                            @endif
+                                        </small>
+                                    </div>
+                                </div>
+                            </li>
+                            @endforeach
+                        </ul>
+                        @endif
+                        @if(strlen($search) >= 1 && strlen($search) < 2)
+                        <div class="text-muted small mt-1">
+                            <i class="bi bi-info-circle"></i> Type at least 2 characters to search
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <h6 class="mb-3">
+                    <i class="bi bi-cart3 me-2"></i>Order Items
+                    <span class="badge bg-primary">{{ count($editOrderItems) }}</span>
+                </h6>
+                
                 <div class="table-responsive">
                     <table class="table table-bordered">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 50px;">No</th>
+                                <th style="width: 90px;">Code</th>
                                 <th>Product</th>
-                                <th>Quantity</th>
-                                <th>Unit Price</th>
-                                <th>Action</th>
+                                <th style="width: 120px;">Quantity</th>
+                                <th style="width: 120px;">Unit Price</th>
+                                <th style="width: 150px;">Total</th>
+                                <th style="width: 80px;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($editOrderItems as $index => $item)
                             <tr>
-                                <td>{{ $item['name'] }}</td>
+                                <td class="text-center">{{ $index + 1 }}</td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm" min="1" wire:model.defer="editOrderItems.{{ $index }}.quantity">
+                                    <span class="badge bg-secondary">{{ $item['code'] ?? 'N/A' }}</span>
                                 </td>
                                 <td>
-                                    <input type="number" class="form-control form-control-sm" step="0.01" wire:model.defer="editOrderItems.{{ $index }}.unit_price">
+                                    <strong>{{ $item['name'] }}</strong>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-danger" wire:click="removeEditItem({{ $index }})">Remove</button>
+                                    <input type="number" 
+                                        class="form-control form-control-sm" 
+                                        min="1" 
+                                        wire:model.live="editOrderItems.{{ $index }}.quantity"
+                                        wire:change="updateEditItemTotal({{ $index }})">
+                                </td>
+                                <td>
+                                    <input type="number" 
+                                        class="form-control form-control-sm" 
+                                        step="0.01" 
+                                        wire:model.live="editOrderItems.{{ $index }}.unit_price"
+                                        wire:change="updateEditItemTotal({{ $index }})">
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">
+                                        Rs. {{ number_format(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2) }}
+                                    </strong>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-outline-danger" 
+                                        wire:click="removeEditItem({{ $index }})"
+                                        title="Remove item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                             @endforeach
                             @if(empty($editOrderItems))
                             <tr>
-                                <td colspan="4" class="text-center text-muted">No items to edit</td>
+                                <td colspan="7" class="text-center text-muted py-3">
+                                    <i class="bi bi-cart-x display-6 d-block mb-2"></i>
+                                    <p class="mb-0">No items in this order. Search and add products above.</p>
+                                </td>
                             </tr>
                             @endif
                         </tbody>
+                        @if(count($editOrderItems) > 0)
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="5" class="text-end"><strong>Grand Total:</strong></td>
+                                <td class="text-end">
+                                    <strong class="text-primary" style="font-size: 1rem;">
+                                        Rs. {{ number_format(collect($editOrderItems)->sum(function($item) { return ($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0); }), 2) }}
+                                    </strong>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                        @endif
                     </table>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button class="btn btn-primary" wire:click="updateOrder">Save Changes</button>
+                <button class="btn btn-primary" wire:click="updateOrder">
+                    <i class="bi bi-save me-1"></i> Save Changes
+                </button>
             </div>
         </div>
     </div>

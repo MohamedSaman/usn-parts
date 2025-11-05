@@ -251,14 +251,12 @@
                                             <td class="ps-4">{{ $index + 1 }}</td>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @if ($product->product_image)
                                                     <div class="me-3" style="width: 50px; height: 50px;">
-                                                        <img src="{{ asset('storage/' . $product->product_image) }}"
+                                                        <img src="{{ $product->product_image ? asset('storage/' . $product->product_image) : asset('images/product.jpg') }}"
                                                             class="img-fluid rounded border"
                                                             alt="{{ $product->product_name }}"
                                                             style="width: 100%; height: 100%; object-fit: cover;">
                                                     </div>
-                                                    @endif
                                                     <div>
                                                         <h6 class="fw-medium text-dark mb-1">{{ $product->product_name }}</h6>
                                                         <div class="text-muted small">

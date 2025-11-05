@@ -81,16 +81,9 @@
                                             <div class="d-flex w-100 align-items-center">
                                                 <!-- Product Image -->
                                                 <div style="width: 60px;">
-                                                    @if ($result->image)
-                                                    <img src="{{ asset('storage/' . $result->image) }}"
+                                                    <img src="{{ $result->image ? asset('storage/' . $result->image) : asset('images/product.jpg') }}"
                                                         alt="{{ $result->name }}" class="img-fluid rounded"
                                                         style="width: 50px; height: 50px; object-fit: cover;">
-                                                    @else
-                                                    <div class="bg-light d-flex align-items-center justify-content-center rounded"
-                                                        style="width: 50px; height: 50px;">
-                                                        <i class="fas fa-camera text-muted"></i>
-                                                    </div>
-                                                    @endif
                                                 </div>
 
                                                 <!-- Product Info -->
@@ -150,16 +143,9 @@
                                         <td>
                                             <div class="d-flex px-2 py-1">
                                                 <div>
-                                                    @if ($item['image'])
-                                                    <img src="{{ asset('storage/' . $item['image']) }}"
+                                                    <img src="{{ $item['image'] ? asset('storage/' . $item['image']) : asset('images/product.jpg') }}"
                                                         class="avatar avatar-sm me-3"
                                                         alt="{{ $item['name'] }}">
-                                                    @else
-                                                    <div
-                                                        class="avatar avatar-sm me-3 bg-gradient-secondary d-flex align-items-center justify-content-center">
-                                                        <i class="fas fa-Product text-lg text-white"></i>
-                                                    </div>
-                                                    @endif
                                                 </div>
                                                 <div class="d-flex flex-column justify-content-center">
                                                     <h6 class="mb-0 text-sm">{{ $item['name'] }}</h6>
@@ -330,19 +316,10 @@
                                         <!-- Image Column -->
                                         <div class="col-md-4 border-end">
                                             <div class="position-relative h-100">
-                                                @if ($ProductDetails->image)
-                                                <img src="{{ asset('storage/' . $ProductDetails->image) }}"
+                                                <img src="{{ $ProductDetails->image ? asset('storage/' . $ProductDetails->image) : asset('images/product.jpg') }}"
                                                     alt="{{ $ProductDetails->name }}"
                                                     class="img-fluid rounded-start h-100 w-100 object-fit-cover">
-                                                @else
-                                                <div
-                                                    class="bg-light d-flex align-items-center justify-content-center h-100">
-                                                    <i class="bi bi-Product text-muted"
-                                                        style="font-size: 5rem;"></i>
-                                                    <p class="text-muted">No image
-                                                        available</p>
-                                                </div>
-                                                @endif
+                                            </div>
 
                                                 <!-- Status badges in corner -->
                                                 <div

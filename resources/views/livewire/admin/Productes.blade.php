@@ -721,7 +721,7 @@
                             <div class="col-lg-4 bg-light border-end">
                                 <div class="p-4 text-center">
                                     <div class="product-image-container mb-4 position-relative">
-                                        <img src="{{ $viewProduct->image ? $viewProduct->image : 'https://cdn-icons-png.flaticon.com/512/679/679922.png' }}"
+                                        <img src="{{ $viewProduct->image ? asset( $viewProduct->image) : asset('images/product.jpg') }}"
                                             alt="Product Image" class="img-fluid rounded-3 shadow-sm product-image"
                                             style="width: 100%; max-width: 280px; height: 280px; object-fit: cover; border: 3px solid #fff;">
 

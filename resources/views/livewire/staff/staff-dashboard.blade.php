@@ -807,13 +807,11 @@
                                 @endphp
 
                                 <div class="d-flex align-items-center flex-wrap flex-md-nowrap mt-3">
-                                    @if ($item->image)
-                                        <div class="me-2" style="width: 35px; height: 35px;">
-                                            <img src="{{ asset('storage/' . $item->image) }}"
-                                                alt="{{ $item->name }}" class="img-fluid rounded"
-                                                style="width: 100%; height: 100%; object-fit: cover;">
-                                        </div>
-                                    @endif
+                                    <div class="me-2" style="width: 35px; height: 35px;">
+                                        <img src="{{ $item->image ? asset('storage/' . $item->image) : asset('images/product.jpg') }}"
+                                            alt="{{ $item->name }}" class="img-fluid rounded"
+                                            style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
                                     <div class="flex-grow-1 min-width-0 me-2">
                                         <h6 class="mb-0 text-truncate fs-6">{{ $item->brand }} {{ $item->name }}
                                             {{ $item->model }}</h6>

@@ -22,6 +22,7 @@ class AddSupplierReceipt extends Component
     public $search = '';
     public $selectedSupplier = null;
     public $supplierOrders = [];
+    public $selectedOrders = [];
     public $totalDueAmount = 0;
     public $totalPaymentAmount = 0;
     public $remainingAmount = 0;
@@ -113,7 +114,9 @@ class AddSupplierReceipt extends Component
     {
         $this->selectedSupplier = ProductSupplier::find($supplierId);
         $this->loadSupplierOrders();
+        $this->selectedOrders = [];
         $this->totalPaymentAmount = 0;
+        $this->totalDueAmount = 0;
         $this->initializeAllocations();
     }
 
@@ -121,6 +124,7 @@ class AddSupplierReceipt extends Component
     {
         $this->selectedSupplier = null;
         $this->supplierOrders = [];
+        $this->selectedOrders = [];
         $this->allocations = [];
         $this->totalDueAmount = 0;
         $this->totalPaymentAmount = 0;
@@ -138,12 +142,45 @@ class AddSupplierReceipt extends Component
             ->get();
 
         $this->supplierOrders = $orders;
+    }
+
+    public function toggleOrderSelection($orderId)
+    {
+        if (in_array($orderId, $this->selectedOrders)) {
+            $this->selectedOrders = array_values(array_diff($this->selectedOrders, [$orderId]));
+        } else {
+            $this->selectedOrders[] = $orderId;
+        }
+        
         $this->calculateTotalDue();
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = $this->totalDueAmount;
+        $this->initializeAllocations();
+    }
+
+    public function selectAllOrders()
+    {
+        $this->selectedOrders = $this->supplierOrders->pluck('id')->toArray();
+        $this->calculateTotalDue();
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = $this->totalDueAmount;
+        $this->initializeAllocations();
+    }
+
+    public function clearOrderSelection()
+    {
+        $this->selectedOrders = [];
+        $this->totalDueAmount = 0;
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = 0;
+        $this->allocations = [];
     }
 
     private function calculateTotalDue()
     {
-        $this->totalDueAmount = collect($this->supplierOrders)->sum('due_amount');
+        $this->totalDueAmount = collect($this->supplierOrders)
+            ->whereIn('id', $this->selectedOrders)
+            ->sum('due_amount');
         $this->remainingAmount = $this->totalDueAmount;
     }
 
@@ -156,12 +193,14 @@ class AddSupplierReceipt extends Component
     {
         $this->allocations = [];
         foreach ($this->supplierOrders as $order) {
-            $this->allocations[$order->id] = [
-                'order_code' => $order->order_code,
-                'due_amount' => $order->due_amount,
-                'payment_amount' => 0,
-                'is_fully_paid' => false
-            ];
+            if (in_array($order->id, $this->selectedOrders)) {
+                $this->allocations[$order->id] = [
+                    'order_code' => $order->order_code,
+                    'due_amount' => $order->due_amount,
+                    'payment_amount' => 0,
+                    'is_fully_paid' => false
+                ];
+            }
         }
     }
 
@@ -171,6 +210,12 @@ class AddSupplierReceipt extends Component
 
         foreach ($this->supplierOrders as $order) {
             $orderId = $order->id;
+            
+            // Only allocate to selected orders
+            if (!in_array($orderId, $this->selectedOrders)) {
+                continue;
+            }
+
             $dueAmount = $order->due_amount;
 
             if ($remainingPayment <= 0) {
@@ -190,6 +235,14 @@ class AddSupplierReceipt extends Component
 
     public function openPaymentModal()
     {
+        if (empty($this->selectedOrders)) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Please select at least one order to make a payment.'
+            ]);
+            return;
+        }
+
         if ($this->totalPaymentAmount <= 0) {
             $this->dispatch('show-toast', [
                 'type' => 'error',

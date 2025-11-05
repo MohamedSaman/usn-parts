@@ -152,17 +152,10 @@
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center">
-                                                    @if($ProductData['Product']->image)
-                                                        <img src="{{ asset('storage/' . $ProductData['Product']->image) }}" 
-                                                            class="rounded me-3" 
-                                                            height="50" width="50" 
-                                                            alt="{{ $ProductData['Product']->name }}">
-                                                    @else
-                                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
-                                                            style="width: 50px; height: 50px;">
-                                                            <i class="bi bi-Product text-secondary"></i>
-                                                        </div>
-                                                    @endif
+                                                    <img src="{{ $ProductData['Product']->image ? asset('storage/' . $ProductData['Product']->image) : asset('images/product.jpg') }}" 
+                                                        class="rounded me-3" 
+                                                        height="50" width="50" 
+                                                        alt="{{ $ProductData['Product']->name }}">
                                                     <div>
                                                         <h6 class="mb-0">{{ $ProductData['Product']->name }}</h6>
                                                         <small class="text-muted d-block">{{ $ProductData['Product']->code }}</small>
@@ -331,17 +324,10 @@
                                             <tr>
                                                 <td>
                                                     <div class="d-flex align-items-center">
-                                                        @if($product->Product && $product->Product->image)
-                                                            <img src="{{ asset('storage/' . $product->Product->image) }}" 
-                                                                class="rounded me-3" 
-                                                                height="40" width="40" 
-                                                                alt="{{ $product->Product->name }}">
-                                                        @else
-                                                            <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
-                                                                style="width: 40px; height: 40px;">
-                                                                <i class="bi bi-Product text-secondary"></i>
-                                                            </div>
-                                                        @endif
+                                                        <img src="{{ ($product->Product && $product->Product->image) ? asset('storage/' . $product->Product->image) : asset('images/product.jpg') }}" 
+                                                            class="rounded me-3" 
+                                                            height="40" width="40" 
+                                                            alt="{{ $product->Product->name ?? 'Product' }}">
                                                         <div>
                                                             <h6 class="mb-0">{{ $product->Product->name ?? 'Unknown Product' }}</h6>
                                                             <small class="text-muted">{{ $product->Product->code ?? 'No Code' }}</small><br>

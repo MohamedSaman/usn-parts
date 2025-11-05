@@ -15,6 +15,8 @@ class PurchaseOrderItem extends Model
         'quantity',
         'unit_price',
         'discount',
+        'discount_type',
+        'status',
     ];
 
     public function order()

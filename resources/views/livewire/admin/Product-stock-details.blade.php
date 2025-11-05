@@ -125,16 +125,10 @@
                                     <span class="fw-medium text-dark">{{ $loop->iteration }}</span>
                                 </td>
                                 <td class="text-center">
-                                    @if($ProductStock->Product_image)
-                                        <img src="{{ $ProductStock->Product_image }}" 
-                                             alt="{{ $ProductStock->Product_name }}"
-                                             class="rounded"
-                                             style="width: 50px; height: 50px; object-fit: cover;">
-                                    @else
-                                        <div class="icon-container bg-light mx-auto">
-                                            <i class="bi bi-box text-muted"></i>
-                                        </div>
-                                    @endif
+                                    <img src="{{ $ProductStock->Product_image ? asset('storage/' . $ProductStock->Product_image) : asset('images/product.jpg') }}" 
+                                         alt="{{ $ProductStock->Product_name }}"
+                                         class="rounded"
+                                         style="width: 50px; height: 50px; object-fit: cover;">
                                 </td>
                                 <td>
                                     <div>
