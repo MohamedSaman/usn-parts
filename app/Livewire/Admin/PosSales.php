@@ -253,7 +253,9 @@ class PosSales extends Component
 
     public function downloadInvoice($saleId)
     {
-        $sale = Sale::with(['customer', 'items'])->find($saleId);
+        $sale = Sale::with(['customer', 'items', 'returns' => function ($q) {
+            $q->with('product');
+        }])->find($saleId);
 
         if (!$sale) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Sale not found.']);

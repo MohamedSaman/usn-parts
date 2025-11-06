@@ -156,10 +156,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form wire:submit.prevent="updateBrand({{ $editBrandId }})">
+                    <form wire:submit.prevent="updateBrand">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Brand Name</label>
-                            <input type="text" class="form-control" wire:model="editBrandName" placeholder="Enter brand name" required>
+                            <input type="text" class="form-control" wire:model.defer="editBrandName" placeholder="Enter brand name" required>
                             @error('editBrandName')
                             <span class="text-danger small">* {{ $message }}</span>
                             @enderror
@@ -298,28 +298,27 @@
             confirmButtonText: "Yes, delete it!"
         }).then((result) => {
             if (result.isConfirmed) {
-                @this.dispatch('confirmDelete');
-                Swal.fire({
-                    title: "Deleted!",
-                    text: "Brand has been deleted.",
-                    icon: "success"
-                });
+                Livewire.dispatch('confirmDelete');
             }
         });
     });
 
     window.addEventListener('edit-brand', event => {
-        setTimeout(() => {
-            const modal = new bootstrap.Modal(document.getElementById('editBrandModal'));
-            modal.show();
-        }, 300);
+        const modal = new bootstrap.Modal(document.getElementById('editBrandModal'));
+        modal.show();
     });
 
     window.addEventListener('create-brand-modal', event => {
-        setTimeout(() => {
-            const modal = new bootstrap.Modal(document.getElementById('createBrandModal'));
-            modal.show();
-        }, 200);
+        const modal = new bootstrap.Modal(document.getElementById('createBrandModal'));
+        modal.show();
+    });
+
+    // Close modals on successful operations
+    Livewire.on('brands-updated', () => {
+        const createModal = bootstrap.Modal.getInstance(document.getElementById('createBrandModal'));
+        const editModal = bootstrap.Modal.getInstance(document.getElementById('editBrandModal'));
+        if (createModal) createModal.hide();
+        if (editModal) editModal.hide();
     });
 </script>
 @endpush

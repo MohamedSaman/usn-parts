@@ -8,6 +8,7 @@ use App\Models\ProductDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -181,44 +182,94 @@ class PurchaseOrderList extends Component
 
     public function saveOrder()
     {
-        if (!$this->supplier_id || count($this->orderItems) == 0) return;
+        try {
+            // Validation
+            if (!$this->supplier_id) {
+                $this->js("Swal.fire('Error', 'Please select a supplier!', 'error');");
+                return;
+            }
 
-        // Generate unique order code for the year
-        $year = date('Ymd');
-        $lastOrder = PurchaseOrder::where('order_code', 'like', 'ORD-' . $year . '-%')
-            ->orderByDesc('order_code')
-            ->first();
-        if ($lastOrder && preg_match('/ORD-' . $year . '-(\d+)/', $lastOrder->order_code, $matches)) {
-            $nextNumber = intval($matches[1]) + 1;
-        } else {
-            $nextNumber = 1;
-        }
-        $orderCode = 'ORD-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+            if (empty($this->orderItems) || count($this->orderItems) == 0) {
+                $this->js("Swal.fire('Error', 'Please add at least one product to the order!', 'error');");
+                return;
+            }
 
-        $order = PurchaseOrder::create([
-            'order_code' => $orderCode,
-            'supplier_id' => $this->supplier_id,
-            'order_date' => now(),
-            'status' => 'pending',
-        ]);
+            // Validate each order item
+            foreach ($this->orderItems as $item) {
+                if (!isset($item['product_id']) || !isset($item['quantity']) || !isset($item['supplier_price'])) {
+                    $this->js("Swal.fire('Error', 'Invalid order item data!', 'error');");
+                    return;
+                }
+                
+                if ($item['quantity'] < 1) {
+                    $this->js("Swal.fire('Error', 'Product quantity must be at least 1!', 'error');");
+                    return;
+                }
+            }
 
-        foreach ($this->orderItems as $item) {
-            PurchaseOrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $item['product_id'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $item['supplier_price'],
-                'discount' => 0,
+            // Generate unique order code for the year
+            $year = date('Ymd');
+            $lastOrder = PurchaseOrder::where('order_code', 'like', 'ORD-' . $year . '-%')
+                ->orderByDesc('order_code')
+                ->first();
+            
+            if ($lastOrder && preg_match('/ORD-' . $year . '-(\d+)/', $lastOrder->order_code, $matches)) {
+                $nextNumber = intval($matches[1]) + 1;
+            } else {
+                $nextNumber = 1;
+            }
+            
+            $orderCode = 'ORD-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+
+            // Create order with transaction
+            DB::beginTransaction();
+
+            $order = PurchaseOrder::create([
+                'order_code' => $orderCode,
+                'supplier_id' => $this->supplier_id,
+                'order_date' => now(),
+                'status' => 'pending',
             ]);
+
+            foreach ($this->orderItems as $item) {
+                PurchaseOrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['supplier_price'],
+                    'discount' => 0,
+                    'status' => 'pending',
+                ]);
+            }
+
+            DB::commit();
+
+            // Refresh table
+            $this->loadOrders();
+
+            // Reset form
+            $this->reset(['supplier_id', 'search', 'selectedProduct', 'selectedProductPrice', 'quantity', 'orderItems', 'totalPrice', 'grandTotal', 'products']);
+
+            // Close modal and show success
+            $this->js("
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addPurchaseOrderModal'));
+                if (modal) modal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Purchase Order {$orderCode} created successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            ");
+
+            Log::info("Purchase Order created successfully: " . $orderCode);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error creating purchase order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to create purchase order: " . addslashes($e->getMessage()) . "', 'error');");
         }
-
-        // Refresh table
-        $this->loadOrders();
-
-        $this->reset(['supplier_id', 'search', 'selectedProduct', 'selectedProductPrice', 'quantity', 'orderItems', 'totalPrice']);
-        $this->js("bootstrap.Modal.getInstance(document.getElementById('addPurchaseOrderModal')).hide();");
-        $this->js("Swal.fire('Success', 'Purchase Order created successfully!', 'success');");
-        $this->js("location.reload();");
     }
 
     public function loadOrders()
@@ -255,18 +306,89 @@ class PurchaseOrderList extends Component
         $this->editOrderItems = [];
         foreach ($order->items as $item) {
             $this->editOrderItems[] = [
-                'item_id' => $item->id,
+                'id' => $item->id,
                 'product_id' => $item->product_id,
+                'code' => $item->product->code ?? 'N/A',
                 'name' => $item->product->name ?? 'N/A',
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
-                'discount' => $item->discount,
-
             ];
         }
 
+        // Clear search to avoid conflicts
+        $this->search = '';
+        $this->products = [];
+
         // Open modal using JavaScript
         $this->js("new bootstrap.Modal(document.getElementById('editOrderModal')).show();");
+    }
+
+    // Add product to edit order items
+    public function addProductToEdit($id)
+    {
+        $product = ProductDetail::with(['stock', 'price'])->find($id);
+
+        if (!$product) {
+            Log::error("Product not found with ID: " . $id);
+            $this->js("Swal.fire('Error', 'Product not found!', 'error');");
+            return;
+        }
+
+        // Check if product already exists in edit items
+        $existingIndex = null;
+        foreach ($this->editOrderItems as $index => $item) {
+            if ($item['product_id'] == $id) {
+                $existingIndex = $index;
+                break;
+            }
+        }
+
+        // Get the price
+        $price = \App\Models\ProductPrice::where('product_id', $id)->value('supplier_price');
+
+        if (!$price && isset($product->price)) {
+            $price = $product->price;
+        }
+
+        if (!$price && isset($product->cost_price)) {
+            $price = $product->cost_price;
+        }
+
+        if (!$price && isset($product->purchase_price)) {
+            $price = $product->purchase_price;
+        }
+
+        if (!$price) {
+            $price = $product->selling_price ?? 0;
+        }
+
+        if ($existingIndex !== null) {
+            // Product already exists, increment quantity
+            $this->editOrderItems[$existingIndex]['quantity'] += 1;
+        } else {
+            // Add new product to edit items
+            $this->editOrderItems[] = [
+                'id' => null, // New item, no database ID yet
+                'product_id' => $product->id,
+                'code' => $product->code,
+                'name' => $product->name,
+                'quantity' => 1,
+                'unit_price' => $price,
+            ];
+        }
+
+        // Clear search
+        $this->products = [];
+        $this->search = '';
+
+        Log::info("Product added to edit order: " . $product->name);
+    }
+
+    // Update total when quantity or price changes in edit modal
+    public function updateEditItemTotal($index)
+    {
+        // This method is called automatically when wire:model.live triggers
+        // No calculation needed here as it's done in the blade template
     }
 
     public function removeEditItem($index)
@@ -279,58 +401,87 @@ class PurchaseOrderList extends Component
 
     public function updateOrder()
     {
-        if (!$this->editOrderId) return;
-
-        $order = PurchaseOrder::find($this->editOrderId);
-        if (!$order) {
-            $this->js("Swal.fire('Error', 'Order not found!', 'error');");
-            return;
-        }
-
-        // Track current item ids to keep
-        $keepIds = [];
-
-        foreach ($this->editOrderItems as $item) {
-            // Validation: quantity must be >=1
-            $qty = isset($item['quantity']) ? intval($item['quantity']) : 0;
-            if ($qty < 1) continue; // skip invalid rows
-
-            if (!empty($item['item_id'])) {
-                // update existing
-                $orderItem = PurchaseOrderItem::find($item['item_id']);
-                if ($orderItem) {
-                    $orderItem->quantity = $qty;
-                    $orderItem->unit_price = $item['unit_price'] ?? 0;
-                    $orderItem->discount = $item['discount'] ?? 0;
-                    $orderItem->total_amount = $item['total_amount'] ?? 0;
-                    $orderItem->due_amount = $item['due_amount'] ?? 0;
-                    $orderItem->save();
-                    $keepIds[] = $orderItem->id;
-                }
-            } else {
-                // create new
-                $new = PurchaseOrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $qty,
-                    'unit_price' => $item['unit_price'] ?? 0,
-                    'discount' => $item['discount'] ?? 0,
-
-                ]);
-                $keepIds[] = $new->id;
+        try {
+            if (!$this->editOrderId) {
+                $this->js("Swal.fire('Error', 'No order selected for editing!', 'error');");
+                return;
             }
+
+            $order = PurchaseOrder::find($this->editOrderId);
+            if (!$order) {
+                $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+                return;
+            }
+
+            if (empty($this->editOrderItems)) {
+                $this->js("Swal.fire('Error', 'Order must have at least one item!', 'error');");
+                return;
+            }
+
+            DB::beginTransaction();
+
+            // Track current item ids to keep
+            $keepIds = [];
+
+            foreach ($this->editOrderItems as $item) {
+                // Validation: quantity must be >=1
+                $qty = isset($item['quantity']) ? intval($item['quantity']) : 0;
+                if ($qty < 1) continue; // skip invalid rows
+
+                if (!empty($item['item_id'])) {
+                    // update existing
+                    $orderItem = PurchaseOrderItem::find($item['item_id']);
+                    if ($orderItem) {
+                        $orderItem->quantity = $qty;
+                        $orderItem->unit_price = $item['unit_price'] ?? 0;
+                        $orderItem->discount = $item['discount'] ?? 0;
+                        $orderItem->save();
+                        $keepIds[] = $orderItem->id;
+                    }
+                } else {
+                    // create new
+                    $new = PurchaseOrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $item['product_id'],
+                        'quantity' => $qty,
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'discount' => $item['discount'] ?? 0,
+                        'status' => 'pending',
+                    ]);
+                    $keepIds[] = $new->id;
+                }
+            }
+
+            // Delete any order items not present in keepIds
+            PurchaseOrderItem::where('order_id', $order->id)
+                ->whereNotIn('id', $keepIds ?: [0])
+                ->delete();
+
+            DB::commit();
+
+            $this->loadOrders();
+            $this->editOrderId = null;
+            $this->editOrderItems = [];
+            
+            $this->js("
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editOrderModal'));
+                if (modal) modal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Order updated successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            ");
+
+            Log::info("Purchase Order updated: " . $order->order_code);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error updating purchase order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to update order: " . addslashes($e->getMessage()) . "', 'error');");
         }
-
-        // Delete any order items not present in keepIds
-        PurchaseOrderItem::where('order_id', $order->id)
-            ->whereNotIn('id', $keepIds ?: [0])
-            ->delete();
-
-        $this->loadOrders();
-        $this->editOrderId = null;
-        $this->editOrderItems = [];
-        $this->js("bootstrap.Modal.getInstance(document.getElementById('editOrderModal')).hide();");
-        $this->js("Swal.fire('Success', 'Order updated successfully!', 'success');");
     }
 
     public function confirmDelete($id)
@@ -349,18 +500,41 @@ class PurchaseOrderList extends Component
                 }
             });
         ");
-        //relode js
-        $this->js("location.reload();");
     }
 
     public function deleteOrderConfirmed($id)
     {
-        $order = PurchaseOrder::find($id);
-        if ($order) {
+        try {
+            $order = PurchaseOrder::find($id);
+            
+            if (!$order) {
+                $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+                return;
+            }
+
+            DB::beginTransaction();
+
             $order->status = 'cancelled';
             $order->save();
+
+            DB::commit();
+
             $this->loadOrders();
-            $this->js("Swal.fire('Cancelled', 'Order status changed to cancelled.', 'success');");
+            
+            $this->js("Swal.fire({
+                icon: 'success',
+                title: 'Cancelled!',
+                text: 'Order has been cancelled.',
+                timer: 2000,
+                showConfirmButton: false
+            });");
+
+            Log::info("Purchase Order cancelled: " . $order->order_code);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error cancelling order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to cancel order: " . addslashes($e->getMessage()) . "', 'error');");
         }
     }
 
@@ -384,12 +558,105 @@ class PurchaseOrderList extends Component
 
     public function completeOrderConfirmed($id)
     {
-        $order = PurchaseOrder::find($id);
-        if ($order) {
+        try {
+            $order = PurchaseOrder::find($id);
+            
+            if (!$order) {
+                $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+                return;
+            }
+
+            DB::beginTransaction();
+
             $order->status = 'complete';
             $order->save();
+
+            DB::commit();
+
             $this->loadOrders();
-            $this->js("Swal.fire('Success', 'Order marked as completed!', 'success');");
+            
+            $this->js("Swal.fire({
+                icon: 'success',
+                title: 'Completed!',
+                text: 'Order has been marked as completed.',
+                timer: 2000,
+                showConfirmButton: false
+            });");
+
+            Log::info("Purchase Order completed: " . $order->order_code);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error completing order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to complete order: " . addslashes($e->getMessage()) . "', 'error');");
+        }
+    }
+
+    // Force complete partial receipt order and mark pending items as not received
+    public function confirmForceComplete($id)
+    {
+        $this->js("Swal.fire({
+                title: 'Force Complete Order?',
+                html: 'This will:<br>• Mark the order as <b>Complete</b><br>• Mark all pending items as <b>Not Received</b><br><br>Are you sure?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, force complete!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    \$wire.forceCompleteOrder({$id});
+                }
+            });
+        ");
+    }
+
+    public function forceCompleteOrder($id)
+    {
+        try {
+            $order = PurchaseOrder::find($id);
+            
+            if (!$order) {
+                $this->js("Swal.fire('Error', 'Order not found!', 'error');");
+                return;
+            }
+
+            DB::beginTransaction();
+
+            // Get all pending items and mark them as not received
+            $pendingItems = PurchaseOrderItem::where('order_id', $order->id)
+                ->where('status', 'pending')
+                ->get();
+
+            $pendingCount = $pendingItems->count();
+
+            foreach ($pendingItems as $item) {
+                $item->status = 'notreceived';
+                $item->save();
+            }
+
+            // Mark order as complete
+            $order->status = 'complete';
+            $order->save();
+
+            DB::commit();
+
+            $this->loadOrders();
+            
+            $this->js("Swal.fire({
+                icon: 'success',
+                title: 'Order Completed!',
+                text: 'Order completed. {$pendingCount} pending item(s) marked as not received.',
+                timer: 3000,
+                showConfirmButton: false
+            });");
+
+            Log::info("Purchase Order force completed: " . $order->order_code . " with {$pendingCount} items marked as not received");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error force completing order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to complete order: " . addslashes($e->getMessage()) . "', 'error');");
         }
     }
 
@@ -420,149 +687,177 @@ class PurchaseOrderList extends Component
     // Update saveGRN method to handle new products
     public function saveGRN()
     {
-        if (!$this->selectedPO || empty($this->grnItems)) return;
-
-        $receivedItemsCount = 0;
-        $notReceivedItemsCount = 0;
-        $orderTotal = 0; // <-- Track the total amount
-
-        foreach ($this->grnItems as $item) {
-            $productId = $item['product_id'];
-            $receivedQty = $item['received_qty'] ?? 0;
-            $status = strtolower($item['status'] ?? '');
-            $isNewProduct = $item['is_new'] ?? false;
-
-            // Count statuses
-            if ($status === 'received') {
-                $receivedItemsCount++;
-            } elseif ($status === 'notreceived') {
-                $notReceivedItemsCount++;
+        try {
+            if (!$this->selectedPO) {
+                $this->js("Swal.fire('Error', 'No purchase order selected!', 'error');");
+                return;
             }
 
-            // Skip items without a valid product_id and not new products
-            if (!$productId && !$isNewProduct) {
-                continue;
+            if (empty($this->grnItems)) {
+                $this->js("Swal.fire('Error', 'No items to process!', 'error');");
+                return;
             }
 
-            // Handle new product creation
-            if ($isNewProduct && !empty($item['name']) && !empty($item['code'])) {
-                $existingProduct = ProductDetail::where('code', $item['code'])->first();
-                if ($existingProduct) {
-                    $productId = $existingProduct->id;
-                } else {
-                    $newProduct = ProductDetail::create([
-                        'code' => $item['code'],
-                        'name' => $item['name'],
-                        'description' => 'Added via GRN',
-                        'category_id' => 1,
-                        'brand_id' => 1,
-                        'status' => 'active',
-                    ]);
-                    \App\Models\ProductPrice::create([
-                        'product_id' => $newProduct->id,
-                        'supplier_price' => $item['unit_price'] ?? 0,
-                        'selling_price' => ($item['unit_price'] ?? 0) * 1.2,
-                        'wholesale_price' => ($item['unit_price'] ?? 0) * 1.1,
-                    ]);
-                    \App\Models\ProductStock::create([
-                        'product_id' => $newProduct->id,
-                        'available_stock' => 0,
-                        'reserved_stock' => 0,
-                    ]);
-                    $productId = $newProduct->id;
+            DB::beginTransaction();
+
+            $receivedItemsCount = 0;
+            $notReceivedItemsCount = 0;
+            $orderTotal = 0;
+
+            foreach ($this->grnItems as $item) {
+                $productId = $item['product_id'];
+                $receivedQty = $item['received_qty'] ?? 0;
+                $status = strtolower($item['status'] ?? '');
+                $isNewProduct = $item['is_new'] ?? false;
+
+                // Count statuses
+                if ($status === 'received') {
+                    $receivedItemsCount++;
+                } elseif ($status === 'notreceived') {
+                    $notReceivedItemsCount++;
                 }
-            }
 
-            // Calculate total for this item (with discount)
-            $unitPrice = floatval($item['unit_price'] ?? 0);
-            $discount = floatval($item['discount'] ?? 0);
-            $discountType = $item['discount_type'] ?? 'rs';
-            $subtotal = $receivedQty * $unitPrice;
-            if ($discountType === 'percent') {
-                $discountAmount = ($subtotal * $discount) / 100;
-                $itemTotal = $subtotal - $discountAmount;
-            } else {
-                $itemTotal = $subtotal - $discount;
-            }
-            $orderTotal += max(0, $itemTotal);
+                // Skip items without a valid product_id and not new products
+                if (!$productId && !$isNewProduct) {
+                    continue;
+                }
 
-            if (isset($item['id'])) {
-                // Update existing order item
-                $orderItem = PurchaseOrderItem::find($item['id']);
-                if ($orderItem) {
-                    $totalQty = PurchaseOrderItem::where('order_id', $orderItem->order_id)
-                        ->where('product_id', $orderItem->product_id)
-                        ->sum('quantity');
-                    $previousQty = $totalQty ?? 0;
-                    $orderItem->quantity = $receivedQty;
-                    $orderItem->unit_price = $item['unit_price'];
-                    $orderItem->discount = $item['discount'];
-                    $orderItem->status = $status;
-                    $orderItem->save();
-                    if ($status === 'received' && $receivedQty > 0) {
-                        $previousQty += $receivedQty;
+                // Handle new product creation
+                if ($isNewProduct && !empty($item['name']) && !empty($item['code'])) {
+                    $existingProduct = ProductDetail::where('code', $item['code'])->first();
+                    if ($existingProduct) {
+                        $productId = $existingProduct->id;
+                    } else {
+                        $newProduct = ProductDetail::create([
+                            'code' => $item['code'],
+                            'name' => $item['name'],
+                            'description' => 'Added via GRN',
+                            'category_id' => 1,
+                            'brand_id' => 1,
+                            'status' => 'active',
+                        ]);
+                        \App\Models\ProductPrice::create([
+                            'product_id' => $newProduct->id,
+                            'supplier_price' => $item['unit_price'] ?? 0,
+                            'selling_price' => ($item['unit_price'] ?? 0) * 1.2,
+                            'wholesale_price' => ($item['unit_price'] ?? 0) * 1.1,
+                        ]);
+                        \App\Models\ProductStock::create([
+                            'product_id' => $newProduct->id,
+                            'available_stock' => 0,
+                            'reserved_stock' => 0,
+                            'total_stock' => 0,
+                        ]);
+                        $productId = $newProduct->id;
+                    }
+                }
+
+                // Calculate total for this item (with discount)
+                $unitPrice = floatval($item['unit_price'] ?? 0);
+                $discount = floatval($item['discount'] ?? 0);
+                $discountType = $item['discount_type'] ?? 'rs';
+                $subtotal = $receivedQty * $unitPrice;
+                
+                if ($discountType === 'percent') {
+                    $discountAmount = ($subtotal * $discount) / 100;
+                    $itemTotal = $subtotal - $discountAmount;
+                } else {
+                    $itemTotal = $subtotal - $discount;
+                }
+                $orderTotal += max(0, $itemTotal);
+
+                if (isset($item['id'])) {
+                    // Update existing order item
+                    $orderItem = PurchaseOrderItem::find($item['id']);
+                    if ($orderItem) {
+                        $orderItem->quantity = $receivedQty;
+                        $orderItem->unit_price = $item['unit_price'];
+                        $orderItem->discount = $item['discount'];
+                        $orderItem->discount_type = $item['discount_type'] ?? 'rs';
+                        $orderItem->status = $status;
+                        $orderItem->save();
+                        
+                        if ($status === 'received' && $receivedQty > 0) {
+                            $this->updateProductStock($productId, $receivedQty);
+                        }
+                    }
+                } else {
+                    // Save new GRN item
+                    $newOrderItem = PurchaseOrderItem::create([
+                        'order_id' => $this->selectedPO->id,
+                        'product_id' => $productId,
+                        'quantity' => $receivedQty,
+                        'unit_price' => $item['unit_price'] ?? 0,
+                        'discount' => $item['discount'] ?? 0,
+                        'discount_type' => $item['discount_type'] ?? 'rs',
+                        'status' => 'received',
+                    ]);
+                    
+                    if ($receivedQty > 0) {
                         $this->updateProductStock($productId, $receivedQty);
                     }
                 }
-            } else {
-                // Save new GRN item
-                $newOrderItem = PurchaseOrderItem::create([
-                    'order_id' => $this->selectedPO->id,
-                    'code' => $item['code'] ?? '',
-                    'product_id' => $productId,
-                    'quantity' => $receivedQty,
-                    'unit_price' => $item['unit_price'] ?? 0,
-                    'discount' => $item['discount'] ?? 0,
-                    'status' => 'received',
-                ]);
-                $newOrderItem->status = 'received';
-                $newOrderItem->save();
-                if ($receivedQty > 0) {
-                    $this->updateProductStock($productId, $receivedQty);
-                }
             }
+
+            // Update order received date
+            $this->selectedPO->received_date = now();
+
+            // Determine overall order status based on ALL order items
+            $allOrderItems = PurchaseOrderItem::where('order_id', $this->selectedPO->id)->get();
+            $totalItemsCount = $allOrderItems->count();
+            $receivedItemsTotal = $allOrderItems->where('status', 'received')->count();
+            $notReceivedItemsTotal = $allOrderItems->where('status', 'notreceived')->count();
+            $pendingItemsTotal = $allOrderItems->whereNotIn('status', ['received', 'notreceived'])->count();
+
+            // If all items are received, mark order as complete
+            if ($receivedItemsTotal === $totalItemsCount && $totalItemsCount > 0) {
+                $this->selectedPO->status = 'complete';
+            }
+            // If some items are received but others are pending/not received
+            elseif ($receivedItemsTotal > 0 && ($pendingItemsTotal > 0 || $notReceivedItemsTotal > 0)) {
+                $this->selectedPO->status = 'received'; // Partial receipt
+            }
+            // If no items received yet
+            else {
+                $this->selectedPO->status = 'pending';
+            }
+
+            // Set total_amount and due_amount
+            $this->selectedPO->total_amount = $orderTotal;
+            $this->selectedPO->due_amount = $orderTotal;
+            $this->selectedPO->save();
+
+            DB::commit();
+
+            // Refresh the orders table
+            $this->loadOrders();
+
+            // Reset GRN data
+            $orderCode = $this->selectedPO->order_code;
+            $this->selectedPO = null;
+            $this->grnItems = [];
+            $this->searchResults = [];
+
+            // Close modal and show success message
+            $this->js("
+                const modal = bootstrap.Modal.getInstance(document.getElementById('grnModal'));
+                if (modal) modal.hide();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'GRN processed successfully! Stock updated for order {$orderCode}.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            ");
+
+            Log::info("GRN processed successfully for order: " . $orderCode);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error processing GRN: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to process GRN: " . addslashes($e->getMessage()) . "', 'error');");
         }
-
-        // Update order received date
-        $this->selectedPO->received_date = now();
-
-        // Determine overall order status based on ALL order items (not just grnItems)
-        $allOrderItems = PurchaseOrderItem::where('order_id', $this->selectedPO->id)->get();
-        $totalItemsCount = $allOrderItems->count();
-        $receivedItemsTotal = $allOrderItems->where('status', 'received')->count();
-        $notReceivedItemsTotal = $allOrderItems->where('status', 'notreceived')->count();
-        $pendingItemsTotal = $allOrderItems->whereNotIn('status', ['received', 'notreceived'])->count();
-
-        // If all items are received, mark order as complete
-        if ($receivedItemsTotal === $totalItemsCount && $totalItemsCount > 0) {
-            $this->selectedPO->status = 'complete';
-        }
-        // If some items are received but others are pending/not received
-        elseif ($receivedItemsTotal > 0 && ($pendingItemsTotal > 0 || $notReceivedItemsTotal > 0)) {
-            $this->selectedPO->status = 'received'; // Partial receipt
-        }
-        // If no items received yet
-        else {
-            $this->selectedPO->status = 'pending';
-        }
-
-        // Set total_amount and due_amount
-        $this->selectedPO->total_amount = $orderTotal;
-        $this->selectedPO->due_amount = $orderTotal;
-        $this->selectedPO->save();
-
-        // Refresh the orders table
-        $this->loadOrders();
-
-        // Close modal and show success message
-        $this->js("bootstrap.Modal.getInstance(document.getElementById('grnModal')).hide();");
-        $this->js("Swal.fire('Success', 'GRN processed successfully! Stock updated.', 'success');");
-
-        // Reset GRN data
-        $this->selectedPO = null;
-        $this->grnItems = [];
-        $this->searchResults = [];
-        $this->js("location.reload();");
     }
 
     public function deleteGRNItem($index)
@@ -879,16 +1174,34 @@ class PurchaseOrderList extends Component
     {
         try {
             $order = PurchaseOrder::findOrFail($orderId);
-            $order->delete(); // Permanent deletion
+            
+            DB::beginTransaction();
+            
+            // Delete all order items first
+            PurchaseOrderItem::where('order_id', $order->id)->delete();
+            
+            // Delete the order
+            $orderCode = $order->order_code;
+            $order->delete();
+            
+            DB::commit();
 
-            $this->loadOrders(); // Refresh the orders list
-            session()->flash('message', 'Purchase order permanently deleted.');
+            $this->loadOrders();
 
-            // Show success message
-            $this->js("Swal.fire('Success', 'Purchase order permanently deleted.', 'success');");
+            $this->js("Swal.fire({
+                icon: 'success',
+                title: 'Deleted!',
+                text: 'Purchase order {$orderCode} has been permanently deleted.',
+                timer: 2000,
+                showConfirmButton: false
+            });");
+
+            Log::info("Purchase order permanently deleted: " . $orderCode);
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error deleting order: ' . $e->getMessage());
-            $this->js("Swal.fire('Error', 'Error deleting order.', 'error');");
+            DB::rollBack();
+            Log::error("Error permanently deleting order: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to delete order: " . addslashes($e->getMessage()) . "', 'error');");
         }
     }
 

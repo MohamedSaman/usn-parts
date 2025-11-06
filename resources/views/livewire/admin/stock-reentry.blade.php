@@ -37,14 +37,10 @@
                                 <div class="row g-0">
                                     <div class="col-4">
                                         <div class="p-2 p-md-3 h-100 d-flex align-items-center justify-content-center bg-light rounded-start">
-                                            @if ($Product && $Product->image)
-                                                <img src="{{ asset('storage/' . $Product->image) }}" alt="{{ $Product->name }}" class="img-fluid" style="max-height: 80px; object-fit: contain;">
-                                                
-                                            @else
-                                                <div class="text-center text-muted">
-                                                    <i class="bi bi-Product fs-3 fs-md-1"></i>
-                                                </div>
-                                            @endif
+                                            <img src="{{ ($Product && $Product->image) ? asset('storage/' . $Product->image) : asset('images/product.jpg') }}" 
+                                                alt="{{ $Product->name ?? 'Product' }}" 
+                                                class="img-fluid" 
+                                                style="max-height: 80px; object-fit: contain;">
                                         </div>
                                     </div>
                                     <div class="col-8">
@@ -96,9 +92,10 @@
                             <strong>Edit Stock: </strong> {{ $selectedProduct->ProductDetail->name ?? 'Selected Product' }}
                             <p class="card-text small text-muted mb-0">Code: {{ $selectedProduct->ProductDetail->code ?? 'N/A' }}</p>
                         </div>
-                        @if ($selectedProduct->ProductDetail && $selectedProduct->ProductDetail->image)
-                            <img src="{{ asset('storage/' . $selectedProduct->ProductDetail->image) }}" alt="{{ $selectedProduct->ProductDetail->name }}" class="img-fluid ms-3" style="max-height: 60px; object-fit: contain;">
-                        @endif
+                        <img src="{{ ($selectedProduct->ProductDetail && $selectedProduct->ProductDetail->image) ? asset('storage/' . $selectedProduct->ProductDetail->image) : asset('images/product.jpg') }}" 
+                            alt="{{ $selectedProduct->ProductDetail->name ?? 'Product' }}" 
+                            class="img-fluid ms-3" 
+                            style="max-height: 60px; object-fit: contain;">
                     </div>
                     <div class="card-body">
                         <p>Available Quantity: {{ $selectedProduct->quantity - $selectedProduct->sold_quantity }}</p>

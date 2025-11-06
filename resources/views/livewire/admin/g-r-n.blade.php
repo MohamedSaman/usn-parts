@@ -84,6 +84,7 @@
                                 <td class="ps-4" wire:click="viewGRN({{ $po->id }})">
                                     <span class="fw-medium text-dark">{{ $po->order_code }}</span>
                                 </td>
+
                                 <td>{{ $po->supplier->name }}</td>
                                 <td>{{ $po->order_date }}</td>
                                 <td>
@@ -91,14 +92,19 @@
                                     <span class="badge bg-warning">Awaiting Receipt</span>
                                     @elseif($po->status == 'complete')
                                     <span class="badge bg-success">Fully Received</span>
+
+                                <td wire:click="viewGRN({{ $po->id }})">{{ $po->supplier->name }}</td>
+                                <td wire:click="viewGRN({{ $po->id }})">{{ $po->order_date }}</td>
+                                <td wire:click="viewGRN({{ $po->id }})">
+                                    @if($po->status == 'received')
+                                        <span class="badge bg-success">Fully Received</span>
                                     @elseif($po->status == 'pending')
-                                    <span class="badge bg-secondary">Pending</span>
+                                        <span class="badge bg-warning">Awaiting Receipt</span>
                                     @else
-                                    <span class="badge bg-info">{{ ucfirst($po->status) }}</span>
+                                        <span class="badge bg-info">{{ ucfirst($po->status) }}</span>
                                     @endif
                                 </td>
                                 
-                               
                             </tr>
                             @endforeach
                         </tbody>
@@ -160,8 +166,26 @@
                                     <td>{{ $item['ordered_qty'] ?? 0 }}</td>
                                     <td>{{ $item['received_qty'] ?? 0 }}</td>
                                     <td>Rs. {{ number_format($item['unit_price'] ?? 0, 2) }}</td>
-                                    <td>Rs. {{ number_format($item['discount'] ?? 0, 2) }}</td>
-                                    <td>Rs. {{ number_format(($item['received_qty'] ?? 0) * ($item['unit_price'] ?? 0) - ($item['discount'] ?? 0), 2) }}</td>
+                                    <td>
+                                        @php
+                                            $discountType = $item['discount_type'] ?? 'rs';
+                                            $discount = floatval($item['discount'] ?? 0);
+                                            $unitPrice = floatval($item['unit_price'] ?? 0);
+                                            $receivedQty = floatval($item['received_qty'] ?? 0);
+                                            
+                                            if ($discountType === 'percent') {
+                                                // Total discount amount
+                                                $totalDiscountAmount = (($receivedQty * $unitPrice) * $discount) / 100;
+                                            } else {
+                                                $totalDiscountAmount = $discount;
+                                            }
+                                        @endphp
+                                        Rs. {{ number_format($totalDiscountAmount, 2) }}
+                                        @if($discountType === 'percent')
+                                        <br><small class="text-muted">({{ number_format($discount, 2) }}%)</small>
+                                        @endif
+                                    </td>
+                                    <td>Rs. {{ number_format($this->calculateItemTotal($item), 2) }}</td>
                                     <td>
                                         <span class="badge 
                                             @if(strtolower($item['status'] ?? '') === 'received') bg-success

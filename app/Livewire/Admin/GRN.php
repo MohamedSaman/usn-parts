@@ -72,6 +72,7 @@ class GRN extends Component
                 'received_qty' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount,
+                'discount_type' => $item->discount_type ?? 'rs',
                 'status' => $item->status ?? 'received',
             ];
         }
@@ -257,6 +258,7 @@ class GRN extends Component
                     $orderItem->quantity = $receivedQty;
                     $orderItem->unit_price = $item['unit_price'];
                     $orderItem->discount = $item['discount'];
+                    $orderItem->discount_type = $item['discount_type'] ?? 'rs';
                     $orderItem->status = $item['status'];
                     $orderItem->save();
 
@@ -277,6 +279,7 @@ class GRN extends Component
                     'quantity' => $receivedQty,
                     'unit_price' => $item['unit_price'] ?? 0,
                     'discount' => $item['discount'] ?? 0,
+                    'discount_type' => $item['discount_type'] ?? 'rs',
                     'status' => 'received',
                 ]);
 
@@ -331,6 +334,35 @@ class GRN extends Component
                 'restocked_quantity' => $quantity,
             ]);
         }
+    }
+
+    // Calculate discount amount in rupees
+    public function calculateDiscountAmount($item)
+    {
+        $discountType = $item['discount_type'] ?? 'rs';
+        $discount = floatval($item['discount'] ?? 0);
+        $unitPrice = floatval($item['unit_price'] ?? 0);
+        $receivedQty = floatval($item['received_qty'] ?? 0);
+
+        if ($discountType === 'percent') {
+            // Calculate percentage discount
+            $subtotal = $receivedQty * $unitPrice;
+            return ($subtotal * $discount) / 100;
+        }
+        
+        // Return discount as is (it's already in rupees)
+        return $discount;
+    }
+
+    // Calculate total for an item
+    public function calculateItemTotal($item)
+    {
+        $receivedQty = floatval($item['received_qty'] ?? 0);
+        $unitPrice = floatval($item['unit_price'] ?? 0);
+        $subtotal = $receivedQty * $unitPrice;
+        $discountAmount = $this->calculateDiscountAmount($item);
+        
+        return max(0, $subtotal - $discountAmount);
     }
 
     public function render()

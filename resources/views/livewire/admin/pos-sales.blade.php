@@ -263,15 +263,14 @@ use App\Models\Sale;
         <div class="modal-dialog modal-lg">
             <div class="modal-content" id="printableInvoice">
                 {{-- ==================== HEADER ==================== --}}
-                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #3b5b0c, #8eb922); color: #fff;">
+                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
                     <div class="w-100">
                         <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                             class="img-fluid mb-2" style="max-height:60px;">
-                        <h4 class="mb-0 fw-bold">USN AUTO PARTS</h4>
-                        
+                            class="img-fluid mb-2" style="max-height:100px;">
+
                     </div>
-                    <button type="button" class="btn-close btn-close-white closebtn"
-                            wire:click="closeModals"></button>
+                    <button type="button" class="btn-close btn-close-black closebtn"
+                        wire:click="closeModals"></button>
                 </div>
                 @if($selectedSale)
                 <div class="modal-body">
@@ -446,6 +445,17 @@ use App\Models\Sale;
                         </div>
                     </div>
                     @endif
+
+                    {{-- Footer – address + contact details --}}
+                    <div class="mt-4 text-center small">
+                        <p class="mb-0">
+                            <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
+                            <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
+                        </p>
+                        <p class="mt-1 text-muted">
+                            Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.
+                        </p>
+                    </div>
                 </div>
                 @endif
                 {{-- ==================== FOOTER BUTTONS ==================== --}}
@@ -453,11 +463,16 @@ use App\Models\Sale;
                     <button type="button" class="btn btn-secondary" wire:click="closeModals">
                         <i class="bi bi-x-circle me-1"></i> Close
                     </button>
+                    @if($selectedSale)
                     <div>
-                        <button type="button" class="btn btn-outline-primary" onclick="window.print()">
+                        <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="printInvoice()">
                             <i class="bi bi-printer me-1"></i> Print
                         </button>
                     </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -522,20 +537,29 @@ use App\Models\Sale;
 <style>
     .table th {
         font-weight: 600;
-        background-color: #f8f9fa;
+        border-top: none;
+        color: #ffffff;
+        background: #3B5B0C;
+        background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-            .closebtn { top:3%; right:3%; position:absolute; }
-
+    .closebtn {
+        top: 3%;
+        right: 3%;
+        position: absolute;
+    }
 
     .btn-group-sm>.btn {
         padding: 0.25rem 0.5rem;
-                
-
     }
 
     .modal-header {
         border-bottom: 1px solid #dee2e6;
+        background: linear-gradient(90deg, #3b5b0c, #8eb922);
+        color: #fff;
     }
 
     .badge {
@@ -546,21 +570,266 @@ use App\Models\Sale;
     .table-hover tbody tr:hover {
         background-color: rgba(0, 0, 0, 0.025);
     }
-    .table th {
-            border-top: none;
-            font-weight: 600;
-            color: #ffffff;
-            background: #3B5B0C;
-            background: linear-gradient(0deg,rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    /* Print styles */
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    @media print {
+
+        /* Remove browser header/footer */
+        @page {
+            margin: 0mm;
         }
+
+        /* Hide everything except the invoice */
+        body * {
+            visibility: hidden;
+        }
+
+        #printableInvoice,
+        #printableInvoice * {
+            visibility: visible;
+        }
+
+        /* Position the invoice */
+        #printableInvoice {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 10mm 10mm 20mm 15mm !important;
+            background: #fff !important;
+            font-size: 10pt !important;
+            color: #000 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+        }
+
+        /* Reset modal styles for print */
+        .modal,
+        .modal-dialog,
+        .modal-content {
+            all: unset !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            position: static !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Hide modal chrome */
+        .modal-footer,
+        .btn,
+        .btn-close,
+        .closebtn {
+            display: none !important;
+        }
+
+        /* Header styles - Fixed at top */
+        .modal-header {
+            border: none !important;
+            padding: 0 0 10px 0 !important;
+            text-align: center !important;
+            margin-bottom: 15px !important;
+            background: transparent !important;
+            border-bottom: 2px solid #3b5b0c !important;
+        }
+
+        .modal-header img {
+            max-height: 100px !important;
+            margin-bottom: 5px !important;
+        }
+
+        .modal-header h4 {
+            margin: 5px 0 !important;
+            font-size: 1rem !important;
+            color: #000 !important;
+            font-weight: bold !important;
+        }
+
+        .modal-header p {
+            margin: 2px 0 !important;
+            font-size: 0.8rem !important;
+            color: #000 !important;
+        }
+
+        /* Body content */
+        .modal-body {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Layout fixes */
+        .row {
+            display: flex !important;
+            margin: 0 !important;
+            page-break-inside: avoid !important;
+        }
+
+        .row>.col-6 {
+            page-break-inside: avoid !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+
+        .row>.col-6:first-child {
+            text-align: left !important;
+        }
+
+        .row>.col-6:last-child {
+            text-align: right !important;
+        }
+
+        .row>.col-7 {
+            display: none !important;
+        }
+
+        .row>.col-5 {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Table styles */
+        .table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-bottom: 10px !important;
+            font-size: 9pt !important;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #999 !important;
+            padding: 4px 6px !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+
+        .table-light th,
+        .table-light td,
+        tfoot.table-light tr,
+        tfoot.table-light td {
+            background: #e9ecef !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        .table-sm {
+            font-size: 8pt !important;
+        }
+
+        .table-borderless td {
+            border: none !important;
+            padding: 2px 4px !important;
+        }
+
+        .table-borderless strong {
+            min-width: 110px !important;
+            display: inline-block !important;
+        }
+
+        /* Compact spacing */
+        h6 {
+            color: #000 !important;
+            margin: 10px 0 5px 0 !important;
+            font-weight: bold !important;
+            font-size: 11pt !important;
+        }
+
+        /* Badge and color fixes */
+        .badge {
+            border: 1px solid #000 !important;
+            padding: 2px 6px !important;
+            border-radius: 3px !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+
+        .fw-bold,
+        strong {
+            font-weight: bold !important;
+            color: #000 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #198754 !important;
+        }
+
+        .text-muted {
+            font-size: 8pt !important;
+            color: #666 !important;
+        }
+
+        /* Card styles */
+        .card {
+            border: 1px solid #ddd !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 10px !important;
+        }
+
+        .card-body {
+            padding: 8px !important;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Remove extra spacing */
+        .mb-3,
+        .mb-4 {
+            margin-bottom: 8px !important;
+        }
+
+        .mt-4 {
+            margin-top: 15px !important;
+        }
+
+        /* Prevent page breaks */
+        .table-responsive {
+            page-break-inside: avoid !important;
+        }
+
+        /* Ensure single page */
+        html,
+        body {
+            height: 297mm !important;
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
+    // Print function
+    function printInvoice() {
+        window.print();
+    }
+
     document.addEventListener('livewire:initialized', () => {
         // Modal management
         Livewire.on('showModal', (modalId) => {
@@ -616,23 +885,26 @@ use App\Models\Sale;
         });
     });
 
-    // Prevent multiple clicks on download button
+    // Handle download button state
     document.addEventListener('livewire:request-start', (event) => {
-        const target = event.detail.component.get('$wire').__instance;
-        if (target.__livewire_requests?.downloadInvoice) {
-            const buttons = document.querySelectorAll('[wire\\:click="downloadInvoice"]');
-            buttons.forEach(button => {
-                button.disabled = true;
-                button.innerHTML = '<i class="bi bi-hourglass-split"></i>';
-            });
-        }
+        const buttons = document.querySelectorAll('[wire\\:click*="downloadInvoice"]');
+        buttons.forEach(button => {
+            button.disabled = true;
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-hourglass-split me-1';
+            }
+        });
     });
 
     document.addEventListener('livewire:request-finish', (event) => {
-        const buttons = document.querySelectorAll('[wire\\:click="downloadInvoice"]');
+        const buttons = document.querySelectorAll('[wire\\:click*="downloadInvoice"]');
         buttons.forEach(button => {
             button.disabled = false;
-            button.innerHTML = '<i class="bi bi-download"></i>';
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.className = 'bi bi-download me-1';
+            }
         });
     });
 </script>

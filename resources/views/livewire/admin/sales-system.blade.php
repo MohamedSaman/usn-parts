@@ -22,9 +22,8 @@
     @endif
 
     <div class="row">
-<<<<<<< Updated upstream
         {{-- Customer Information --}}
-        <div class="col-md-6">
+        <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h5 class="card-title mb-0">
@@ -48,7 +47,6 @@
                             </select>
                             <div class="form-text">Select existing customer</div>
                         </div>
-=======
        {{-- Customer Information --}}
 <div class="col-6 mb-4">
     <div class="card">
@@ -83,7 +81,6 @@
                         @else
                         Select existing customer or add new
                         @endif
->>>>>>> Stashed changes
                     </div>
                 </div>
               
@@ -265,6 +262,13 @@
                                     </td>
                                     <td></td>
                                 </tr>
+
+                                {{-- Grand Total
+                                <tr>
+                                    <td colspan="5" class="text-end fw-bold fs-5">Grand Total:</td>
+                                    <td class="fw-bold fs-5 text-primary">Rs.{{ number_format($grandTotal, 2) }}</td>
+                                <td></td>
+                                </tr> --}}
                             </tfoot>
                         </table>
                     </div>
@@ -383,22 +387,19 @@
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-cart-check me-2"></i>
-                        Sale Completed Successfully! - {{ $createdSale->invoice_number }}
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="createNewSale"></button>
-                </div>
 
                 <div class="modal-body p-0">
                     {{-- Sale Preview --}}
                     <div class="sale-preview p-4">
                         {{-- Header --}}
-                        <div class="header text-center mb-4">
-                            <h2 class="text-success mb-1">USN AUTO PARTS</h2>
-                            <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="mb-1">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+                        <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
+                            <div class="w-100">
+                                <img src="{{ asset('images/USN.png') }}" alt="Logo"
+                                    class="img-fluid mb-2" style="max-height:100px;">
+
+                            </div>
+                            <button type="button" class="btn-close btn-close-black closebtn"
+                                wire:click="closeModal"></button>
                         </div>
 
                         {{-- Customer & Sale Details --}}
@@ -465,7 +466,7 @@
                                 <tfoot class="table-light">
                                     @php
                                     $itemDiscountTotal = $createdSale->items->sum(function($item) {
-                                        return ($item->discount_per_unit ?? 0) * $item->quantity;
+                                    return ($item->discount_per_unit ?? 0) * $item->quantity;
                                     });
                                     @endphp
                                     <tr>
@@ -475,7 +476,7 @@
 
                                     @php
                                     $itemDiscountTotal = $createdSale->items->sum(function($item) {
-                                        return ($item->discount_per_unit ?? 0) * $item->quantity;
+                                    return ($item->discount_per_unit ?? 0) * $item->quantity;
                                     });
                                     $totalDiscount = ($createdSale->discount_amount + $itemDiscountTotal);
                                     @endphp
@@ -516,8 +517,9 @@
 
                 {{-- Footer Buttons --}}
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewSale">
-                        <i class="bi bi-plus-circle me-2"></i>Create New Sale
+
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="printSaleReceipt()">
+                        <i class="bi bi-printer me-2"></i>Print
                     </button>
                     <button type="button" class="btn btn-success" wire:click="downloadInvoice">
                         <i class="bi bi-download me-2"></i>Download Invoice
@@ -531,7 +533,6 @@
 
 @push('styles')
 <style>
-    
     .container-fluid,
     .card,
     .modal-content {
@@ -544,11 +545,12 @@
         padding: 0.35rem 0.5rem !important;
     }
 
-    .modal-header{
+    .modal-header {
         padding-top: 0.5rem !important;
         padding-bottom: 0.5rem !important;
         margin-bottom: 0.25rem !important;
     }
+
     .modal-footer,
     .card-header,
     .card-body,
@@ -601,6 +603,7 @@
         height: 36px !important;
         font-size: 1.1rem !important;
     }
+
     .search-results {
         max-height: 300px;
         overflow-y: auto;
@@ -698,11 +701,209 @@
     .text-info small {
         font-size: 0.75rem;
     }
+
+    /* Print styles */
+    @page {
+        size: A4;
+        margin: 0;
+    }
+
+    @media print {
+
+        /* Remove browser header/footer */
+        @page {
+            margin: 0mm;
+        }
+
+        /* Hide everything except the modal content */
+        body * {
+            visibility: hidden;
+        }
+
+        .modal-content,
+        .modal-content * {
+            visibility: visible;
+        }
+
+        /* Position the modal content */
+        .modal-content {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 10mm 10mm 20mm 15mm !important;
+            background: #fff !important;
+            font-size: 10pt !important;
+            color: #000 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            page-break-after: avoid !important;
+            page-break-before: avoid !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Reset modal styles for print */
+        .modal,
+        .modal-dialog {
+            all: unset !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            position: static !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Hide modal chrome */
+        .modal-footer,
+        .btn,
+        .btn-close {
+            display: none !important;
+        }
+
+        /* Header styles */
+        .modal-header {
+            border: none !important;
+            padding: 0 0 10px 0 !important;
+            text-align: center !important;
+            margin-bottom: 15px !important;
+            background: transparent !important;
+            border-bottom: 2px solid #3b5b0c !important;
+        }
+
+        .sale-preview .header {
+            border-bottom: 2px solid #3b5b0c !important;
+            padding-bottom: 1rem !important;
+        }
+
+        .sale-preview .header h2 {
+            font-size: 1.5rem !important;
+            color: #000 !important;
+        }
+
+        /* Body content */
+        .modal-body {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
+
+        /* Layout fixes */
+        .row {
+            display: flex !important;
+            margin: 0 !important;
+            page-break-inside: avoid !important;
+        }
+
+        .row>.col-md-6 {
+            page-break-inside: avoid !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+        }
+
+        /* Table styles */
+        .table {
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-bottom: 10px !important;
+            font-size: 9pt !important;
+        }
+
+        .table th,
+        .table td {
+            border: 1px solid #999 !important;
+            padding: 4px 6px !important;
+            color: #000 !important;
+            background: transparent !important;
+        }
+
+        .table-primary th,
+        .table-light td,
+        .table-light tr {
+            background: #e9ecef !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Card styles */
+        .card {
+            border: 1px solid #ddd !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 10px !important;
+            box-shadow: none !important;
+        }
+
+        .card-body {
+            padding: 8px !important;
+        }
+
+        .card-header {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            padding: 6px 8px !important;
+        }
+
+        .bg-light {
+            background-color: #f8f9fa !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* Text styles */
+        .fw-bold,
+        strong {
+            font-weight: bold !important;
+            color: #000 !important;
+        }
+
+        .text-danger {
+            color: #dc3545 !important;
+        }
+
+        .text-success {
+            color: #198754 !important;
+        }
+
+        .text-primary {
+            color: #0d6efd !important;
+        }
+
+        /* Remove extra spacing */
+        .mb-3,
+        .mb-4 {
+            margin-bottom: 8px !important;
+        }
+
+        /* Prevent page breaks */
+        .table-responsive {
+            page-break-inside: avoid !important;
+        }
+
+        /* Ensure single page */
+        html,
+        body {
+            height: 297mm !important;
+            width: 210mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+        }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
+    // Print function
+    function printSaleReceipt() {
+        window.print();
+    }
+
     // Auto-close alerts after 5 seconds
     document.addEventListener('livewire:initialized', () => {
         const alerts = document.querySelectorAll('.alert');

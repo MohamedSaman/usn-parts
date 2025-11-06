@@ -4,6 +4,7 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 use App\Models\ProductDetail;
 use App\Models\ProductPrice;
 use App\Models\ProductStock;
@@ -18,20 +19,28 @@ use App\Models\Quotation;
 use App\Models\ReturnsProduct;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use App\Imports\ProductsImport;
+use App\Exports\ProductsTemplateExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\ProductApiController;
 
 #[Title("Product List")]
 #[Layout('components.layouts.admin')]
 class Products extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $search = '';
 
     // Create form fields
     public $code, $name, $model, $brand, $category, $image, $description, $barcode, $status, $supplier;
     public $supplier_price, $selling_price, $discount_price, $available_stock, $damage_stock;
+
+    // Import file
+    public $importFile;
 
     // Edit form fields
     public $editId, $editCode, $editName, $editModel, $editBrand, $editCategory, $editImage, $existingImage,
@@ -56,6 +65,15 @@ class Products extends Component
     {
         $this->setDefaultIds();
         $this->setDefaultValues();
+    }
+
+    /**
+     * Reset component state when pagination changes
+     * This fixes the issue where wrong product shows in modal on different pages
+     */
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
     /**
@@ -162,9 +180,9 @@ class Products extends Component
                     ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%');
             })
             ->orderBy('product_details.created_at', 'desc')
-            ->paginate(10);
+            ->paginate(20);
 
-        return view('livewire.admin.productes', [
+        return view('livewire.admin.Productes', [
             'products' => $products,
             'brands' => $brands,
             'categories' => $categories,
@@ -277,11 +295,83 @@ class Products extends Component
             $this->js("$('#createProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product created successfully!', 'success')");
             
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+            
             $this->dispatch('refreshPage');
 
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to create product. Please try again.', 'error')");
         }
+    }
+
+    // 🔹 Import Products from Excel
+    public function importProducts()
+    {
+        // Validate file
+        $this->validate([
+            'importFile' => 'required|mimes:xlsx,xls,csv|max:10240', // Max 10MB
+        ], [
+            'importFile.required' => 'Please select an Excel file to import.',
+            'importFile.mimes' => 'File must be an Excel file (xlsx, xls, or csv).',
+            'importFile.max' => 'File size must not exceed 10MB.',
+        ]);
+
+        try {
+            // Create import instance
+            $import = new ProductsImport();
+            
+            // Import the file
+            Excel::import($import, $this->importFile->getRealPath());
+
+            // Get import statistics
+            $successCount = $import->getSuccessCount();
+            $skipCount = $import->getSkipCount();
+            $failures = $import->failures();
+
+            // Build success message
+            $message = "Import completed! ";
+            $message .= "✅ {$successCount} product(s) imported successfully. ";
+            
+            if ($skipCount > 0) {
+                $message .= "⚠️ {$skipCount} product(s) skipped (duplicates or errors). ";
+            }
+
+            // Reset file input
+            $this->reset(['importFile']);
+
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
+            // Close modal and show success
+            $this->js("$('#importProductsModal').modal('hide')");
+            $this->js("Swal.fire('Import Complete!', '{$message}', 'success')");
+            
+            $this->dispatch('refreshPage');
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessage = "Import failed due to validation errors: <br>";
+            
+            foreach ($failures as $failure) {
+                $errorMessage .= "Row {$failure->row()}: " . implode(', ', $failure->errors()) . "<br>";
+            }
+            
+            $this->js("Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: '{$errorMessage}',
+                confirmButtonText: 'OK'
+            })");
+        } catch (\Exception $e) {
+            $this->js("Swal.fire('Error!', 'Failed to import products: {$e->getMessage()}', 'error')");
+        }
+    }
+
+    // 🔹 Download Excel Template
+    public function downloadTemplate()
+    {
+        return Excel::download(new ProductsTemplateExport(), 'products_import_template.xlsx');
     }
 
     // 🔹 Reset form fields
@@ -388,6 +478,9 @@ class Products extends Component
                 'damage_stock' => $this->editDamageStock,
             ]);
 
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
             $this->js("$('#editProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product updated successfully!', 'success')");
             $this->dispatch('refreshPage');
@@ -435,6 +528,9 @@ class Products extends Component
             // Delete the product
             $product->delete();
 
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
             $this->js("Swal.fire('Success!', 'Product deleted successfully!', 'success')");
             $this->dispatch('refreshPage');
 
@@ -469,7 +565,7 @@ class Products extends Component
         $this->adjustmentProductName = $product->name;
         $this->adjustmentAvailableStock = $product->stock->available_stock ?? 0;
         $this->adjustmentDamageStock = $product->stock->damage_stock ?? 0;
-        $this->adjustmentQuantity = 0;
+        $this->adjustmentQuantity = $product->stock->damage_stock ?? 0; // Set current damage as default
 
         $this->resetValidation();
         $this->js("$('#stockAdjustmentModal').modal('show')");
@@ -479,15 +575,17 @@ class Products extends Component
     protected function adjustmentRules()
     {
         return [
-            'adjustmentQuantity' => 'required|integer|min:1|max:' . $this->adjustmentAvailableStock,
+            'adjustmentQuantity' => 'nullable|integer|min:0',
+            'adjustmentAvailableStock' => 'nullable|integer|min:0',
         ];
     }
 
-    // 🔹 Adjust Stock (Damage Only)
+    // 🔹 Adjust Stock (Smart Logic for Available and Damage)
     public function adjustStock()
     {
         $this->validate([
-            'adjustmentQuantity' => 'required|integer|min:1|max:' . $this->adjustmentAvailableStock,
+            'adjustmentQuantity' => 'nullable|integer|min:0',
+            'adjustmentAvailableStock' => 'nullable|integer|min:0',
         ]);
 
         try {
@@ -504,27 +602,52 @@ class Products extends Component
                 ]);
             }
 
-            $currentAvailable = $stock->available_stock;
-            $currentDamage = $stock->damage_stock;
-            $quantity = $this->adjustmentQuantity;
+            $originalAvailable = $stock->available_stock;
+            $originalDamage = $stock->damage_stock;
+            
+            // Convert to int, treat empty/null as 0
+            $newDamageStock = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== '' 
+                ? (int)$this->adjustmentQuantity 
+                : 0;
+            $newAvailableStock = $this->adjustmentAvailableStock !== null && $this->adjustmentAvailableStock !== '' 
+                ? (int)$this->adjustmentAvailableStock 
+                : 0;
+            
+            // Check what changed
+            $damageChanged = $newDamageStock != $originalDamage;
+            $availableChanged = $newAvailableStock != $originalAvailable;
 
-            // Move stock from available to damage
-            if ($currentAvailable < $quantity) {
-                $this->js("Swal.fire('Error!', 'Not enough available stock to mark as damaged. Available: ' + $currentAvailable, 'error')");
-                return;
+            // If damage changed but available didn't change manually, auto-adjust available
+            if ($damageChanged && !$availableChanged) {
+                $damageDifference = $newDamageStock - $originalDamage;
+                $newAvailableStock = $originalAvailable - $damageDifference;
+                
+                // Prevent negative available stock
+                if ($newAvailableStock < 0) {
+                    $this->js("Swal.fire('Error!', 'Not enough available stock. Available: {$originalAvailable}, Trying to damage: {$damageDifference}', 'error')");
+                    return;
+                }
             }
 
-            $stock->available_stock = $currentAvailable - $quantity;
-            $stock->damage_stock = $currentDamage + $quantity;
-            $stock->total_stock = $stock->available_stock + $stock->damage_stock;
+            // Update stock values
+            $stock->available_stock = $newAvailableStock;
+            $stock->damage_stock = $newDamageStock;
+            $stock->total_stock = $newAvailableStock + $newDamageStock;
             $stock->save();
 
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
+            // Reset adjustment fields
+            $this->adjustmentQuantity = null;
+            $this->adjustmentAvailableStock = null;
+
             $this->js("$('#stockAdjustmentModal').modal('hide')");
-            $this->js("Swal.fire('Success!', 'Stock marked as damaged successfully!', 'success')");
+            $this->js("Swal.fire('Success!', 'Stock adjusted successfully!', 'success')");
             $this->dispatch('refreshPage');
 
         } catch (\Exception $e) {
-            $this->js("Swal.fire('Error!', 'Failed to adjust stock. Please try again.', 'error')");
+            $this->js("Swal.fire('Error!', 'Failed to adjust stock: " . addslashes($e->getMessage()) . "', 'error')");
         }
     }
 
@@ -533,31 +656,41 @@ class Products extends Component
      */
     public function openProductHistory($id)
     {
-        $product = ProductDetail::findOrFail($id);
-        
-        $this->historyProductId = $product->id;
-        $this->historyProductName = $product->name;
-        
-        // Reset all history arrays
-        $this->salesHistory = [];
-        $this->purchasesHistory = [];
-        $this->returnsHistory = [];
-        $this->quotationsHistory = [];
-        
-        // Set default tab and load initial data
-        $this->historyTab = 'sales';
-        $this->loadSalesHistory();
+        try {
+            $product = ProductDetail::findOrFail($id);
+            
+            $this->historyProductId = $product->id;
+            $this->historyProductName = $product->name;
+            
+            // Set default tab
+            $this->historyTab = 'sales';
+            
+            // Load ALL history data at once
+            $this->loadSalesHistory();
+            $this->loadPurchasesHistory();
+            $this->loadReturnsHistory();
+            $this->loadQuotationsHistory();
 
-        // Show the modal
-        $this->js("
-            setTimeout(() => {
-                const historyModalEl = document.getElementById('productHistoryModal');
-                if (historyModalEl) {
-                    const historyModal = new bootstrap.Modal(historyModalEl);
-                    historyModal.show();
-                }
-            }, 100);
-        ");
+            // Log for debugging
+            Log::info('Product History Loaded', [
+                'product_id' => $this->historyProductId,
+                'sales' => count($this->salesHistory),
+                'purchases' => count($this->purchasesHistory),
+                'returns' => count($this->returnsHistory),
+                'quotations' => count($this->quotationsHistory)
+            ]);
+
+            // Show modal using Bootstrap JavaScript
+            $this->js("
+                setTimeout(() => {
+                    const modal = new bootstrap.Modal(document.getElementById('productHistoryModal'));
+                    modal.show();
+                }, 100);
+            ");
+            
+        } catch (\Exception $e) {
+            $this->js("Swal.fire('Error!', 'Failed to load product history: " . addslashes($e->getMessage()) . "', 'error')");
+        }
     }
 
     /**
@@ -565,23 +698,26 @@ class Products extends Component
      */
     public function switchHistoryTab($tab)
     {
+        // Validate tab name
+        $validTabs = ['sales', 'purchases', 'returns', 'quotations'];
+        if (!in_array($tab, $validTabs)) {
+            $tab = 'sales';
+        }
+        
+        // Simply update the active tab
         $this->historyTab = $tab;
         
-        // Load data for the selected tab
-        switch ($tab) {
-            case 'sales':
-                $this->loadSalesHistory();
-                break;
-            case 'purchases':
-                $this->loadPurchasesHistory();
-                break;
-            case 'returns':
-                $this->loadReturnsHistory();
-                break;
-            case 'quotations':
-                $this->loadQuotationsHistory();
-                break;
-        }
+        // Log for debugging
+        Log::info('Tab switched', [
+            'tab' => $tab,
+            'sales_count' => count($this->salesHistory),
+            'purchases_count' => count($this->purchasesHistory),
+            'returns_count' => count($this->returnsHistory),
+            'quotations_count' => count($this->quotationsHistory)
+        ]);
+        
+        // Dispatch event for debugging
+        $this->dispatch('historyTabSwitched', ['tab' => $tab]);
     }
 
     /**
@@ -591,21 +727,16 @@ class Products extends Component
     {
         try {
             $salesItems = SaleItem::with(['sale.customer', 'sale.user'])
-                ->where('product_id', $this->historyProductId)
+                ->where('sale_items.product_id', $this->historyProductId)
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->select(
                     'sale_items.*', 
                     'sales.invoice_number', 
                     'sales.sale_type',
                     'sales.customer_type',
-                    'sales.subtotal',
-                    'sales.discount_amount',
-                    'sales.total_amount',
                     'sales.payment_type',
                     'sales.payment_status',
                     'sales.status as sale_status',
-                    'sales.due_amount',
-                    'sales.notes',
                     'sales.created_at as sale_date'
                 )
                 ->orderBy('sales.created_at', 'desc')
@@ -615,24 +746,23 @@ class Products extends Component
                 return [
                     'id' => $sale->id,
                     'invoice_number' => $sale->invoice_number,
-                    'sale_type' => $sale->sale_type,
-                    'customer_type' => $sale->customer_type,
+                    'sale_type' => $sale->sale_type ?? 'regular',
+                    'customer_type' => $sale->customer_type ?? 'walk-in',
                     'quantity' => $sale->quantity,
                     'unit_price' => $sale->unit_price,
-                    'discount_per_unit' => $sale->discount_per_unit,
-                    'total_discount' => $sale->total_discount,
+                    'discount_per_unit' => $sale->discount_per_unit ?? 0,
+                    'total_discount' => $sale->total_discount ?? 0,
                     'total' => $sale->total,
-                    'payment_type' => $sale->payment_type,
-                    'payment_status' => $sale->payment_status,
-                    'sale_status' => $sale->sale_status,
-                    'due_amount' => $sale->due_amount,
-                    'notes' => $sale->notes,
+                    'payment_type' => $sale->payment_type ?? 'cash',
+                    'payment_status' => $sale->payment_status ?? 'unpaid',
+                    'sale_status' => $sale->sale_status ?? 'completed',
                     'sale_date' => $sale->sale_date,
-                    'customer_name' => $sale->sale->customer->name ?? 'Walk-in Customer',
-                    'customer_phone' => $sale->sale->customer->phone ?? 'N/A',
-                    'user_name' => $sale->sale->user->name ?? 'N/A'
+                    'customer_name' => $sale->sale && $sale->sale->customer ? $sale->sale->customer->name : 'Walk-in Customer',
+                    'customer_phone' => $sale->sale && $sale->sale->customer ? $sale->sale->customer->phone : 'N/A',
+                    'user_name' => $sale->sale && $sale->sale->user ? $sale->sale->user->name : 'N/A'
                 ];
             })->toArray();
+// dd(array_column($this->salesHistory, 'sale_status'));
 
         } catch (\Exception $e) {
             $this->salesHistory = [];
@@ -646,34 +776,36 @@ class Products extends Component
     {
         try {
             $purchaseItems = PurchaseOrderItem::with(['order.supplier'])
-                ->where('product_id', $this->historyProductId)
+                ->where('purchase_order_items.product_id', $this->historyProductId)
                 ->join('purchase_orders', 'purchase_order_items.order_id', '=', 'purchase_orders.id')
                 ->select(
                     'purchase_order_items.*', 
                     'purchase_orders.order_code', 
                     'purchase_orders.order_date', 
                     'purchase_orders.received_date',
-                    'purchase_orders.status as order_status',
-                    'purchase_orders.total_amount',
-                    'purchase_orders.due_amount'
+                    'purchase_orders.status as order_status'
                 )
                 ->orderBy('purchase_orders.order_date', 'desc')
                 ->get();
 
             $this->purchasesHistory = $purchaseItems->map(function($purchase) {
+                $total = $purchase->quantity * $purchase->unit_price;
+                if (isset($purchase->discount) && $purchase->discount > 0) {
+                    $total -= $purchase->discount;
+                }
+                
                 return [
                     'id' => $purchase->id,
                     'order_code' => $purchase->order_code,
                     'order_date' => $purchase->order_date,
-                    'received_date' => $purchase->received_date,
+                    'received_date' => $purchase->received_date ?? 'Pending',
                     'quantity' => $purchase->quantity,
                     'unit_price' => $purchase->unit_price,
-                    'total' => $purchase->quantity * $purchase->unit_price,
-                    'order_status' => $purchase->order_status,
-                    'total_amount' => $purchase->total_amount,
-                    'due_amount' => $purchase->due_amount,
-                    'supplier_name' => $purchase->order->supplier->name ?? 'N/A',
-                    'supplier_phone' => $purchase->order->supplier->phone ?? 'N/A'
+                    'discount' => $purchase->discount ?? 0,
+                    'total' => $total,
+                    'order_status' => $purchase->order_status ?? 'pending',
+                    'supplier_name' => $purchase->order && $purchase->order->supplier ? $purchase->order->supplier->name : 'N/A',
+                    'supplier_phone' => $purchase->order && $purchase->order->supplier ? $purchase->order->supplier->phone : 'N/A'
                 ];
             })->toArray();
 
@@ -688,8 +820,8 @@ class Products extends Component
     private function loadReturnsHistory()
     {
         try {
-            $returns = ReturnsProduct::with(['sale.customer'])
-                ->where('product_id', $this->historyProductId)
+            $returns = ReturnsProduct::with(['sale.customer', 'product'])
+                ->where('returns_products.product_id', $this->historyProductId)
                 ->join('sales', 'returns_products.sale_id', '=', 'sales.id')
                 ->select(
                     'returns_products.*',
@@ -703,12 +835,12 @@ class Products extends Component
                     'id' => $return->id,
                     'invoice_number' => $return->invoice_number,
                     'return_quantity' => $return->return_quantity,
-                    'selling_price' => $return->selling_price,
-                    'total_amount' => $return->total_amount,
-                    'notes' => $return->notes,
+                    'selling_price' => $return->selling_price ?? 0,
+                    'total_amount' => $return->total_amount ?? 0,
+                    'notes' => $return->notes ?? 'No notes provided',
                     'return_date' => $return->created_at,
-                    'customer_name' => $return->sale->customer->name ?? 'N/A',
-                    'customer_phone' => $return->sale->customer->phone ?? 'N/A'
+                    'customer_name' => $return->sale && $return->sale->customer ? $return->sale->customer->name : 'Walk-in Customer',
+                    'customer_phone' => $return->sale && $return->sale->customer ? $return->sale->customer->phone : 'N/A'
                 ];
             })->toArray();
 
@@ -723,66 +855,90 @@ class Products extends Component
     private function loadQuotationsHistory()
     {
         try {
-            $quotations = Quotation::where('status', '!=', 'draft')
+            $quotations = Quotation::with(['creator', 'customer'])
+                ->where('status', '!=', 'draft')
                 ->orderBy('quotation_date', 'desc')
                 ->get();
 
             $this->quotationsHistory = [];
             
             foreach ($quotations as $quotation) {
-                $items = $quotation->items ?? [];
-                foreach ($items as $item) {
-                    if (isset($item['product_id']) && $item['product_id'] == $this->historyProductId) {
-                        $this->quotationsHistory[] = [
-                            'quotation_number' => $quotation->quotation_number,
-                            'reference_number' => $quotation->reference_number,
-                            'customer_name' => $quotation->customer_name,
-                            'customer_phone' => $quotation->customer_phone,
-                            'customer_email' => $quotation->customer_email,
-                            'customer_address' => $quotation->customer_address,
-                            'quotation_date' => $quotation->quotation_date,
-                            'valid_until' => $quotation->valid_until,
-                            'subtotal' => $quotation->subtotal,
-                            'discount_amount' => $quotation->discount_amount,
-                            'tax_amount' => $quotation->tax_amount,
-                            'shipping_charges' => $quotation->shipping_charges,
-                            'total_amount' => $quotation->total_amount,
-                            'status' => $quotation->status,
-                            'terms_conditions' => $quotation->terms_conditions,
-                            'notes' => $quotation->notes,
-                            'quantity' => $item['quantity'] ?? 0,
-                            'unit_price' => $item['unit_price'] ?? 0,
-                            'discount' => $item['discount'] ?? 0,
-                            'total' => $item['total'] ?? 0,
-                            'product_name' => $item['product_name'] ?? 'N/A',
-                            'product_code' => $item['product_code'] ?? 'N/A',
-                            'created_by_name' => $quotation->createdBy->name ?? 'N/A'
-                        ];
+                $items = is_array($quotation->items) ? $quotation->items : json_decode($quotation->items, true);
+                
+                if (!empty($items)) {
+                    foreach ($items as $item) {
+                        if (isset($item['product_id']) && $item['product_id'] == $this->historyProductId) {
+                            $this->quotationsHistory[] = [
+                                'id' => $quotation->id,
+                                'quotation_number' => $quotation->quotation_number,
+                                'reference_number' => $quotation->reference_number ?? 'N/A',
+                                'customer_name' => $quotation->customer_name ?? ($quotation->customer->name ?? 'N/A'),
+                                'customer_phone' => $quotation->customer_phone ?? ($quotation->customer->phone ?? 'N/A'),
+                                'customer_email' => $quotation->customer_email ?? 'N/A',
+                                'quotation_date' => $quotation->quotation_date,
+                                'valid_until' => $quotation->valid_until,
+                                'status' => $quotation->status,
+                                'quantity' => $item['quantity'] ?? 0,
+                                'unit_price' => $item['unit_price'] ?? 0,
+                                'discount' => $item['discount'] ?? 0,
+                                'total' => $item['total'] ?? 0,
+                                'product_name' => $item['product_name'] ?? 'N/A',
+                                'product_code' => $item['product_code'] ?? 'N/A',
+                                'created_by_name' => $quotation->creator->name ?? 'N/A'
+                            ];
+                        }
                     }
                 }
             }
 
         } catch (\Exception $e) {
             $this->quotationsHistory = [];
+            // Log error for debugging
         }
     }
 
     // 🔹 Real-time validation for specific fields
     public function updated($propertyName)
     {
+        // Clear view/edit state when page changes to fix modal showing wrong product
+        if ($propertyName === 'page' || $propertyName === 'search') {
+            $this->viewProduct = null;
+            $this->editId = null;
+            $this->historyProductId = null;
+            $this->adjustmentProductId = null;
+        }
+        
         // Only validate specific fields in real-time to improve performance
         if (in_array($propertyName, [
             'name', 'code', 'brand', 'category', 'supplier_price', 'selling_price', 
             'available_stock', 'editName', 'editCode', 'editBrand', 'editCategory',
-            'editSupplierPrice', 'editSellingPrice', 'adjustmentQuantity'
+            'editSupplierPrice', 'editSellingPrice', 'adjustmentQuantity', 'adjustmentAvailableStock'
         ])) {
             $this->validateOnly($propertyName);
         }
 
-        // Real-time validation for stock adjustment quantity
-        if ($propertyName === 'adjustmentQuantity' && $this->adjustmentQuantity) {
-            if ($this->adjustmentQuantity > $this->adjustmentAvailableStock) {
-                $this->addError('adjustmentQuantity', "Quantity cannot exceed available stock ({$this->adjustmentAvailableStock})");
+        // Auto-adjust available stock when damage quantity changes
+        if ($propertyName === 'adjustmentQuantity' && $this->adjustmentProductId) {
+            $product = ProductDetail::with(['stock'])->find($this->adjustmentProductId);
+            if ($product && $product->stock) {
+                $originalAvailable = $product->stock->available_stock;
+                $originalDamage = $product->stock->damage_stock;
+                
+                // Convert to int, treat empty/null as 0
+                $newDamage = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== '' 
+                    ? (int)$this->adjustmentQuantity 
+                    : 0;
+                
+                $damageDifference = $newDamage - $originalDamage;
+                
+                // Auto-reduce available stock
+                $this->adjustmentAvailableStock = $originalAvailable - $damageDifference;
+                
+                // Prevent negative values
+                if ($this->adjustmentAvailableStock < 0) {
+                    $this->adjustmentAvailableStock = 0;
+                    $this->addError('adjustmentQuantity', "Not enough available stock! Available: {$originalAvailable}");
+                }
             }
         }
     }

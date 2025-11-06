@@ -156,7 +156,7 @@
                                     wire:click="selectProduct({{ $product->id }})"
                                     style="cursor: pointer;">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ $product->image }}"
+                                        <img src="{{ $product->image ? asset('storage/' . $product->image) : asset('images/product.jpg') }}"
                                             alt="{{ $product->name }}"
                                             class="me-2"
                                             style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #dee2e6;">

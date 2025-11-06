@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Livewire\Admin;
+
 use Exception;
 use Livewire\Component;
 
@@ -20,9 +21,9 @@ class ProductBrandlist extends Component
 
     public function render()
     {
-        $brands = BrandList::orderBy('id','desc')->get();
-        return view('livewire.admin.Product-brandlist',[
-            'brands'=> $brands,
+        $brands = BrandList::orderBy('id', 'desc')->get();
+        return view('livewire.admin.Product-brandlist', [
+            'brands' => $brands,
         ]);
     }
 
@@ -44,20 +45,18 @@ class ProductBrandlist extends Component
         $this->validate([
             'brandName' => 'required|unique:brand_lists,brand_name'
         ]);
-        
+
         try {
             BrandList::create([
                 'brand_name' => $this->brandName,
             ]);
-            
-            $this->js('$("#createBrandModal").modal("hide")');
-            $this->js("Swal.fire('Success!', 'Brand Created Successfully', 'success')");
+
             $this->reset(['brandName']);
             $this->dispatch('brands-updated');
-        } catch(Exception $e) {
-            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
+            $this->js("Swal.fire('Success!', 'Brand Created Successfully', 'success')");
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
-        return redirect()->route('admin.Product-brand');
     }
 
     public function editBrand($id)
@@ -67,38 +66,39 @@ class ProductBrandlist extends Component
             $this->js("Swal.fire('Error!', 'Brand not found', 'error')");
             return;
         }
-        
+
         $this->editBrandName = $brand->brand_name;
         $this->editBrandId = $brand->id;
+        $this->resetErrorBag();
+        $this->resetValidation();
         $this->dispatch('edit-brand');
     }
 
-    public function updateBrand($id)
+    public function updateBrand()
     {
         $this->validate([
-            'editBrandName' => 'required|unique:brand_lists,brand_name,'.$id
+            'editBrandName' => 'required|unique:brand_lists,brand_name,' . $this->editBrandId
         ]);
-        
+
         try {
-            BrandList::where('id', $id)->update([
+            BrandList::where('id', $this->editBrandId)->update([
                 'brand_name' => $this->editBrandName,
             ]);
-            
-            $this->js('$("#editBrandModal").modal("hide")');
-            $this->js("Swal.fire('Success!', 'Brand Updated Successfully', 'success')");
+
             $this->reset(['editBrandName', 'editBrandId']);
             $this->dispatch('brands-updated');
-        } catch(Exception $e) {
-            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
+            $this->js("Swal.fire('Success!', 'Brand Updated Successfully', 'success')");
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
     }
-    
+
     public function confirmDelete($id)
     {
         $this->deleteId = $id;
         $this->dispatch('confirm-delete');
     }
-    
+
     #[On('confirmDelete')]
     public function deleteBrand()
     {
@@ -107,8 +107,8 @@ class ProductBrandlist extends Component
             $this->js("Swal.fire('Deleted!', 'Brand has been deleted successfully', 'success')");
             $this->reset(['deleteId']);
             $this->dispatch('brands-updated');
-        } catch(Exception $e) {
-            $this->js("Swal.fire('Error!', '".$e->getMessage()."', 'error')");
+        } catch (Exception $e) {
+            $this->js("Swal.fire('Error!', '" . $e->getMessage() . "', 'error')");
         }
     }
 }

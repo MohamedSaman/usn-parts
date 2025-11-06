@@ -135,15 +135,9 @@
                                                 <div class="col-4">
                                                     <div
                                                         class="p-2 p-md-3 h-100 d-flex align-items-center justify-content-center bg-light rounded-start">
-                                                        @if ($item->Product_image)
-                                                            <img src="{{ asset('storage/' . $item->Product_image) }}"
-                                                                alt="{{ $item->Product_name }}" class="img-fluid"
-                                                                style="max-height: 80px; max-height: 100px; object-fit: contain;">
-                                                        @else
-                                                            <div class="text-center text-muted">
-                                                                <i class="bi bi-Product fs-3 fs-md-1"></i>
-                                                            </div>
-                                                        @endif
+                                                        <img src="{{ $item->Product_image ? asset('storage/' . $item->Product_image) : asset('images/product.jpg') }}"
+                                                            alt="{{ $item->Product_name }}" class="img-fluid"
+                                                            style="max-height: 80px; max-height: 100px; object-fit: contain;">
                                                     </div>
                                                 </div>
                                                 <div class="col-8">

@@ -116,7 +116,7 @@ class SalesList extends Component
                     'return_qty' => 0,
                 ];
             }
-            
+
             $this->showReturnModal = true;
             $this->dispatch('showModal', 'returnModal');
         }
@@ -204,12 +204,11 @@ class SalesList extends Component
             $this->clearReturnCart();
             $this->dispatch('hideModal', 'returnModal');
             $this->dispatch('showToast', ['type' => 'success', 'message' => 'Return processed successfully!']);
-            
+
             // Refresh the selected sale to show updated returns
             if ($this->selectedSale) {
                 $this->selectedSale->refresh();
             }
-            
         } catch (\Exception $e) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Error processing return: ' . $e->getMessage()]);
         }
@@ -384,7 +383,9 @@ class SalesList extends Component
 
     public function downloadInvoice($saleId)
     {
-        $sale = Sale::with(['customer', 'items'])->where('sale_type', 'admin')->find($saleId);
+        $sale = Sale::with(['customer', 'items', 'returns' => function ($q) {
+            $q->with('product');
+        }])->where('sale_type', 'admin')->find($saleId);
 
         if (!$sale) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Sale not found.']);
