@@ -402,12 +402,12 @@
                     <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th style="width: 120px;">Code</th>
-                                <th style="width: 120px;">Product</th>
-                                <th style="width: 80px;">Ordered Qty</th>
-                                <th style="width: 150px;">Received Qty</th>
-                                <th style="width: 180px;">Supplier Price</th>
-                                <th style="width: 250px;">Discount</th>
+                                <th style="width: 100px;">Code</th>
+                                <th style="width: 150px;">Product</th>
+                                <th style="width: 80px;">Ord Qty</th>
+                                <th style="width: 80px;">Recv Qty</th>
+                                <th style="width: 150px;">Supplier Price</th>
+                                <th style="width: 180px;">Discount</th>
                                 <th style="width: 80px;">Cost</th>
                                 <th style="width: 80px;">Total</th>
                                 <th style="width: 50px;">Actions</th>
@@ -543,11 +543,11 @@
                                             title="Remove Item">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-success"
+                                        {{-- <button class="btn btn-sm btn-outline-success"
                                             wire:click="correctGRNItem({{ $index }})"
                                             title="Mark as Received">
                                             <i class="bi bi-check-circle"></i>
-                                        </button>
+                                        </button> --}}
                                     </div>
                                 </td>
                             </tr>
