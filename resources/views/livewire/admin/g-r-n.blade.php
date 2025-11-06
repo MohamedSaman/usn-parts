@@ -190,6 +190,21 @@
                                 </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr class="table-secondary fw-bold">
+                                    <td colspan="5" class="text-end">Grand Total:</td>
+                                    <td>
+                                        @php
+                                            $grandTotal = 0;
+                                            foreach($grnItems as $item) {
+                                                $grandTotal += $this->calculateItemTotal($item);
+                                            }
+                                        @endphp
+                                        Rs. {{ number_format($grandTotal, 2) }}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                     @endif
