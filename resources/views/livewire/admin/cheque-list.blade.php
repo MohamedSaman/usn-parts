@@ -1,33 +1,9 @@
 <div class="container-fluid py-3">
-    {{-- Toast Alert --}}
-    <div>
-        <div
-            x-data="{ show: false, type: '', message: '' }"
-            x-init="
-                window.addEventListener('show-toast', e => {
-                    type = e.detail.type;
-                    message = e.detail.message;
-                    show = true;
-                    setTimeout(() => show = false, 3500);
-                });
-            "
-            style="position: fixed; top: 24px; right: 24px; z-index: 2000; min-width: 320px;">
-            <template x-if="show">
-                <div :class="type === 'success' ? 'alert alert-success shadow' : 'alert alert-danger shadow'" class="fade show">
-                    <div class="d-flex align-items-center">
-                        <i :class="type === 'success' ? 'bi bi-check-circle-fill me-2' : 'bi bi-exclamation-triangle-fill me-2'" style="font-size: 1.5rem;"></i>
-                        <div x-text="message"></div>
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
-
     {{-- Header --}}
     <div class="d-flex justify-content-between align-items-center mb-5">
         <div>
             <h3 class="fw-bold text-dark mb-2">
-                <i class="bi bi-journal-check text-sucess me-2"></i> Cheque Management
+                <i class="bi bi-journal-check text-success me-2"></i> Cheque Management
             </h3>
             <p class="text-muted mb-0">View and manage all customer cheques</p>
         </div>
@@ -107,51 +83,42 @@
                             <td class="text-center">Rs.{{ number_format($cheque->cheque_amount, 2) }}</td>
                             <td class="text-center">{{ $cheque->cheque_date ? date('M d, Y', strtotime($cheque->cheque_date)) : '-' }}</td>
                             <td class="text-center">
-                                <span class="badge bg-{{ $cheque->status == 'pending' ? 'warning' : ($cheque->status == 'complete' ? 'success' : 'danger') }}">
+                                <span class="badge bg-{{ $cheque->status == 'pending' ? 'warning' : ($cheque->status == 'complete' ? 'success' : ($cheque->status == 'return' ? 'danger' : 'secondary')) }}">
                                     {{ ucfirst($cheque->status) }}
                                 </span>
                             </td>
                             <td class="text-end pe-4">
-    @if($cheque->status == 'pending' || $cheque->status == 'overdue')
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                <i class="bi bi-gear-fill"></i> Actions
-            </button>
-
-            <ul class="dropdown-menu dropdown-menu-end">
-
-                <!-- Mark as Complete -->
-                <li>
-                    <button class="dropdown-item"
-                            data-bs-toggle="modal"
-                            data-bs-target="#confirmCompleteModal"
-                            wire:click="setSelectedCheque({{ $cheque->id }})">
-                        <i class="bi bi-check2-circle text-success me-2"></i>
-                        Complete
-                    </button>
-                </li>
-
-                <!-- Return Cheque -->
-                <li>
-                    <button class="dropdown-item"
-                            data-bs-toggle="modal"
-                            data-bs-target="#confirmReturnModal"
-                            wire:click="setSelectedCheque({{ $cheque->id }})">
-                        <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>
-                        Return
-                    </button>
-                </li>
-
-            </ul>
-        </div>
-    @else
-        <span class="text-muted">-</span>
-    @endif
-</td>
-
+                                @if($cheque->status == 'pending' || $cheque->status == 'overdue')
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false">
+                                        <i class="bi bi-gear-fill"></i> Actions
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <!-- Mark as Complete -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                    wire:click="confirmComplete({{ $cheque->id }})">
+                                                <i class="bi bi-check2-circle text-success me-2"></i>
+                                                Complete
+                                            </button>
+                                        </li>
+                                        <!-- Return Cheque -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                    wire:click="confirmReturn({{ $cheque->id }})">
+                                                <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>
+                                                Return
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
@@ -175,60 +142,4 @@
             @endif
         </div>
     </div>
-
-    <!-- Confirm Complete Modal -->
-    <div wire:ignore.self class="modal fade" id="confirmCompleteModal" tabindex="-1" aria-labelledby="confirmCompleteModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered"> <!-- 👈 Centered here -->
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-check2-circle me-2"></i> Confirm Complete
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center"> <!-- 👈 Centered text -->
-                    <p class="fw-semibold fs-5">Are you sure you want to mark this cheque as <strong>Complete</strong>?</p>
-                </div>
-                <div class="modal-footer justify-content-center"> <!-- 👈 Center footer buttons -->
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-success" wire:click="completeCheque" data-bs-dismiss="modal">Yes, Complete</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Confirm Return Modal -->
-    <div wire:ignore.self class="modal fade" id="confirmReturnModal" tabindex="-1"
-        aria-labelledby="confirmReturnModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered"> <!-- 👈 Centered -->
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title fw-bold">
-                        <i class="bi bi-arrow-counterclockwise me-2"></i> Confirm Return
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body text-center">
-                    <p class="fw-semibold fs-5">Are you sure you want to <strong>Return</strong> this cheque?</p>
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" wire:click="returnCheque" data-bs-dismiss="modal">Yes, Return</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
-
-@push('script')
-<script>
-    // Clean up any stuck modals on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('padding-right');
-        document.body.style.removeProperty('overflow');
-    });
-</script>
-@endpush

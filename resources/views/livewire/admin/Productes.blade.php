@@ -1500,7 +1500,6 @@
                                             <select class="form-select" id="editStatus" wire:model="editStatus">
                                                 <option value="active">Active</option>
                                                 <option value="inactive">Inactive</option>
-                                                <option value="discontinued">Discontinued</option>
                                             </select>
                                             @error('editStatus')
                                             <span class="text-danger small">* {{ $message }}</span>

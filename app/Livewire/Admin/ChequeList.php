@@ -2,21 +2,19 @@
 
 namespace App\Livewire\Admin;
 
-
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Cheque; // You must have a Cheque model
+use App\Models\Cheque;
 use App\Models\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Illuminate\Support\Facades\Log;
 
 #[Layout('components.layouts.admin')]
 #[Title('Cheque List')]
 class ChequeList extends Component
 {
     use WithPagination;
-
-    public $selectedChequeId = null;
 
     public function getChequesProperty()
     {
@@ -42,42 +40,106 @@ class ChequeList extends Component
         return Cheque::where('status', 'overdue')->count();
     }
 
-    public function setSelectedCheque($id)
+    public function confirmComplete($id)
     {
-        $this->selectedChequeId = $id;
+        $this->js("
+            Swal.fire({
+                title: 'Mark as Complete?',
+                text: 'Are you sure you want to mark this cheque as complete?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, mark as complete!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    \$wire.completeCheque({$id});
+                }
+            });
+        ");
     }
 
-    public function completeCheque()
+    public function confirmReturn($id)
     {
-        if ($this->selectedChequeId) {
-            $cheque = Cheque::find($this->selectedChequeId);
-            if ($cheque) {
-                // Mark as complete
-                $cheque->status = 'complete';
-                $cheque->save();
-
-                $this->selectedChequeId = null;
-                $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Cheque marked as complete.']);
-                return;
-            }
-        }
-        $this->selectedChequeId = null;
+        $this->js("
+            Swal.fire({
+                title: 'Return Cheque?',
+                text: 'Are you sure you want to return this cheque?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, return cheque!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    \$wire.returnCheque({$id});
+                }
+            });
+        ");
     }
 
-    public function returnCheque()
+    public function completeCheque($id)
     {
-        if ($this->selectedChequeId) {
-            $cheque = Cheque::find($this->selectedChequeId);
-            if ($cheque) {
-                $cheque->status = 'return';
-                $cheque->save();
-
-                $this->selectedChequeId = null;
-                $this->dispatch('show-toast', ['type' => 'success', 'message' => 'Cheque marked as returned.']);
+        try {
+            $cheque = Cheque::find($id);
+            
+            if (!$cheque) {
+                $this->js("Swal.fire('Error', 'Cheque not found!', 'error');");
                 return;
             }
+
+            $cheque->status = 'complete';
+            $cheque->save();
+
+            // Refresh the data
+          
+
+            $this->js("
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Cheque marked as complete successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            ");
+
+        } catch (\Exception $e) {
+            Log::error("Error completing cheque: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to mark cheque as complete!', 'error');");
         }
-        $this->selectedChequeId = null;
+    }
+
+    public function returnCheque($id)
+    {
+        try {
+            $cheque = Cheque::find($id);
+            
+            if (!$cheque) {
+                $this->js("Swal.fire('Error', 'Cheque not found!', 'error');");
+                return;
+            }
+
+            $cheque->status = 'return';
+            $cheque->save();
+
+            // Refresh the data
+            
+
+            $this->js("
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Cheque returned successfully!',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            ");
+
+        } catch (\Exception $e) {
+            Log::error("Error returning cheque: " . $e->getMessage());
+            $this->js("Swal.fire('Error', 'Failed to return cheque!', 'error');");
+        }
     }
 
     public function render()

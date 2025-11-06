@@ -165,10 +165,10 @@ class SalesSystem extends Component
     {
         $this->validate([
             'customerName' => 'required|string|max:255',
-            'customerPhone' => 'nullable|string|max:20|unique:customers,phone',
+            'customerPhone' => 'nullable|string|max:10|unique:customers,phone',
             'customerEmail' => 'nullable|email|unique:customers,email',
             'customerAddress' => 'required|string',
-            'customerType' => 'required|in:retail,wholesale,business',
+            'customerType' => 'required|in:retail,wholesale',
         ]);
 
         try {
