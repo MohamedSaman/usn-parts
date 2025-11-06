@@ -25,6 +25,7 @@ class AddCustomerReceipt extends Component
     public $search = '';
     public $selectedCustomer = null;
     public $customerSales = [];
+    public $selectedInvoices = [];
     public $paymentData = [
         'payment_date' => '',
         'payment_method' => 'cash',
@@ -33,7 +34,13 @@ class AddCustomerReceipt extends Component
     ];
     
     // Cheque related properties
-    public $cheques = [];
+    public $cheque = [
+        'cheque_number' => '',
+        'bank_name' => '',
+        'cheque_date' => '',
+        'amount' => 0
+    ];
+
     public $bankTransfer = [
         'bank_name' => '',
         'transfer_date' => '',
@@ -57,10 +64,9 @@ class AddCustomerReceipt extends Component
         'paymentData.reference_number' => 'nullable|string|max:100',
         'paymentData.notes' => 'nullable|string|max:500',
         'totalPaymentAmount' => 'required|numeric|min:0.01',
-        'cheques.*.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50|distinct',
-        'cheques.*.bank_name' => 'required_if:paymentData.payment_method,cheque|string|max:100',
-        'cheques.*.cheque_date' => 'required_if:paymentData.payment_method,cheque|date',
-        'cheques.*.amount' => 'required_if:paymentData.payment_method,cheque|numeric|min:0.01',
+        'cheque.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50',
+        'cheque.bank_name' => 'required_if:paymentData.payment_method,cheque|string|max:100',
+        'cheque.cheque_date' => 'required_if:paymentData.payment_method,cheque|date',
         'bankTransfer.bank_name' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
         'bankTransfer.transfer_date' => 'required_if:paymentData.payment_method,bank_transfer|date',
         'bankTransfer.reference_number' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
@@ -71,11 +77,9 @@ class AddCustomerReceipt extends Component
         'paymentData.payment_method.required' => 'Payment method is required.',
         'totalPaymentAmount.required' => 'Payment amount is required.',
         'totalPaymentAmount.min' => 'Payment amount must be at least Rs. 0.01',
-        'cheques.*.cheque_number.required_if' => 'Cheque number is required for cheque payments.',
-        'cheques.*.cheque_number.distinct' => 'Each cheque number must be unique. Please use different cheque numbers.',
-        'cheques.*.bank_name.required_if' => 'Bank name is required for cheque payments.',
-        'cheques.*.cheque_date.required_if' => 'Cheque date is required for cheque payments.',
-        'cheques.*.amount.required_if' => 'Cheque amount is required for cheque payments.',
+        'cheque.cheque_number.required_if' => 'Cheque number is required for cheque payments.',
+        'cheque.bank_name.required_if' => 'Bank name is required for cheque payments.',
+        'cheque.cheque_date.required_if' => 'Cheque date is required for cheque payments.',
         'bankTransfer.bank_name.required_if' => 'Bank name is required for bank transfer.',
         'bankTransfer.transfer_date.required_if' => 'Transfer date is required for bank transfer.',
         'bankTransfer.reference_number.required_if' => 'Reference number is required for bank transfer.',
@@ -84,6 +88,8 @@ class AddCustomerReceipt extends Component
     public function mount()
     {
         $this->paymentData['payment_date'] = now()->format('Y-m-d');
+        $this->cheque['cheque_date'] = now()->format('Y-m-d');
+        $this->bankTransfer['transfer_date'] = now()->format('Y-m-d');
         $this->totalPaymentAmount = 0;
     }
 
@@ -108,79 +114,36 @@ class AddCustomerReceipt extends Component
         $this->calculateRemainingAmount();
         $this->autoAllocatePayment();
         
-        // Update cheque amounts if payment method is cheque
-        if ($this->paymentData['payment_method'] === 'cheque' && !empty($this->cheques)) {
-            $this->updateChequeAmounts();
+        // Update cheque amount if payment method is cheque
+        if ($this->paymentData['payment_method'] === 'cheque') {
+            $this->cheque['amount'] = $this->totalPaymentAmount;
         }
     }
 
     public function updatedPaymentDataPaymentMethod($value)
     {
         // Reset all payment method specific fields first
-        $this->cheques = [];
-        $this->bankTransfer = [
-            'bank_name' => '',
-            'transfer_date' => '',
-            'reference_number' => ''
-        ];
-        
-        // Initialize based on selected method
-        if ($value === 'cheque') {
-            $this->initializeCheque();
-        } elseif ($value === 'bank_transfer') {
-            $this->bankTransfer = [
-                'bank_name' => '',
-                'transfer_date' => now()->format('Y-m-d'),
-                'reference_number' => ''
-            ];
-        }
-    }
-
-    private function initializeCheque()
-    {
-        $this->cheques = [
-            [
-                'cheque_number' => '',
-                'bank_name' => '',
-                'cheque_date' => now()->format('Y-m-d'),
-                'amount' => $this->totalPaymentAmount > 0 ? $this->totalPaymentAmount : 0
-            ]
-        ];
-    }
-
-    public function addCheque()
-    {
-        $this->cheques[] = [
+        $this->cheque = [
             'cheque_number' => '',
             'bank_name' => '',
             'cheque_date' => now()->format('Y-m-d'),
-            'amount' => 0
+            'amount' => $this->totalPaymentAmount
         ];
-    }
-
-    public function removeCheque($index)
-    {
-        if (count($this->cheques) > 1) {
-            unset($this->cheques[$index]);
-            $this->cheques = array_values($this->cheques);
-        }
-    }
-
-    private function updateChequeAmounts()
-    {
-        $totalChequeAmount = collect($this->cheques)->sum('amount');
-        $difference = $this->totalPaymentAmount - $totalChequeAmount;
-
-        if ($difference != 0 && !empty($this->cheques)) {
-            $this->cheques[0]['amount'] = max(0, $this->cheques[0]['amount'] + $difference);
-        }
+        
+        $this->bankTransfer = [
+            'bank_name' => '',
+            'transfer_date' => now()->format('Y-m-d'),
+            'reference_number' => ''
+        ];
     }
 
     public function selectCustomer($customerId)
     {
         $this->selectedCustomer = Customer::find($customerId);
         $this->loadCustomerSales();
+        $this->selectedInvoices = [];
         $this->totalPaymentAmount = 0;
+        $this->totalDueAmount = 0;
         $this->initializeAllocations();
     }
 
@@ -188,12 +151,53 @@ class AddCustomerReceipt extends Component
     {
         $this->selectedCustomer = null;
         $this->customerSales = [];
+        $this->selectedInvoices = [];
         $this->allocations = [];
         $this->totalDueAmount = 0;
         $this->totalPaymentAmount = 0;
         $this->remainingAmount = 0;
-        $this->cheques = [];
         $this->resetPaymentData();
+    }
+
+    /**
+     * Toggle invoice selection
+     */
+    public function toggleInvoiceSelection($saleId)
+    {
+        if (in_array($saleId, $this->selectedInvoices)) {
+            $this->selectedInvoices = array_values(array_diff($this->selectedInvoices, [$saleId]));
+        } else {
+            $this->selectedInvoices[] = $saleId;
+        }
+        
+        $this->calculateTotalDue();
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = $this->totalDueAmount;
+        $this->initializeAllocations();
+    }
+
+    /**
+     * Select all invoices
+     */
+    public function selectAllInvoices()
+    {
+        $this->selectedInvoices = array_column($this->customerSales, 'id');
+        $this->calculateTotalDue();
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = $this->totalDueAmount;
+        $this->initializeAllocations();
+    }
+
+    /**
+     * Clear invoice selection
+     */
+    public function clearInvoiceSelection()
+    {
+        $this->selectedInvoices = [];
+        $this->totalDueAmount = 0;
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = 0;
+        $this->allocations = [];
     }
 
     /**
@@ -260,6 +264,195 @@ class AddCustomerReceipt extends Component
     }
 
     /**
+     * Calculate total due amount for selected invoices
+     */
+    private function calculateTotalDue()
+    {
+        $this->totalDueAmount = collect($this->customerSales)
+            ->whereIn('id', $this->selectedInvoices)
+            ->sum('due_amount');
+        $this->remainingAmount = $this->totalDueAmount;
+    }
+
+    private function calculateRemainingAmount()
+    {
+        $this->remainingAmount = $this->totalDueAmount - $this->totalPaymentAmount;
+    }
+
+    private function initializeAllocations()
+    {
+        $this->allocations = [];
+
+        foreach ($this->customerSales as $sale) {
+            if (in_array($sale['id'], $this->selectedInvoices)) {
+                $this->allocations[$sale['id']] = [
+                    'sale_id' => $sale['id'],
+                    'invoice_number' => $sale['invoice_number'],
+                    'due_amount' => $sale['due_amount'],
+                    'payment_amount' => 0,
+                    'is_fully_paid' => false
+                ];
+            }
+        }
+    }
+
+    private function autoAllocatePayment()
+    {
+        $remainingPayment = $this->totalPaymentAmount;
+
+        foreach ($this->customerSales as $sale) {
+            $saleId = $sale['id'];
+            
+            // Only allocate to selected invoices
+            if (!in_array($saleId, $this->selectedInvoices)) {
+                continue;
+            }
+
+            $dueAmount = $sale['due_amount'];
+
+            if ($remainingPayment <= 0) {
+                $this->allocations[$saleId]['payment_amount'] = 0;
+                $this->allocations[$saleId]['is_fully_paid'] = false;
+            } elseif ($remainingPayment >= $dueAmount) {
+                $this->allocations[$saleId]['payment_amount'] = $dueAmount;
+                $this->allocations[$saleId]['is_fully_paid'] = true;
+                $remainingPayment -= $dueAmount;
+            } else {
+                $this->allocations[$saleId]['payment_amount'] = $remainingPayment;
+                $this->allocations[$saleId]['is_fully_paid'] = false;
+                $remainingPayment = 0;
+            }
+        }
+    }
+
+    public function openPaymentModal()
+    {
+        if (empty($this->selectedInvoices)) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Please select at least one invoice to make a payment.'
+            ]);
+            return;
+        }
+
+        // Validate payment amount
+        if (!$this->totalPaymentAmount || $this->totalPaymentAmount <= 0) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Please enter a payment amount greater than zero.'
+            ]);
+            return;
+        }
+
+        if ($this->totalPaymentAmount > $this->totalDueAmount) {
+            $this->dispatch('show-toast', [
+                'type' => 'error',
+                'message' => 'Payment amount cannot exceed total due amount.'
+            ]);
+            return;
+        }
+
+        // Validate cheque amounts if payment method is cheque
+        if ($this->paymentData['payment_method'] === 'cheque') {
+            if ($this->cheque['amount'] != $this->totalPaymentAmount) {
+                $this->dispatch('show-toast', [
+                    'type' => 'error',
+                    'message' => 'Cheque amount must equal the payment amount.'
+                ]);
+                return;
+            }
+        }
+
+        // Allocate payment
+        $this->autoAllocatePayment();
+        
+        // Show modal
+        $this->showPaymentModal = true;
+    }
+
+    public function closePaymentModal()
+    {
+        $this->showPaymentModal = false;
+        $this->paymentSuccess = false;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->selectedSale = null;
+    }
+
+    public function openReceiptModal()
+    {
+        $this->showReceiptModal = true;
+    }
+
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->latestPayment = null;
+        
+        // Reset everything
+        $this->selectedCustomer = null;
+        $this->customerSales = [];
+        $this->selectedInvoices = [];
+        $this->allocations = [];
+        $this->totalDueAmount = 0;
+        $this->totalPaymentAmount = 0;
+        $this->remainingAmount = 0;
+        $this->cheque = [
+            'cheque_number' => '',
+            'bank_name' => '',
+            'cheque_date' => now()->format('Y-m-d'),
+            'amount' => 0
+        ];
+        $this->search = '';
+        $this->resetPaymentData();
+        
+        // Reset page
+        $this->resetPage();
+        
+        // Dispatch event to refresh the page
+        $this->dispatch('payment-completed');
+    }
+
+    private function resetPaymentData()
+    {
+        $this->paymentData = [
+            'payment_date' => now()->format('Y-m-d'),
+            'payment_method' => 'cash',
+            'reference_number' => '',
+            'notes' => ''
+        ];
+        $this->totalPaymentAmount = 0;
+        $this->cheque = [
+            'cheque_number' => '',
+            'bank_name' => '',
+            'cheque_date' => now()->format('Y-m-d'),
+            'amount' => 0
+        ];
+        $this->bankTransfer = [
+            'bank_name' => '',
+            'transfer_date' => now()->format('Y-m-d'),
+            'reference_number' => ''
+        ];
+    }
+
+    public function viewSale($saleId)
+    {
+        $this->selectedSale = Sale::with(['customer', 'items', 'payments', 'returns.product'])->find($saleId);
+        
+        // Calculate return amount for display
+        if ($this->selectedSale) {
+            $this->selectedSale->return_amount = $this->calculateReturnAmount($saleId);
+            $this->selectedSale->adjusted_total = $this->selectedSale->total_amount - $this->selectedSale->return_amount;
+            $this->selectedSale->adjusted_due = max(0, $this->selectedSale->due_amount - $this->selectedSale->return_amount);
+        }
+        
+        $this->showViewModal = true;
+    }
+
+    /**
      * Automatically mark sale as paid if returns cover the full due amount
      */
     private function autoMarkSaleAsPaid($saleId, $returnAmount)
@@ -313,164 +506,6 @@ class AddCustomerReceipt extends Component
         }
     }
 
-    private function calculateTotalDue()
-    {
-        $this->totalDueAmount = collect($this->customerSales)->sum('due_amount');
-        $this->remainingAmount = $this->totalDueAmount;
-    }
-
-    private function calculateRemainingAmount()
-    {
-        $this->remainingAmount = $this->totalDueAmount - $this->totalPaymentAmount;
-    }
-
-    private function initializeAllocations()
-    {
-        $this->allocations = [];
-
-        foreach ($this->customerSales as $sale) {
-            $this->allocations[$sale['id']] = [
-                'sale_id' => $sale['id'],
-                'invoice_number' => $sale['invoice_number'],
-                'due_amount' => $sale['due_amount'],
-                'payment_amount' => 0,
-                'is_fully_paid' => false
-            ];
-        }
-    }
-
-    private function autoAllocatePayment()
-    {
-        $remainingPayment = $this->totalPaymentAmount;
-
-        foreach ($this->customerSales as $sale) {
-            $saleId = $sale['id'];
-            $dueAmount = $sale['due_amount'];
-
-            if ($remainingPayment <= 0) {
-                $this->allocations[$saleId]['payment_amount'] = 0;
-                $this->allocations[$saleId]['is_fully_paid'] = false;
-            } elseif ($remainingPayment >= $dueAmount) {
-                $this->allocations[$saleId]['payment_amount'] = $dueAmount;
-                $this->allocations[$saleId]['is_fully_paid'] = true;
-                $remainingPayment -= $dueAmount;
-            } else {
-                $this->allocations[$saleId]['payment_amount'] = $remainingPayment;
-                $this->allocations[$saleId]['is_fully_paid'] = false;
-                $remainingPayment = 0;
-            }
-        }
-    }
-
-    public function openPaymentModal()
-    {
-        // Validate payment amount
-        if (!$this->totalPaymentAmount || $this->totalPaymentAmount <= 0) {
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => 'Please enter a payment amount greater than zero.'
-            ]);
-            return;
-        }
-
-        if ($this->totalPaymentAmount > $this->totalDueAmount) {
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => 'Payment amount cannot exceed total due amount.'
-            ]);
-            return;
-        }
-
-        // Validate cheque amounts if payment method is cheque
-        if ($this->paymentData['payment_method'] === 'cheque') {
-            $totalChequeAmount = collect($this->cheques)->sum('amount');
-            if (abs($totalChequeAmount - $this->totalPaymentAmount) > 0.01) {
-                $this->dispatch('show-toast', [
-                    'type' => 'error',
-                    'message' => 'Total cheque amount must equal the payment amount.'
-                ]);
-                return;
-            }
-        }
-
-        // Allocate payment
-        $this->autoAllocatePayment();
-        
-        // Show modal
-        $this->showPaymentModal = true;
-    }
-
-    public function closePaymentModal()
-    {
-        $this->showPaymentModal = false;
-        $this->paymentSuccess = false;
-    }
-
-    public function closeViewModal()
-    {
-        $this->showViewModal = false;
-        $this->selectedSale = null;
-    }
-
-    public function openReceiptModal()
-    {
-        $this->showReceiptModal = true;
-    }
-
-    public function closeReceiptModal()
-    {
-        $this->showReceiptModal = false;
-        $this->latestPayment = null;
-        
-        // Reset everything
-        $this->selectedCustomer = null;
-        $this->customerSales = [];
-        $this->allocations = [];
-        $this->totalDueAmount = 0;
-        $this->totalPaymentAmount = 0;
-        $this->remainingAmount = 0;
-        $this->cheques = [];
-        $this->search = '';
-        $this->resetPaymentData();
-        
-        // Reset page
-        $this->resetPage();
-        
-        // Dispatch event to refresh the page
-        $this->dispatch('payment-completed');
-    }
-
-    private function resetPaymentData()
-    {
-        $this->paymentData = [
-            'payment_date' => now()->format('Y-m-d'),
-            'payment_method' => 'cash',
-            'reference_number' => '',
-            'notes' => ''
-        ];
-        $this->totalPaymentAmount = 0;
-        $this->cheques = [];
-        $this->bankTransfer = [
-            'bank_name' => '',
-            'transfer_date' => '',
-            'reference_number' => ''
-        ];
-    }
-
-    public function viewSale($saleId)
-    {
-        $this->selectedSale = Sale::with(['customer', 'items', 'payments', 'returns.product'])->find($saleId);
-        
-        // Calculate return amount for display
-        if ($this->selectedSale) {
-            $this->selectedSale->return_amount = $this->calculateReturnAmount($saleId);
-            $this->selectedSale->adjusted_total = $this->selectedSale->total_amount - $this->selectedSale->return_amount;
-            $this->selectedSale->adjusted_due = max(0, $this->selectedSale->due_amount - $this->selectedSale->return_amount);
-        }
-        
-        $this->showViewModal = true;
-    }
-
     public function processPayment()
     {
         Log::info('Payment processing started', [
@@ -506,15 +541,13 @@ class AddCustomerReceipt extends Component
 
         // Additional validation: Check for duplicate cheque numbers in database
         if ($this->paymentData['payment_method'] === 'cheque') {
-            foreach ($this->cheques as $index => $chequeData) {
-                $existingCheque = Cheque::where('cheque_number', $chequeData['cheque_number'])->first();
-                if ($existingCheque) {
-                    $this->dispatch('show-toast', [
-                        'type' => 'error',
-                        'message' => "Cheque number '{$chequeData['cheque_number']}' already exists in the system. Please use a different cheque number."
-                    ]);
-                    return;
-                }
+            $existingCheque = Cheque::where('cheque_number', $this->cheque['cheque_number'])->first();
+            if ($existingCheque) {
+                $this->dispatch('show-toast', [
+                    'type' => 'error',
+                    'message' => "Cheque number '{$this->cheque['cheque_number']}' already exists in the system. Please use a different cheque number."
+                ]);
+                return;
             }
         }
 
@@ -550,23 +583,27 @@ class AddCustomerReceipt extends Component
 
             // Process cheques if payment method is cheque
             if ($this->paymentData['payment_method'] === 'cheque') {
-                foreach ($this->cheques as $chequeData) {
-                    Cheque::create([
-                        'payment_id' => $payment->id,
-                        'cheque_number' => $chequeData['cheque_number'],
-                        'bank_name' => $chequeData['bank_name'],
-                        'cheque_date' => $chequeData['cheque_date'],
-                        'cheque_amount' => $chequeData['amount'],
-                        'status' => 'pending',
-                        'customer_id' => $this->selectedCustomer->id,
-                    ]);
-                }
-                Log::info('Cheques created', ['count' => count($this->cheques)]);
+                Cheque::create([
+                    'payment_id' => $payment->id,
+                    'cheque_number' => $this->cheque['cheque_number'],
+                    'bank_name' => $this->cheque['bank_name'],
+                    'cheque_date' => $this->cheque['cheque_date'],
+                    'cheque_amount' => $this->cheque['amount'],
+                    'status' => 'pending',
+                    'customer_id' => $this->selectedCustomer->id,
+                ]);
+                Log::info('Cheque created');
             }
 
             // Process each sale allocation
             foreach ($this->customerSales as $sale) {
                 $saleId = $sale['id'];
+                
+                // Only process selected invoices
+                if (!in_array($saleId, $this->selectedInvoices)) {
+                    continue;
+                }
+                
                 $allocation = $this->allocations[$saleId];
                 $paymentAmount = $allocation['payment_amount'];
 

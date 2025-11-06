@@ -393,7 +393,7 @@
                     <i class="bi bi-file-earmark-text me-2"></i>
                     Quotation Preview - {{ $createdQuotation->quotation_number }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeModal"></button>
+                <button type="button" class="btn-close btn-close-white" wire:click="createNewQuotation"></button>
             </div>
 
             <div class="modal-body p-0">
