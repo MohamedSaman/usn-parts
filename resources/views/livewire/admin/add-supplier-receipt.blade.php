@@ -200,9 +200,16 @@
                                     <td class="text-end text-success fw-bold">Rs.{{ number_format($allocation['payment_amount'], 2) }}</td>
                                     <td class="text-end text-danger">Rs.{{ number_format($allocation['due_amount'] - $allocation['payment_amount'], 2) }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $allocation['is_fully_paid'] ? 'success' : 'warning' }}">
-                                            {{ $allocation['is_fully_paid'] ? 'Fully Paid' : 'Partial Payment' }}
-                                        </span>
+                                        @php
+                                            $remaining = $allocation['due_amount'] - $allocation['payment_amount'];
+                                        @endphp
+                                        @if($remaining == 0)
+                                            <span class="badge bg-success">Complete</span>
+                                        @elseif($allocation['payment_amount'] > 0 && $remaining > 0)
+                                            <span class="badge bg-warning text-dark">Partial Paid</span>
+                                        @else
+                                            <span class="badge bg-danger">Payment Pending</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @endif
@@ -418,9 +425,13 @@
                                             Rs.{{ number_format($order->due_amount, 2) }}
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $order->status === 'completed' ? 'success' : 'warning' }}">
-                                                {{ ucfirst($order->status) }}
-                                            </span>
+                                            @if($order->due_amount == 0)
+                                                <span class="badge bg-success">Complete</span>
+                                            @elseif($order->due_amount > 0 && $order->due_amount < $order->total_amount)
+                                                <span class="badge bg-warning text-dark">Partial Paid</span>
+                                            @else
+                                                <span class="badge bg-danger">Payment Pending</span>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach

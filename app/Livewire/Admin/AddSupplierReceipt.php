@@ -326,6 +326,15 @@ class AddSupplierReceipt extends Component
                 'cheque.amount' => 'required|numeric|min:0.01',
             ]);
 
+            // Check for duplicate cheque number
+            $exists = PurchasePayment::where('payment_method', 'cheque')
+                ->where('cheque_number', $this->cheque['cheque_number'])
+                ->exists();
+            if ($exists) {
+                $this->addError('cheque.cheque_number', 'This cheque number has already been used. Please enter a unique cheque number.');
+                return;
+            }
+
             if (abs($this->cheque['amount'] - $this->totalPaymentAmount) > 0.01) {
                 $this->addError('cheque.amount', 'Cheque amount must match payment amount.');
                 return;
