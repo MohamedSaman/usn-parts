@@ -952,13 +952,13 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.return-supplier') }}">
                         <i class="bi bi-arrow-return-left"></i> <span>Add Supplier Return</span>
                     </a>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="">
+                    <a class="nav-link py-2" href="{{ route('admin.list-supplier-return') }}">
                         <i class="bi bi-list-check"></i> <span>List Supplier Return</span>
                     </a>
                 </li>
