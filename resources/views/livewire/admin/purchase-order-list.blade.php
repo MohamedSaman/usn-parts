@@ -255,8 +255,8 @@
                                             <div class="fw-semibold text-dark">{{ $product->name }}</div>
                                             <small class="text-muted">
                                                 Code: <span class="badge bg-secondary">{{ $product->code }}</span>
-                                                | Stock: <span class="badge {{ ($product->stock->total_stock ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
-                                                    {{ $product->stock->total_stock ?? 0 }} units
+                                                | Available: <span class="badge {{ ($product->stock->available_stock ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $product->stock->available_stock ?? 0 }} units
                                                 </span>
                                             </small>
                                         </div>
@@ -689,7 +689,7 @@
                                         <small class="text-muted">
                                             <span class="badge bg-secondary">{{ $product->code }}</span>
                                             @if($product->stock)
-                                            <span class="ms-2">Stock: {{ $product->stock->quantity ?? 0 }}</span>
+                                            <span class="ms-2 badge {{ ($product->stock->available_stock ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">Available: {{ $product->stock->available_stock ?? 0 }} units</span>
                                             @endif
                                         </small>
                                     </div>

@@ -160,20 +160,28 @@
                                 {{-- Payment Method Details --}}
                                 @if($payment->payment_method === 'cheque')
                                 <div class="alert alert-info mb-3">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <small class="text-muted d-block">Cheque Number</small>
-                                            <strong>{{ $payment->cheque_number }}</strong>
+                                    @if($payment->cheques && count($payment->cheques) > 0)
+                                        @foreach($payment->cheques as $cheque)
+                                        <div class="row {{ !$loop->last ? 'mb-3 pb-3 border-bottom' : '' }}">
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Cheque Number</small>
+                                                <strong>{{ $cheque->cheque_number }}</strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Bank Name</small>
+                                                <strong>{{ $cheque->bank_name }}</strong>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <small class="text-muted d-block">Cheque Date</small>
+                                                <strong>{{ $cheque->cheque_date ? date('M d, Y', strtotime($cheque->cheque_date)) : '-' }}</strong>
+                                            </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <small class="text-muted d-block">Bank Name</small>
-                                            <strong>{{ $payment->bank_name }}</strong>
+                                        @endforeach
+                                    @else
+                                        <div class="text-center text-muted">
+                                            <i class="bi bi-exclamation-circle me-1"></i> Cheque details not available
                                         </div>
-                                        <div class="col-md-4">
-                                            <small class="text-muted d-block">Cheque Date</small>
-                                            <strong>{{ $payment->cheque_date ? date('M d, Y', strtotime($payment->cheque_date)) : '-' }}</strong>
-                                        </div>
-                                    </div>
+                                    @endif
                                 </div>
                                 @elseif($payment->payment_method === 'bank_transfer')
                                 <div class="alert alert-info mb-3">

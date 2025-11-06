@@ -160,7 +160,7 @@ class AddSupplierReceipt extends Component
 
     public function selectAllOrders()
     {
-        $this->selectedOrders = $this->supplierOrders->pluck('id')->toArray();
+        $this->selectedOrders = array_column($this->supplierOrders, 'id');
         $this->calculateTotalDue();
         $this->totalPaymentAmount = 0;
         $this->remainingAmount = $this->totalDueAmount;

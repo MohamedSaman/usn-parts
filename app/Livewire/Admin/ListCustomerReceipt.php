@@ -50,7 +50,7 @@ class ListCustomerReceipt extends Component
     public function showCustomerPayments($customerId)
     {
         $this->selectedCustomer = Customer::find($customerId);
-        $this->payments = Payment::with(['allocations', 'allocations.sale'])
+        $this->payments = Payment::with(['allocations', 'allocations.sale', 'cheques'])
             ->where('customer_id', $customerId)
             ->orderByDesc('payment_date')
             ->get();

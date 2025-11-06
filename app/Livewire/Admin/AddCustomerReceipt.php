@@ -57,7 +57,7 @@ class AddCustomerReceipt extends Component
         'paymentData.reference_number' => 'nullable|string|max:100',
         'paymentData.notes' => 'nullable|string|max:500',
         'totalPaymentAmount' => 'required|numeric|min:0.01',
-        'cheques.*.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50',
+        'cheques.*.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50|distinct',
         'cheques.*.bank_name' => 'required_if:paymentData.payment_method,cheque|string|max:100',
         'cheques.*.cheque_date' => 'required_if:paymentData.payment_method,cheque|date',
         'cheques.*.amount' => 'required_if:paymentData.payment_method,cheque|numeric|min:0.01',
@@ -72,6 +72,7 @@ class AddCustomerReceipt extends Component
         'totalPaymentAmount.required' => 'Payment amount is required.',
         'totalPaymentAmount.min' => 'Payment amount must be at least Rs. 0.01',
         'cheques.*.cheque_number.required_if' => 'Cheque number is required for cheque payments.',
+        'cheques.*.cheque_number.distinct' => 'Each cheque number must be unique. Please use different cheque numbers.',
         'cheques.*.bank_name.required_if' => 'Bank name is required for cheque payments.',
         'cheques.*.cheque_date.required_if' => 'Cheque date is required for cheque payments.',
         'cheques.*.amount.required_if' => 'Cheque amount is required for cheque payments.',
@@ -483,9 +484,13 @@ class AddCustomerReceipt extends Component
             $this->validate();
         } catch (\Illuminate\Validation\ValidationException $e) {
             Log::error('Validation failed', ['errors' => $e->errors()]);
+            
+            // Get first error message
+            $firstError = collect($e->errors())->flatten()->first();
+            
             $this->dispatch('show-toast', [
                 'type' => 'error',
-                'message' => 'Please fill all required fields correctly.'
+                'message' => $firstError ?? 'Please fill all required fields correctly.'
             ]);
             return;
         }
@@ -497,6 +502,20 @@ class AddCustomerReceipt extends Component
                 'message' => 'Payment amount cannot exceed total due amount.'
             ]);
             return;
+        }
+
+        // Additional validation: Check for duplicate cheque numbers in database
+        if ($this->paymentData['payment_method'] === 'cheque') {
+            foreach ($this->cheques as $index => $chequeData) {
+                $existingCheque = Cheque::where('cheque_number', $chequeData['cheque_number'])->first();
+                if ($existingCheque) {
+                    $this->dispatch('show-toast', [
+                        'type' => 'error',
+                        'message' => "Cheque number '{$chequeData['cheque_number']}' already exists in the system. Please use a different cheque number."
+                    ]);
+                    return;
+                }
+            }
         }
 
         try {
@@ -621,10 +640,23 @@ class AddCustomerReceipt extends Component
                 'trace' => $e->getTraceAsString()
             ]);
             
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => 'Failed to process payment: ' . $e->getMessage()
-            ]);
+            // Check if it's a duplicate entry error for cheque number
+            $errorMessage = $e->getMessage();
+            if (strpos($errorMessage, 'Duplicate entry') !== false && strpos($errorMessage, 'cheques_cheque_number_unique') !== false) {
+                // Extract cheque number from error message
+                preg_match("/Duplicate entry '([^']+)'/", $errorMessage, $matches);
+                $chequeNumber = $matches[1] ?? 'unknown';
+                
+                $this->dispatch('show-toast', [
+                    'type' => 'error',
+                    'message' => "Cheque number '{$chequeNumber}' already exists in the system. Please use a different cheque number."
+                ]);
+            } else {
+                $this->dispatch('show-toast', [
+                    'type' => 'error',
+                    'message' => 'Failed to process payment. Please check your input and try again.'
+                ]);
+            }
         }
     }
 
