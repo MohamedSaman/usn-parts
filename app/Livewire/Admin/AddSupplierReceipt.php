@@ -27,9 +27,6 @@ class AddSupplierReceipt extends Component
     public $totalPaymentAmount = 0;
     public $remainingAmount = 0;
     public $showPaymentModal = false;
-    public $showViewModal = false;
-    public $selectedOrder = null;
-    public $paymentHistory = [];
 
     // Payment modal fields
     public $paymentData = [
@@ -53,33 +50,6 @@ class AddSupplierReceipt extends Component
     ];
 
     public $allocations = [];
-
-    protected $rules = [
-        'paymentData.payment_date' => 'required|date',
-        'paymentData.payment_method' => 'required|in:cash,cheque,bank_transfer',
-        'paymentData.reference_number' => 'nullable|string|max:100',
-        'paymentData.notes' => 'nullable|string|max:500',
-        'totalPaymentAmount' => 'required|numeric|min:0.01',
-        'cheque.cheque_number' => 'required_if:paymentData.payment_method,cheque|string|max:50',
-        'cheque.bank_name' => 'required_if:paymentData.payment_method,cheque|string|max:100',
-        'cheque.cheque_date' => 'required_if:paymentData.payment_method,cheque|date',
-        'bankTransfer.bank_name' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
-        'bankTransfer.transfer_date' => 'required_if:paymentData.payment_method,bank_transfer|date',
-        'bankTransfer.reference_number' => 'required_if:paymentData.payment_method,bank_transfer|string|max:100',
-    ];
-
-    protected $messages = [
-        'paymentData.payment_date.required' => 'Payment date is required.',
-        'paymentData.payment_method.required' => 'Payment method is required.',
-        'totalPaymentAmount.required' => 'Payment amount is required.',
-        'totalPaymentAmount.min' => 'Payment amount must be at least Rs. 0.01',
-        'cheque.cheque_number.required_if' => 'Cheque number is required for cheque payments.',
-        'cheque.bank_name.required_if' => 'Bank name is required for cheque payments.',
-        'cheque.cheque_date.required_if' => 'Cheque date is required for cheque payments.',
-        'bankTransfer.bank_name.required_if' => 'Bank name is required for bank transfer.',
-        'bankTransfer.transfer_date.required_if' => 'Transfer date is required for bank transfer.',
-        'bankTransfer.reference_number.required_if' => 'Reference number is required for bank transfer.',
-    ];
 
     public function mount()
     {
@@ -305,51 +275,6 @@ class AddSupplierReceipt extends Component
         $this->resetValidation();
     }
 
-    /**
-     * View order details
-     */
-    public function viewOrderDetails($orderId)
-    {
-        try {
-            $this->selectedOrder = PurchaseOrder::with([
-                'supplier',
-                'items.product'
-            ])->find($orderId);
-
-            if ($this->selectedOrder) {
-                // Load payment history for this order
-                $this->paymentHistory = PurchasePayment::whereHas('allocations', function($query) use ($orderId) {
-                    $query->where('purchase_order_id', $orderId);
-                })
-                ->orderBy('payment_date', 'desc')
-                ->get();
-
-                $this->showViewModal = true;
-            } else {
-                $this->dispatch('show-toast', [
-                    'type' => 'error',
-                    'message' => 'Order not found.'
-                ]);
-            }
-        } catch (\Exception $e) {
-            Log::error('Error loading order details: ' . $e->getMessage());
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => 'Failed to load order details.'
-            ]);
-        }
-    }
-
-    /**
-     * Close view modal
-     */
-    public function closeViewModal()
-    {
-        $this->showViewModal = false;
-        $this->selectedOrder = null;
-        $this->paymentHistory = [];
-    }
-
     private function resetPaymentData()
     {
         $this->paymentData = [
@@ -374,49 +299,54 @@ class AddSupplierReceipt extends Component
 
     public function processPayment()
     {
-        // Validate base fields
-        try {
-            $this->validate();
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::error('Validation failed', ['errors' => $e->errors()]);
-            
-            $firstError = collect($e->errors())->flatten()->first();
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => $firstError ?? 'Please fill all required fields correctly.'
-            ]);
-            return;
-        }
+        // Base validation
+        $this->validate([
+            'paymentData.payment_date' => 'required|date',
+            'paymentData.payment_method' => 'required|in:cash,cheque,bank_transfer',
+            'totalPaymentAmount' => 'required|numeric|min:0.01',
+        ]);
 
         if ($this->totalPaymentAmount > $this->totalDueAmount) {
-            $this->dispatch('show-toast', [
-                'type' => 'error',
-                'message' => 'Payment amount cannot exceed total due amount.'
-            ]);
+            $this->addError('totalPaymentAmount', 'Payment amount cannot exceed total due.');
             return;
         }
 
         $hasAllocation = collect($this->allocations)->sum('payment_amount') > 0;
         if (!$hasAllocation) {
-            $this->dispatch('show-toast', [
-                'type' => 'error', 
-                'message' => 'No payment allocated to any order.'
-            ]);
+            $this->dispatch('show-toast', ['type' => 'error', 'message' => 'No payment allocated to any order.']);
             return;
         }
 
-        // Additional validation for cheque payments
+        // Conditional validation
         if ($this->paymentData['payment_method'] === 'cheque') {
+            $this->validate([
+                'cheque.cheque_number' => 'required|string|max:255',
+                'cheque.bank_name' => 'required|string|max:255',
+                'cheque.cheque_date' => 'required|date',
+                'cheque.amount' => 'required|numeric|min:0.01',
+            ]);
+
+            // Check for duplicate cheque number
             $exists = PurchasePayment::where('payment_method', 'cheque')
                 ->where('cheque_number', $this->cheque['cheque_number'])
                 ->exists();
             if ($exists) {
-                $this->dispatch('show-toast', [
-                    'type' => 'error',
-                    'message' => 'This cheque number has already been used. Please enter a unique cheque number.'
-                ]);
+                $this->addError('cheque.cheque_number', 'This cheque number has already been used. Please enter a unique cheque number.');
                 return;
             }
+
+            if (abs($this->cheque['amount'] - $this->totalPaymentAmount) > 0.01) {
+                $this->addError('cheque.amount', 'Cheque amount must match payment amount.');
+                return;
+            }
+        }
+
+        if ($this->paymentData['payment_method'] === 'bank_transfer') {
+            $this->validate([
+                'bankTransfer.bank_name' => 'required|string|max:255',
+                'bankTransfer.transfer_date' => 'required|date',
+                'bankTransfer.reference_number' => 'required|string|max:255',
+            ]);
         }
 
         DB::beginTransaction();
@@ -463,14 +393,6 @@ class AddSupplierReceipt extends Component
                         $order->due_amount -= $allocation['payment_amount'];
                         $order->due_amount = max(0, round($order->due_amount, 2));
 
-                        // Update payment status
-                        if ($order->due_amount <= 0.01) {
-                            $order->payment_status = 'paid';
-                            $order->due_amount = 0;
-                        } else {
-                            $order->payment_status = 'partial';
-                        }
-                        
                         $order->save();
                     }
                 }
@@ -480,7 +402,7 @@ class AddSupplierReceipt extends Component
 
             $this->dispatch('show-toast', [
                 'type' => 'success',
-                'message' => 'Payment of Rs.' . number_format($this->totalPaymentAmount, 2) . ' recorded successfully!'
+                'message' => 'Payment recorded successfully!'
             ]);
 
             $this->showPaymentModal = false;
@@ -518,6 +440,6 @@ class AddSupplierReceipt extends Component
     {
         return view('livewire.admin.add-supplier-receipt', [
             'suppliers' => $this->suppliers
-        ]);
-    }
+]);
+}
 }
