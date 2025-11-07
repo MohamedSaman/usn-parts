@@ -578,7 +578,7 @@
                             <select class="form-select" wire:model="customerType">
                                 <option value="retail">Retail</option>
                                 <option value="wholesale">Wholesale</option>
-                                <option value="business">Business</option>
+                               
                             </select>
                             @error('customerType') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>

@@ -439,7 +439,7 @@ class Products extends Component
             'editImage' => 'nullable|url',
             'editDescription' => 'nullable|string|max:1000',
             'editBarcode' => 'nullable|string|max:255|unique:product_details,barcode,' . $this->editId,
-            'editStatus' => 'required|in:active,inactive,discontinued',
+            'editStatus' => 'required|in:active,inactive',
             'editSupplierPrice' => 'required|numeric|min:0',
             'editSellingPrice' => 'required|numeric|min:0|gte:editSupplierPrice',
             'editDiscountPrice' => 'nullable|numeric|min:0|lte:editSellingPrice',

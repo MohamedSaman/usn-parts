@@ -155,11 +155,11 @@ use App\Models\Sale;
                     <tbody>
                         @forelse($sales as $sale)
                         <tr wire:key="sale-{{ $sale->id }}" style="cursor:pointer">
-                            <td class="ps-4"  wire:click="viewSale({{ $sale->id }})">
+                            <td class="ps-4" wire:click="viewSale({{ $sale->id }})">
                                 <div class="fw-bold text-primary">{{ $sale->invoice_number }}</div>
                                 <small class="text-muted">#{{ $sale->sale_id }}</small>
                             </td>
-                            <td  wire:click="viewSale({{ $sale->id }})">
+                            <td wire:click="viewSale({{ $sale->id }})">
                                 @if($sale->customer)
                                 <div class="fw-medium">{{ $sale->customer->name }}</div>
                                 <small class="text-muted">{{ $sale->customer->phone }}</small>
@@ -185,54 +185,54 @@ use App\Models\Sale;
                             <td class="text-center" wire:click="viewSale({{ $sale->id }})">
                                 <span class="badge bg-primary">{{ strtoupper($sale->sale_type) }}</span>
                             </td>
-                          <td class="text-end pe-4">
-    <div class="dropdown">
-        <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-            <i class="bi bi-gear-fill"></i> Actions
-        </button>
+                            <td class="text-end pe-4">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <i class="bi bi-gear-fill"></i> Actions
+                                    </button>
 
-        <ul class="dropdown-menu dropdown-menu-end">
-            <!-- Download Invoice -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="downloadInvoice({{ $sale->id }})"
-                        wire:loading.attr="disabled"
-                        wire:target="downloadInvoice({{ $sale->id }})">
-                    
-                    <span wire:loading wire:target="downloadInvoice({{ $sale->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i>
-                        Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="downloadInvoice({{ $sale->id }})">
-                        <i class="bi bi-download text-success me-2"></i>
-                        Download Invoice
-                    </span>
-                </button>
-            </li>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <!-- Download Invoice -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                wire:click="downloadInvoice({{ $sale->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="downloadInvoice({{ $sale->id }})">
 
-            <!-- Delete Sale -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="deleteSale({{ $sale->id }})"
-                        wire:loading.attr="disabled"
-                        wire:target="deleteSale({{ $sale->id }})">
-                    
-                    <span wire:loading wire:target="deleteSale({{ $sale->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i>
-                        Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="deleteSale({{ $sale->id }})">
-                        <i class="bi bi-trash text-danger me-2"></i>
-                        Delete
-                    </span>
-                </button>
-            </li>
-        </ul>
-    </div>
-</td>
+                                                <span wire:loading wire:target="downloadInvoice({{ $sale->id }})">
+                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                    Loading...
+                                                </span>
+                                                <span wire:loading.remove wire:target="downloadInvoice({{ $sale->id }})">
+                                                    <i class="bi bi-download text-success me-2"></i>
+                                                    Download Invoice
+                                                </span>
+                                            </button>
+                                        </li>
+
+                                        <!-- Delete Sale -->
+                                        <li>
+                                            <button class="dropdown-item"
+                                                wire:click="deleteSale({{ $sale->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="deleteSale({{ $sale->id }})">
+
+                                                <span wire:loading wire:target="deleteSale({{ $sale->id }})">
+                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                    Loading...
+                                                </span>
+                                                <span wire:loading.remove wire:target="deleteSale({{ $sale->id }})">
+                                                    <i class="bi bi-trash text-danger me-2"></i>
+                                                    Delete
+                                                </span>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
 
                         </tr>
                         @empty
@@ -258,225 +258,202 @@ use App\Models\Sale;
         </div>
     </div>
 
-    {{-- View Sale Modal --}}
-    <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" id="printableInvoice">
-                {{-- ==================== HEADER ==================== --}}
-                <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
-                    <div class="w-100">
-                        <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                            class="img-fluid mb-2" style="max-height:100px;">
-
-                    </div>
-                    <button type="button" class="btn-close btn-close-black closebtn"
-                        wire:click="closeModals"></button>
+   {{-- View Sale Modal --}}
+<div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" id="printableInvoice">
+            {{-- ==================== HEADER ==================== --}}
+            <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
+                <div class="w-100">
+                    <img src="{{ asset('images/USN.png') }}" alt="Logo"
+                        class="img-fluid mb-2" style="max-height:100px;">
                 </div>
-                @if($selectedSale)
-                <div class="modal-body">
-                    {{-- ==================== CUSTOMER + INVOICE INFO ==================== --}}
-                    <div class="row mb-3">
-                        <div class="col-6">
-                            <strong>Customer :</strong><br>
-                            {{ $selectedSale->customer->name ?? 'Walk-in Customer' }}<br>
-                            {{ $selectedSale->customer->address ?? '' }}<br>
-                            Tel: {{ $selectedSale->customer->phone ?? '' }}
-                        </div>
-                        <div class="col-6 text-end">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td><strong>Invoice #</strong></td>
-                                    <td>{{ $selectedSale->invoice_number }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sale ID</strong></td>
-                                    <td>{{ $selectedSale->sale_id }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Date</strong></td>
-                                    <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Sale Type</strong></td>
-                                    <td><span class="badge bg-primary">{{ strtoupper($selectedSale->sale_type) }}</span></td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Created By</strong></td>
-                                    <td>{{ $selectedSale->user->name ?? 'System' }}</td>
-                                </tr>
-                            </table>
-                        </div>
+                <button type="button" class="btn-close btn-close-black closebtn"
+                    wire:click="closeModals"></button>
+            </div>
+            @if($selectedSale)
+            <div class="modal-body">
+                {{-- ==================== CUSTOMER + INVOICE INFO ==================== --}}
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Customer :</strong><br>
+                        {{ $selectedSale->customer->name ?? 'Walk-in Customer' }}<br>
+                        {{ $selectedSale->customer->address ?? '' }}<br>
+                        Tel: {{ $selectedSale->customer->phone ?? '' }}
                     </div>
-
-                    {{-- ==================== ITEMS TABLE ==================== --}}
-                    <div class="table-responsive mb-3">
-                        <table class="table table-bordered table-sm">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Product</th>
-                                    <th class="text-center">Code</th>
-                                    <th class="text-center">Quantity</th>
-                                    <th class="text-end">Unit Price</th>
-                                    <th class="text-end">Discount</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($selectedSale->items as $i => $item)
-                                <tr>
-                                    <td>{{ $i + 1 }}</td>
-                                    <td>{{ $item->product_name }}</td>
-                                    <td class="text-center">{{ $item->product_code }}</td>
-                                    <td class="text-center">{{ $item->quantity }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->discount_per_unit * $item->quantity, 2) }}</td>
-                                    <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
-                                </tr>
-                                @endforeach
-                                @if($selectedSale->items->count() == 0)
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted">No items found.</td>
-                                </tr>
-                                @endif
-                            </tbody>
+                    <div class="col-6 text-end">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td><strong>Invoice #</strong></td>
+                                <td>{{ $selectedSale->invoice_number }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sale ID</strong></td>
+                                <td>{{ $selectedSale->sale_id }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Date</strong></td>
+                                <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Sale Type</strong></td>
+                                <td><span class="badge bg-primary">{{ strtoupper($selectedSale->sale_type) }}</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Created By</strong></td>
+                                <td>{{ $selectedSale->user->name ?? 'System' }}</td>
+                            </tr>
                         </table>
                     </div>
+                </div>
 
-                    {{-- ==================== TOTALS (right-aligned) ==================== --}}
-                    <div class="row">
-                        <div class="col-7"></div>
-                        <div class="col-5">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td><strong>Subtotal</strong></td>
-                                    <td class="text-end">Rs.{{ number_format($selectedSale->subtotal, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Discount</strong></td>
-                                    <td class="text-end">- Rs.{{ number_format($selectedSale->discount_amount, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Grand Total</strong></td>
-                                    <td class="text-end fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
-                                </tr>
-                                @if($selectedSale->due_amount > 0)
-                                <tr>
-                                    <td><strong class="text-danger">Due Amount</strong></td>
-                                    <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
-                                </tr>
-                                @endif
-                            </table>
-                        </div>
-                    </div>
+                {{-- ==================== ITEMS TABLE ==================== --}}
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th class="text-center">Code</th>
+                                <th class="text-center">Quantity</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Discount</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($selectedSale->items as $i => $item)
+                            <tr>
+                                <td>{{ $i + 1 }}</td>
+                                <td>{{ $item->product_name }}</td>
+                                <td class="text-center">{{ $item->product_code }}</td>
+                                <td class="text-center">{{ $item->quantity }}</td>
+                                <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($item->discount_per_unit * $item->quantity, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
+                            </tr>
+                            @endforeach
+                            @if($selectedSale->items->count() == 0)
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No items found.</td>
+                            </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
 
-
-                    {{-- ==================== RETURNED ITEMS TABLE ==================== --}}
-                    <h6 class="text-muted mb-3 mt-4">RETURNED ITEMS</h6>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-bordered table-sm">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Product</th>
-                                    <th class="text-center">Code</th>
-                                    <th class="text-center">Return Qty</th>
-                                    <th class="text-end">Unit Price</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php $returnAmount = 0; @endphp
-                                @if(isset($selectedSale->returns) && count($selectedSale->returns) > 0)
-                                @foreach($selectedSale->returns as $rIndex => $return)
-                                @php $returnAmount += $return->total_amount; @endphp
-                                <tr>
-                                    <td>{{ $rIndex + 1 }}</td>
-                                    <td>{{ $return->product?->name ?? '-' }}</td>
-                                    <td class="text-center">{{ $return->product?->code ?? '-' }}</td>
-                                    <td class="text-center">{{ $return->return_quantity }}</td>
-                                    <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
-                                    <td class="text-end">Rs.{{ number_format($return->total_amount, 2) }}</td>
-                                </tr>
-                                @endforeach
-                                @else
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">No returned items.</td>
-                                </tr>
-                                @endif
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <td colspan="5" class="text-end"><strong>Return Amount:</strong></td>
-                                    <td class="text-end">- Rs.@php echo number_format($returnAmount, 2); @endphp</td>
-                                </tr>
-                                <tr>
-                                    <td colspan="5" class="text-end"><strong>Net Amount:</strong></td>
-                                    <td class="text-end fw-bold">
-                                        Rs.@php echo number_format(($selectedSale->subtotal - $selectedSale->discount_amount) - $returnAmount, 2); @endphp
-                                    </td>
-                                </tr>
-                            </tfoot>
+                {{-- ==================== TOTALS (right-aligned) ==================== --}}
+                <div class="row">
+                    <div class="col-7"></div>
+                    <div class="col-5">
+                        <table class="table table-sm table-borderless">
+                            <tr>
+                                <td><strong>Subtotal</strong></td>
+                                <td class="text-end">Rs.{{ number_format($selectedSale->subtotal, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Discount</strong></td>
+                                <td class="text-end">- Rs.{{ number_format($selectedSale->discount_amount, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Grand Total</strong></td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
+                            </tr>
+                            @if($selectedSale->due_amount > 0)
+                            <tr>
+                                <td><strong class="text-danger">Due Amount</strong></td>
+                                <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
+                            </tr>
+                            @endif
                         </table>
                     </div>
+                </div>
 
-                    {{-- ==================== GRAND TOTAL & DUE AMOUNT ==================== --}}
-                    <div class="row">
-                        <div class="col-7"></div>
-                        <div class="col-5">
-                            <table class="table table-sm table-borderless">
-                                <tr>
-                                    <td><strong>Grand Total</strong></td>
-                                    <td class="text-end">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Due Amount</strong></td>
-                                    <td class="text-end">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
-                                </tr>
-                            </table>
-                        </div>
-                    </div>
+                {{-- ==================== RETURNED ITEMS TABLE ==================== --}}
+                @if(isset($selectedSale->returns) && count($selectedSale->returns) > 0)
+                <h6 class="text-muted mb-3 mt-4">RETURNED ITEMS</h6>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Product</th>
+                                <th class="text-center">Code</th>
+                                <th class="text-center">Return Qty</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $returnAmount = 0; @endphp
+                            @foreach($selectedSale->returns as $rIndex => $return)
+                            @php $returnAmount += $return->total_amount; @endphp
+                            <tr>
+                                <td>{{ $rIndex + 1 }}</td>
+                                <td>{{ $return->product?->name ?? '-' }}</td>
+                                <td class="text-center">{{ $return->product?->code ?? '-' }}</td>
+                                <td class="text-center">{{ $return->return_quantity }}</td>
+                                <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($return->total_amount, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot class="table-light">
+                            <tr>
+                                <td colspan="5" class="text-end"><strong>Return Amount:</strong></td>
+                                <td class="text-end">- Rs.@php echo number_format($returnAmount, 2); @endphp</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="text-end"><strong>Net Amount:</strong></td>
+                                <td class="text-end fw-bold">
+                                    Rs.@php echo number_format(($selectedSale->subtotal - $selectedSale->discount_amount) - $returnAmount, 2); @endphp
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+                @endif
 
-                    @if($selectedSale->notes)
-                    <h6 class="text-muted mb-2">NOTES</h6>
-                    <div class="card bg-light">
-                        <div class="card-body">
-                            <p class="mb-0">{{ $selectedSale->notes }}</p>
-                        </div>
-                    </div>
-                    @endif
-
-                    {{-- Footer – address + contact details --}}
-                    <div class="mt-4 text-center small">
-                        <p class="mb-0">
-                            <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
-                            <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
-                        </p>
-                        <p class="mt-1 text-muted">
-                            Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.
-                        </p>
+                @if($selectedSale->notes)
+                <h6 class="text-muted mb-2">NOTES</h6>
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <p class="mb-0">{{ $selectedSale->notes }}</p>
                     </div>
                 </div>
                 @endif
-                {{-- ==================== FOOTER BUTTONS ==================== --}}
-                <div class="modal-footer bg-light justify-content-between">
-                    <button type="button" class="btn btn-secondary" wire:click="closeModals">
-                        <i class="bi bi-x-circle me-1"></i> Close
-                    </button>
-                    @if($selectedSale)
-                    <div>
-                        <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
-                            <i class="bi bi-download me-1"></i> Download PDF
-                        </button>
-                        <button type="button" class="btn btn-outline-primary" onclick="printInvoice()">
-                            <i class="bi bi-printer me-1"></i> Print
-                        </button>
-                    </div>
-                    @endif
+
+                {{-- Footer – address + contact details --}}
+                <div class="mt-4 text-center small">
+                    <p class="mb-0">
+                        <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
+                        <strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com
+                    </p>
+                    <p class="mt-1 text-muted">
+                        Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.
+                    </p>
                 </div>
+            </div>
+            @endif
+            {{-- ==================== FOOTER BUTTONS ==================== --}}
+            <div class="modal-footer bg-light justify-content-between">
+                <button type="button" class="btn btn-secondary" wire:click="closeModals">
+                    <i class="bi bi-x-circle me-1"></i> Close
+                </button>
+                @if($selectedSale)
+                <div>
+                    <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
+                        <i class="bi bi-download me-1"></i> Download PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" onclick="printInvoice()">
+                        <i class="bi bi-printer me-1"></i> Print
+                    </button>
+                </div>
+                @endif
             </div>
         </div>
     </div>
+</div>
 
 
 

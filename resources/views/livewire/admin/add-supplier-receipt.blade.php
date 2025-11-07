@@ -24,7 +24,6 @@
         </template>
     </div>
 
-
     {{-- Payment Modal --}}
     @if($showPaymentModal && $selectedSupplier)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
@@ -239,6 +238,239 @@
         </div>
     </div>
     @endif
+
+    {{-- Order Details Modal --}}
+    @if($showOrderDetailsModal && $selectedOrderForView)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-eye me-2"></i> Order Details - {{ $selectedOrderForView->order_code }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeOrderDetailsModal"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Order Header --}}
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">ORDER INFORMATION</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="40%"><strong>Order Code:</strong></td>
+                                    <td class="fw-bold">{{ $selectedOrderForView->order_code }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Order Date:</strong></td>
+                                    <td>{{ $selectedOrderForView->order_date ? date('M d, Y', strtotime($selectedOrderForView->order_date)) : '-' }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status:</strong></td>
+                                    <td>
+                                        @if($selectedOrderForView->due_amount == 0)
+                                            <span class="badge bg-success">Paid</span>
+                                        @elseif($selectedOrderForView->due_amount > 0 && $selectedOrderForView->due_amount < $selectedOrderForView->total_amount)
+                                            <span class="badge bg-warning text-dark">Partial Paid</span>
+                                        @else
+                                            <span class="badge bg-danger">Payment Pending</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">FINANCIAL SUMMARY</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td width="50%"><strong>Total Amount:</strong></td>
+                                    <td class="text-end fw-bold">Rs.{{ number_format($selectedOrderForView->total_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Paid Amount:</strong></td>
+                                    <td class="text-end text-success">Rs.{{ number_format($selectedOrderForView->total_amount - $selectedOrderForView->due_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Due Amount:</strong></td>
+                                    <td class="text-end text-danger fw-bold">Rs.{{ number_format($selectedOrderForView->due_amount, 2) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- Order Items --}}
+                    <h6 class="text-muted mb-3">ORDER ITEMS</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($selectedOrderForView->items as $item)
+                                <tr>
+                                    <td class="fw-bold">{{ $item->product->name ?? 'N/A' }}</td>
+                                    <td class="text-center">{{ $item->quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                                    <td class="text-end fw-bold">Rs.{{ number_format($item->quantity * $item->unit_price, 2) }}</td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-3">No items found for this order.</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold">Total:</td>
+                                    <td class="text-end fw-bold text-primary">Rs.{{ number_format($selectedOrderForView->total_amount, 2) }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {{-- Payment History --}}
+                    @if($selectedOrderForView->payments && $selectedOrderForView->payments->count() > 0)
+                    <h6 class="text-muted mt-4 mb-3">PAYMENT HISTORY</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Payment Date</th>
+                                    <th>Method</th>
+                                    <th class="text-end">Amount</th>
+                                    <th>Reference</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedOrderForView->payments as $payment)
+                                <tr>
+                                    <td>{{ $payment->payment_date ? date('M d, Y', strtotime($payment->payment_date)) : '-' }}</td>
+                                    <td><span class="badge bg-info">{{ ucfirst($payment->payment_method) }}</span></td>
+                                    <td class="text-end text-success fw-bold">Rs.{{ number_format($payment->amount, 2) }}</td>
+                                    <td>{{ $payment->payment_reference ?? '-' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeOrderDetailsModal">Close</button>
+                    @if($selectedOrderForView->due_amount > 0)
+                    <button type="button" class="btn btn-primary" wire:click="closeOrderDetailsModal">
+                        <i class="bi bi-credit-card me-1"></i> Make Payment
+                    </button>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+   {{-- Payment Receipt Modal --}}
+@if($showReceiptModal && $lastPayment)
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body p-0">
+                {{-- Success Message --}}
+                <div class="bg-success text-white p-4 text-center">
+                    <i class="bi bi-check-circle display-4 d-block mb-3"></i>
+                    <h4 class="mb-2">Payment Successful!</h4>
+                    <p class="mb-0">Payment Processed Successfully!</p>
+                    <p class="mb-0">Payment receipt has been generated and saved.</p>
+                </div>
+
+                {{-- Receipt Content --}}
+                <div class="p-4" id="receipt-content">
+                    <div class="text-center mb-4">
+                        <h4 class="fw-bold">Payment Receipt</h4>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Receipt ID:</strong> #{{ $lastPayment->id }}</p>
+                            <p class="mb-1"><strong>Payment Date:</strong> {{ date('M d, Y', strtotime($lastPayment->payment_date)) }}</p>
+                            <p class="mb-1"><strong>Customer:</strong> {{ $lastPayment->supplier->name }}</p>
+                            <p class="mb-0"><strong>Phone:</strong> {{ $lastPayment->supplier->mobile }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Payment Method:</strong> {{ ucfirst($lastPayment->payment_method) }}</p>
+                            <p class="mb-1"><strong>Amount Paid:</strong> Rs.{{ number_format($lastPayment->amount, 2) }}</p>
+                            <p class="mb-1"><strong>Reference No:</strong> {{ $lastPayment->payment_reference ?? 'N/A' }}</p>
+                            <p class="mb-0"><strong>Received By:</strong> Admin</p>
+                        </div>
+                    </div>
+
+                    {{-- Allocated Orders --}}
+                    <h6 class="fw-bold text-muted mb-3">PAYMENT ALLOCATION</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Order Code</th>
+                                    <th class="text-end">Allocated Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($lastPayment->allocations as $allocation)
+                                <tr>
+                                    <td class="fw-bold">{{ $allocation->order->order_code }}</td>
+                                    <td class="text-end text-success">Rs.{{ number_format($allocation->allocated_amount, 2) }}</td>
+                                    <td>
+                                        @if($allocation->order->due_amount == 0)
+                                            <span class="badge bg-success">Fully Paid</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark">Partial Paid</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td class="fw-bold">TOTAL</td>
+                                    <td class="text-end fw-bold text-success">Rs.{{ number_format($lastPayment->amount, 2) }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    @if($lastPayment->notes)
+                    <div class="mt-3">
+                        <h6 class="fw-bold text-muted">NOTES</h6>
+                        <p class="mb-0">{{ $lastPayment->notes }}</p>
+                    </div>
+                    @endif
+
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <p class="text-muted mb-0">Thank you for your payment!</p>
+                        <small class="text-muted">Generated on {{ now()->format('M d, Y h:i A') }}</small>
+                    </div>
+                </div>
+                
+                {{-- Modal Footer --}}
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" wire:click="closeReceiptModal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-success" wire:click="downloadReceipt">
+                        <i class="bi bi-download me-1"></i> Download Receipt
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
     <div class="container-fluid py-4">
         {{-- Header --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -251,44 +483,59 @@
         </div>
 
         {{-- Supplier Search --}}
-        <div class="card mb-4">
-            <div class="card-header bg-light">
-                <h5 class="fw-bold mb-0">
-                    <i class="bi bi-search me-2"></i> Find Supplier with Due Payments
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Search Supplier</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" wire:model.debounce.500ms="search" placeholder="Type supplier name or mobile...">
-
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Selected Supplier</label>
-                        @if($selectedSupplier)
-                        <div class="border rounded p-3 bg-light">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold">{{ $selectedSupplier->name }}</div>
-                                    <div class="text-muted small">{{ $selectedSupplier->mobile }}</div>
-                                    <div class="text-muted small">{{ $selectedSupplier->email }}</div>
-                                </div>
-                                <button class="btn btn-outline-danger btn-sm" wire:click="clearSelectedSupplier"><i class="bi bi-x"></i></button>
-                            </div>
-                        </div>
-                        @else
-                        <div class="border rounded p-3 text-center text-muted">
-                            <i class="bi bi-person-x display-6 d-block mb-2"></i>
-                            No supplier selected
-                        </div>
-                        @endif
-                    </div>
+<div class="card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="fw-bold mb-0">
+            <i class="bi bi-search me-2"></i> Find Supplier with Due Payments
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            {{-- Search Input --}}
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Search Supplier</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <input type="text" class="form-control"
+                        placeholder="Search by supplier name, phone or email..."
+                        wire:model.live="search">
                 </div>
             </div>
+
+            {{-- Selected Supplier --}}
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Selected Supplier</label>
+                @if($selectedSupplier)
+                <div class="border rounded p-3 bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ $selectedSupplier->name }}</h6>
+                            <p class="mb-1 text-muted">
+                                <i class="bi bi-telephone me-1"></i>{{ $selectedSupplier->mobile }}
+                                @if($selectedSupplier->email)
+                                | <i class="bi bi-envelope me-1"></i>{{ $selectedSupplier->email }}
+                                @endif
+                            </p>
+                            
+                        </div>
+                        <button class="btn btn-outline-secondary btn-sm" wire:click="clearSelectedSupplier">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+                @else
+                <div class="border rounded p-3 text-center text-muted">
+                    <i class="bi bi-person-x display-6 d-block mb-2"></i>
+                    No supplier selected
+                </div>
+                @endif
+            </div>
         </div>
+    </div>
+</div>
+
 
         {{-- Supplier List --}}
         @if(!$selectedSupplier)
@@ -305,7 +552,6 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">Supplier Name</th>
-
                                 <th class="text-center">Total Due</th>
                                 <th class="text-center">Due Orders</th>
                                 <th class="text-end pe-4">Action</th>
@@ -397,6 +643,7 @@
                                         <th>Total Amount</th>
                                         <th>Due Amount</th>
                                         <th>Status</th>
+                                        <th width="100">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -406,7 +653,7 @@
                                     @endphp
                                     <tr 
                                         wire:key="order-{{ $order->id }}" 
-                                        class="{{ $isSelected ? 'table-success' : '' }}"
+                                        class="{{ $isSelected ? 'table-success' : 'table-warning' }}"
                                         style="cursor: pointer;"
                                         wire:click="toggleOrderSelection({{ $order->id }})">
                                         <td class="text-center">
@@ -415,7 +662,8 @@
                                                     class="form-check-input" 
                                                     type="checkbox" 
                                                     {{ $isSelected ? 'checked' : '' }}
-                                                    style="pointer-events: none;">
+                                                    wire:click="toggleOrderSelection({{ $order->id }})"
+                                                    style="pointer-events: auto;">
                                             </div>
                                         </td>
                                         <td class="fw-bold">{{ $order->order_code }}</td>
@@ -432,6 +680,11 @@
                                             @else
                                                 <span class="badge bg-danger">Payment Pending</span>
                                             @endif
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-outline-primary btn-sm" wire:click="viewOrderDetails({{ $order->id }})">
+                                                <i class="bi bi-eye"></i> View
+                                            </button>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -453,7 +706,7 @@
                         @else
                             <div class="card-footer bg-light text-center text-muted">
                                 <i class="bi bi-hand-index me-2"></i>
-                                Click on rows to select orders for payment
+                                Click on rows or checkboxes to select orders for payment
                             </div>
                         @endif
                     </div>
@@ -483,6 +736,7 @@
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Enter Payment Amount <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-lg">
+                                    <span class="input-group-text">Rs.</span>
                                     <input type="number" class="form-control" wire:model.lazy="totalPaymentAmount" min="0" max="{{ $totalDueAmount }}" step="0.01" placeholder="Enter amount...">
                                 </div>
                                 <small class="text-muted">Maximum: Rs.{{ number_format($totalDueAmount, 2) }}</small>
@@ -508,6 +762,18 @@
                                     </span>
                                 </button>
                             </div>
+
+                               {{-- Quick Payment Options --}}
+                        <div class="mt-3">
+                            <small class="text-muted d-block mb-2">Quick Options:</small>
+                            <div class="d-grid gap-2">
+                                <button
+                                    class="btn btn-outline-primary btn-sm"
+                                    wire:click="$set('totalPaymentAmount', {{ $totalDueAmount }})" >
+                                    Pay Full Amount (Rs.{{ number_format($totalDueAmount, 2) }})
+                                </button>
+                            </div>
+                        </div>
                         @else
                             <div class="alert alert-warning text-center">
                                 <i class="bi bi-exclamation-triangle-fill display-4 d-block mb-3"></i>
@@ -537,6 +803,7 @@
         @endif
     </div>
 </div>
+
 @push('styles')
 <style>
     .sticky-top {
@@ -583,5 +850,120 @@
         height: 1.2em;
         cursor: pointer;
     }
+
+    /* Receipt styles */
+    #receipt-content {
+        background: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        #receipt-content, #receipt-content * {
+            visibility: visible;
+        }
+        #receipt-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: white;
+        }
+        .btn {
+            display: none !important;
+        }
+    }
+
+    /* Modal animations */
+    .modal.fade.show {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Success animation */
+    .alert-success {
+        border-left: 4px solid #8eb922;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Checkbox styling */
+    .form-check-input:checked {
+        background-color: #8eb922;
+        border-color: #3b5b0c;
+    }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    function printReceipt() {
+        const receiptContent = document.getElementById('receipt-content').innerHTML;
+        const originalContent = document.body.innerHTML;
+        
+        // Create a print-friendly version
+        const printContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Payment Receipt</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+                <style>
+                    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
+                    .receipt-header { border-bottom: 2px solid #8eb922; padding-bottom: 15px; margin-bottom: 20px; }
+                    .text-success { color: #198754 !important; }
+                    .table th { background-color: #f8f9fa !important; }
+                    @media print { 
+                        .no-print { display: none !important; }
+                        body { margin: 0; padding: 15px; }
+                    }
+                </style>
+            </head>
+            <body>
+                ${receiptContent}
+                <div class="text-center mt-4 no-print">
+                    <button class="btn btn-secondary" onclick="window.close()">Close</button>
+                    
+                </div>
+                <script>
+                    window.onload = function() {
+                        window.print();
+                    }
+                <\/script>
+            </body>
+            </html>
+        `;
+        
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+    }
+
+    // Toast notification handler
+    document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('show-toast', (event) => {
+            const toastData = Array.isArray(event.detail) ? event.detail[0] : event.detail;
+            const type = toastData.type || 'info';
+            const message = toastData.message || 'Notification';
+            
+            // You can integrate with a more sophisticated toast library here
+            console.log(`Toast: ${type} - ${message}`);
+        });
+        window.addEventListener('refreshPage', () => {
+            window.location.reload();
+        });
+    });
+</script>
 @endpush

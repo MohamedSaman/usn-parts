@@ -10,6 +10,7 @@ use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentAllocation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -27,6 +28,10 @@ class AddSupplierReceipt extends Component
     public $totalPaymentAmount = 0;
     public $remainingAmount = 0;
     public $showPaymentModal = false;
+    public $showReceiptModal = false;
+    public $lastPayment = null;
+    public $selectedOrderForView = null;
+    public $showOrderDetailsModal = false;
 
     // Payment modal fields
     public $paymentData = [
@@ -160,11 +165,11 @@ class AddSupplierReceipt extends Component
 
     public function selectAllOrders()
     {
-        $this->selectedOrders = array_column($this->supplierOrders, 'id');
-        $this->calculateTotalDue();
-        $this->totalPaymentAmount = 0;
-        $this->remainingAmount = $this->totalDueAmount;
-        $this->initializeAllocations();
+        $this->selectedOrders = collect($this->supplierOrders)->pluck('id')->toArray();
+    $this->calculateTotalDue();
+    $this->totalPaymentAmount = 0;
+    $this->remainingAmount = $this->totalDueAmount;
+    $this->initializeAllocations();
     }
 
     public function clearOrderSelection()
@@ -273,6 +278,29 @@ class AddSupplierReceipt extends Component
         $this->showPaymentModal = false;
         $this->resetErrorBag();
         $this->resetValidation();
+    }
+
+    public function closeReceiptModal()
+    {
+        $this->showReceiptModal = false;
+        $this->lastPayment = null;
+        
+    $this->dispatch('refreshPage');
+        
+         
+    }
+
+    public function closeOrderDetailsModal()
+    {
+        $this->showOrderDetailsModal = false;
+        $this->selectedOrderForView = null;
+    }
+
+    public function viewOrderDetails($orderId)
+    {
+        $this->selectedOrderForView = PurchaseOrder::with(['supplier', 'items.product'])
+            ->find($orderId);
+        $this->showOrderDetailsModal = true;
     }
 
     private function resetPaymentData()
@@ -400,16 +428,16 @@ class AddSupplierReceipt extends Component
 
             DB::commit();
 
-            $this->dispatch('show-toast', [
-                'type' => 'success',
-                'message' => 'Payment recorded successfully!'
-            ]);
+            // Store the last payment for receipt
+            $this->lastPayment = PurchasePayment::with(['supplier', 'allocations.order'])
+                ->find($payment->id);
 
             $this->showPaymentModal = false;
-            $this->clearSelectedSupplier();
-            $this->resetPage();
-            $this->resetErrorBag();
-            $this->resetValidation();
+            $this->showReceiptModal = true;
+
+           
+         
+
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Payment processing error: ' . $e->getMessage());
@@ -418,6 +446,35 @@ class AddSupplierReceipt extends Component
                 'message' => 'Failed to save payment. Please try again.'
             ]);
         }
+    }
+
+    public function printReceipt()
+    {
+        $this->dispatch('print-receipt', ['paymentId' => $this->lastPayment->id]);
+    }
+
+    public function downloadReceipt()
+    {
+        if (!$this->lastPayment) {
+            return;
+        }
+
+        // Load the payment with relationships for PDF
+        $payment = PurchasePayment::with(['supplier', 'allocations.order'])
+            ->find($this->lastPayment->id);
+
+        $pdf = Pdf::loadView('components.payment-receipt', ['payment' => $payment]);
+        
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'payment-receipt-' . $payment->id . '.pdf');
+    }
+    
+    private function generateReceiptPDF()
+    {
+        // This is a simplified version - you might want to use DomPDF or similar
+        $receipt = view('pdf.payment-receipt', ['payment' => $this->lastPayment])->render();
+        // PDF generation logic would go here
     }
 
     public function getSuppliersProperty()
@@ -429,8 +486,7 @@ class AddSupplierReceipt extends Component
                 $query->where('due_amount', '>', 0);
             })
             ->when($this->search, function ($query) {
-                $query->where('name', 'like', "%{$this->search}%")
-                    ->orWhere('mobile', 'like', "%{$this->search}%");
+                $query->where('name', 'like', "%{$this->search}%");
             })
             ->orderBy('name')
             ->paginate(10);

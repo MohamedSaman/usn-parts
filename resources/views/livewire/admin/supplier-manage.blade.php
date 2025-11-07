@@ -47,65 +47,62 @@
                                 <td>{{ $supplier->businessname }}</td>
                                 <td>{{ $supplier->contact }}</td>
                                 <td>{{ $supplier->email }}</td>
-                               <td class="text-end pe-2">
-    <div class="dropdown">
-        <button class="btn btn-outline-secondary dropdown-toggle"
-                type="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
-            <i class="bi bi-gear-fill"></i> Actions
-        </button>
+                                <td class="text-end pe-2">
+                                    <div class="dropdown">
+                                        <button class="btn btn-outline-secondary dropdown-toggle"
+                                                type="button"
+                                                data-bs-toggle="dropdown"
+                                                aria-expanded="false">
+                                            <i class="bi bi-gear-fill"></i> Actions
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                            <!-- View Supplier -->
+                                            <li>
+                                                <button class="dropdown-item"
+                                                        wire:click="view({{ $supplier->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        title="View Supplier Details">
+                                                    <span wire:loading wire:target="view({{ $supplier->id }})">
+                                                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                                                    </span>
+                                                    <span wire:loading.remove wire:target="view({{ $supplier->id }})">
+                                                        <i class="bi bi-eye text-info me-2"></i> View
+                                                    </span>
+                                                </button>
+                                            </li>
 
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-            <!-- View Supplier -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="view({{ $supplier->id }})"
-                        wire:loading.attr="disabled"
-                        title="View Supplier Details">
-                    <span wire:loading wire:target="view({{ $supplier->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="view({{ $supplier->id }})">
-                        <i class="bi bi-eye text-info me-2"></i> View
-                    </span>
-                </button>
-            </li>
+                                            <!-- Edit Supplier -->
+                                            <li>
+                                                <button class="dropdown-item"
+                                                        wire:click="edit({{ $supplier->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        title="Edit Supplier">
+                                                    <span wire:loading wire:target="edit({{ $supplier->id }})">
+                                                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                                                    </span>
+                                                    <span wire:loading.remove wire:target="edit({{ $supplier->id }})">
+                                                        <i class="bi bi-pencil text-primary me-2"></i> Edit
+                                                    </span>
+                                                </button>
+                                            </li>
 
-            <!-- Edit Supplier -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="edit({{ $supplier->id }})"
-                        wire:loading.attr="disabled"
-                        title="Edit Supplier">
-                    <span wire:loading wire:target="edit({{ $supplier->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="edit({{ $supplier->id }})">
-                        <i class="bi bi-pencil text-primary me-2"></i> Edit
-                    </span>
-                </button>
-            </li>
-
-            <!-- Delete Supplier -->
-            <li>
-                <button class="dropdown-item"
-                        wire:click="confirmDelete({{ $supplier->id }})"
-                        wire:loading.attr="disabled"
-                        title="Delete Supplier">
-                    <span wire:loading wire:target="confirmDelete({{ $supplier->id }})">
-                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
-                    </span>
-                    <span wire:loading.remove wire:target="confirmDelete({{ $supplier->id }})">
-                        <i class="bi bi-trash text-danger me-2"></i> Delete
-                    </span>
-                </button>
-            </li>
-        </ul>
-    </div>
-</td>
-
-
+                                            <!-- Delete Supplier -->
+                                            <li>
+                                                <button class="dropdown-item"
+                                                        wire:click="confirmDelete({{ $supplier->id }})"
+                                                        wire:loading.attr="disabled"
+                                                        title="Delete Supplier">
+                                                    <span wire:loading wire:target="confirmDelete({{ $supplier->id }})">
+                                                        <i class="spinner-border spinner-border-sm me-2"></i> Loading...
+                                                    </span>
+                                                    <span wire:loading.remove wire:target="confirmDelete({{ $supplier->id }})">
+                                                        <i class="bi bi-trash text-danger me-2"></i> Delete
+                                                    </span>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
                             </tr>
                             @empty
                             <tr>
@@ -138,45 +135,67 @@
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Supplier Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name" placeholder="Enter supplier name">
-                                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model.blur="name" placeholder="Enter supplier name">
+                                @error('name') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Business Name</label>
-                                <input type="text" class="form-control" wire:model="businessname" placeholder="Enter business name">
+                                <input type="text" class="form-control @error('businessname') is-invalid @enderror" wire:model.blur="businessname" placeholder="Enter business name">
+                                @error('businessname') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Contact Number</label>
-                                <input type="text" class="form-control" wire:model="contact" placeholder="Enter contact number">
+                                <input type="text" class="form-control @error('contact') is-invalid @enderror" wire:model.blur="contact" placeholder="Enter contact number">
+                                @error('contact') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Email</label>
-                                <input type="email" class="form-control" wire:model="email" placeholder="Enter email">
-                                @error('email') <div class="text-danger small">{{ $message }}</div> @enderror
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" wire:model.blur="email" placeholder="Enter email">
+                                @error('email') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Phone</label>
-                                <input type="text" class="form-control" wire:model="phone" placeholder="Enter phone number">
+                                <input type="text" class="form-control @error('phone') is-invalid @enderror" wire:model.blur="phone" placeholder="Enter phone number">
+                                @error('phone') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Status</label>
-                                <select class="form-select" wire:model="status">
+                                <select class="form-select @error('status') is-invalid @enderror" wire:model="status">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
+                                @error('status') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Address</label>
-                            <textarea class="form-control" wire:model="address" rows="2" placeholder="Enter address"></textarea>
+                            <textarea class="form-control @error('address') is-invalid @enderror" wire:model.blur="address" rows="2" placeholder="Enter address"></textarea>
+                            @error('address') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Notes</label>
-                            <textarea class="form-control" wire:model="notes" rows="2" placeholder="Additional notes (optional)"></textarea>
+                            <textarea class="form-control @error('notes') is-invalid @enderror" wire:model.blur="notes" rows="2" placeholder="Additional notes (optional)"></textarea>
+                            @error('notes') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
@@ -271,45 +290,67 @@
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Supplier Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model="name">
-                                @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <input type="text" class="form-control @error('name') is-invalid @enderror" wire:model.blur="name">
+                                @error('name') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Business Name</label>
-                                <input type="text" class="form-control" wire:model="businessname">
+                                <input type="text" class="form-control @error('businessname') is-invalid @enderror" wire:model.blur="businessname">
+                                @error('businessname') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Contact Number</label>
-                                <input type="text" class="form-control" wire:model="contact">
+                                <input type="text" class="form-control @error('contact') is-invalid @enderror" wire:model.blur="contact">
+                                @error('contact') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Email</label>
-                                <input type="email" class="form-control" wire:model="email">
-                                @error('email') <div class="text-danger small">{{ $message }}</div> @enderror
+                                <input type="email" class="form-control @error('email') is-invalid @enderror" wire:model.blur="email">
+                                @error('email') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Phone</label>
-                                <input type="text" class="form-control" wire:model="phone">
+                                <input type="text" class="form-control @error('phone') is-invalid @enderror" wire:model.blur="phone">
+                                @error('phone') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label fw-semibold">Status</label>
-                                <select class="form-select" wire:model="status">
+                                <select class="form-select @error('status') is-invalid @enderror" wire:model="status">
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
                                 </select>
+                                @error('status') 
+                                    <div class="invalid-feedback d-block">{{ $message }}</div> 
+                                @enderror
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Address</label>
-                            <textarea class="form-control" wire:model="address" rows="2"></textarea>
+                            <textarea class="form-control @error('address') is-invalid @enderror" wire:model.blur="address" rows="2"></textarea>
+                            @error('address') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
                         </div>
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Notes</label>
-                            <textarea class="form-control" wire:model="notes" rows="2"></textarea>
+                            <textarea class="form-control @error('notes') is-invalid @enderror" wire:model.blur="notes" rows="2"></textarea>
+                            @error('notes') 
+                                <div class="invalid-feedback d-block">{{ $message }}</div> 
+                            @enderror
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary">
@@ -322,7 +363,6 @@
         </div>
     </div>
     @endif
-
 </div>
 
 @push('styles')
@@ -402,6 +442,28 @@
         border: none;
         background: transparent;
     }
+
+    .invalid-feedback {
+        display: block;
+        width: 100%;
+        margin-top: 0.25rem;
+        font-size: 0.875em;
+        color: #dc3545;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+        padding-right: calc(1.5em + 0.75rem);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.8 3.6.4.4.4-.4'/%3e%3cpath d='M6 7v2'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right calc(0.375em + 0.1875rem) center;
+        background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+    }
+
+    .is-invalid:focus {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
 </style>
 @endpush
 
@@ -418,11 +480,13 @@
                 showConfirmButton: false
             });
         });
+        
         Livewire.on('refreshPage', () => {
             setTimeout(() => {
                 window.location.reload();
-            }, 1500); // Refresh after 1.5 seconds to show success message
+            }, 1500);
         });
+        
         // Delete confirmation
         Livewire.on('swal:confirm', ([data]) => {
             Swal.fire({

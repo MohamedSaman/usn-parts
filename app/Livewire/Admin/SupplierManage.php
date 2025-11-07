@@ -27,17 +27,37 @@ class SupplierManage extends Component
     
     public $showCreateModal = false;
     public $showEditModal = false;
-    public $showViewModal = false; // Added for view modal
+    public $showViewModal = false;
 
     protected $rules = [
         'name' => 'required|string|max:255',
         'businessname' => 'nullable|string|max:255',
-        'contact' => 'nullable|string|max:50',
+        'contact' => 'nullable|string|max:10',
         'address' => 'nullable|string|max:255',
         'email' => 'nullable|email|max:255',
-        'phone' => 'nullable|max:10',
+        'phone' => 'nullable|string|max:10',
         'status' => 'required|in:active,inactive',
         'notes' => 'nullable|string|max:500',
+    ];
+
+    protected $messages = [
+        'name.required' => 'The supplier name field is required.',
+        'name.string' => 'The supplier name must be a valid string.',
+        'name.max' => 'The supplier name may not be greater than 255 characters.',
+        'businessname.string' => 'The business name must be a valid string.',
+        'businessname.max' => 'The business name may not be greater than 255 characters.',
+        'contact.string' => 'The contact number must be a valid string.',
+        'contact.max' => 'The contact number may not be greater than 10 characters.',
+        'address.string' => 'The address must be a valid string.',
+        'address.max' => 'The address may not be greater than 255 characters.',
+        'email.email' => 'Please enter a valid email address.',
+        'email.max' => 'The email may not be greater than 255 characters.',
+        'phone.string' => 'The phone number must be a valid string.',
+        'phone.max' => 'The phone number may not be greater than 10 characters.',
+        'status.required' => 'The status field is required.',
+        'status.in' => 'The selected status is invalid.',
+        'notes.string' => 'The notes must be a valid string.',
+        'notes.max' => 'The notes may not be greater than 500 characters.',
     ];
 
     // -------------------- CREATE MODAL --------------------
@@ -67,12 +87,11 @@ class SupplierManage extends Component
         $this->showCreateModal = false;
 
         $this->dispatch('show-toast', 'success', 'Supplier created successfully!');
-                        $this->dispatch('refreshPage');
-
+        $this->dispatch('refreshPage');
     }
 
     // -------------------- VIEW --------------------
-    public function view($id) // Added view method
+    public function view($id)
     {
         $supplier = ProductSupplier::findOrFail($id);
 
@@ -134,8 +153,7 @@ class SupplierManage extends Component
         $this->showEditModal = false;
 
         $this->dispatch('show-toast', 'success', 'Supplier updated successfully!');
-                        $this->dispatch('refreshPage');
-
+        $this->dispatch('refreshPage');
     }
 
     // -------------------- CONFIRM DELETE --------------------
@@ -163,15 +181,14 @@ class SupplierManage extends Component
         } else {
             $this->dispatch('show-toast', 'error', 'Supplier not found.');
         }
-                $this->dispatch('refreshPage');
-
+        $this->dispatch('refreshPage');
     }
 
     public function closeModal()
     {
         $this->showCreateModal = false;
         $this->showEditModal = false;
-        $this->showViewModal = false; // Added for view modal
+        $this->showViewModal = false;
         $this->resetForm();
     }
 
