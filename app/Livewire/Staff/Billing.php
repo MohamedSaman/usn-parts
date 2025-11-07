@@ -12,6 +12,7 @@ use App\Models\ProductPrice;
 use App\Models\ProductStock;
 use App\Models\ProductDetail;
 use App\Models\StaffProduct;
+use App\Services\FIFOStockService;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Collection;

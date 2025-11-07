@@ -7,6 +7,9 @@ use App\Models\ProductSupplier;
 use App\Models\ProductDetail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use App\Models\ProductBatch;
+use App\Models\ProductPrice;
+use App\Models\ProductStock;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
@@ -200,7 +203,7 @@ class PurchaseOrderList extends Component
                     $this->js("Swal.fire('Error', 'Invalid order item data!', 'error');");
                     return;
                 }
-                
+
                 if ($item['quantity'] < 1) {
                     $this->js("Swal.fire('Error', 'Product quantity must be at least 1!', 'error');");
                     return;
@@ -212,13 +215,13 @@ class PurchaseOrderList extends Component
             $lastOrder = PurchaseOrder::where('order_code', 'like', 'ORD-' . $year . '-%')
                 ->orderByDesc('order_code')
                 ->first();
-            
+
             if ($lastOrder && preg_match('/ORD-' . $year . '-(\d+)/', $lastOrder->order_code, $matches)) {
                 $nextNumber = intval($matches[1]) + 1;
             } else {
                 $nextNumber = 1;
             }
-            
+
             $orderCode = 'ORD-' . $year . '-' . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
 
             // Create order with transaction
@@ -264,7 +267,6 @@ class PurchaseOrderList extends Component
             ");
 
             Log::info("Purchase Order created successfully: " . $orderCode);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error creating purchase order: " . $e->getMessage());
@@ -462,7 +464,7 @@ class PurchaseOrderList extends Component
             $this->loadOrders();
             $this->editOrderId = null;
             $this->editOrderItems = [];
-            
+
             $this->js("
                 const modal = bootstrap.Modal.getInstance(document.getElementById('editOrderModal'));
                 if (modal) modal.hide();
@@ -476,7 +478,6 @@ class PurchaseOrderList extends Component
             ");
 
             Log::info("Purchase Order updated: " . $order->order_code);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error updating purchase order: " . $e->getMessage());
@@ -506,7 +507,7 @@ class PurchaseOrderList extends Component
     {
         try {
             $order = PurchaseOrder::find($id);
-            
+
             if (!$order) {
                 $this->js("Swal.fire('Error', 'Order not found!', 'error');");
                 return;
@@ -520,7 +521,7 @@ class PurchaseOrderList extends Component
             DB::commit();
 
             $this->loadOrders();
-            
+
             $this->js("Swal.fire({
                 icon: 'success',
                 title: 'Cancelled!',
@@ -530,7 +531,6 @@ class PurchaseOrderList extends Component
             });");
 
             Log::info("Purchase Order cancelled: " . $order->order_code);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error cancelling order: " . $e->getMessage());
@@ -560,7 +560,7 @@ class PurchaseOrderList extends Component
     {
         try {
             $order = PurchaseOrder::find($id);
-            
+
             if (!$order) {
                 $this->js("Swal.fire('Error', 'Order not found!', 'error');");
                 return;
@@ -574,7 +574,7 @@ class PurchaseOrderList extends Component
             DB::commit();
 
             $this->loadOrders();
-            
+
             $this->js("Swal.fire({
                 icon: 'success',
                 title: 'Completed!',
@@ -584,7 +584,6 @@ class PurchaseOrderList extends Component
             });");
 
             Log::info("Purchase Order completed: " . $order->order_code);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error completing order: " . $e->getMessage());
@@ -615,7 +614,7 @@ class PurchaseOrderList extends Component
     {
         try {
             $order = PurchaseOrder::find($id);
-            
+
             if (!$order) {
                 $this->js("Swal.fire('Error', 'Order not found!', 'error');");
                 return;
@@ -642,7 +641,7 @@ class PurchaseOrderList extends Component
             DB::commit();
 
             $this->loadOrders();
-            
+
             $this->js("Swal.fire({
                 icon: 'success',
                 title: 'Order Completed!',
@@ -652,7 +651,6 @@ class PurchaseOrderList extends Component
             });");
 
             Log::info("Purchase Order force completed: " . $order->order_code . " with {$pendingCount} items marked as not received");
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error force completing order: " . $e->getMessage());
@@ -660,25 +658,68 @@ class PurchaseOrderList extends Component
         }
     }
 
-    protected function updateProductStock($productId, $quantity)
+    protected function updateProductStock($productId, $quantity, $supplierPrice = 0, $sellingPrice = 0, $purchaseOrderId = null)
     {
-        $product = ProductDetail::find($productId);
-        if ($product) {
-            // If product has stock relationship, update it
-            if ($product->stock) {
-                $product->stock->available_stock += $quantity;
-                $product->stock->total_stock += $quantity;
-                $product->stock->save();
+        $product = ProductDetail::with('price')->find($productId);
+        if (!$product) return;
 
-                //add discounted price to cost price
+        $productPrice = $product->price;
 
+        // If prices not provided, get from product
+        if ($supplierPrice == 0 && $productPrice) {
+            $supplierPrice = $productPrice->supplier_price;
+        }
+        if ($sellingPrice == 0 && $productPrice) {
+            $sellingPrice = $productPrice->selling_price;
+        }
 
+        // Check if product already has stock
+        $stock = $product->stock;
+        $hasExistingStock = $stock && $stock->available_stock > 0;
+
+        // Create a new batch for this purchase
+        $batchNumber = ProductBatch::generateBatchNumber($productId);
+        ProductBatch::create([
+            'product_id' => $productId,
+            'batch_number' => $batchNumber,
+            'purchase_order_id' => $purchaseOrderId,
+            'supplier_price' => $supplierPrice,
+            'selling_price' => $sellingPrice,
+            'quantity' => $quantity,
+            'remaining_quantity' => $quantity,
+            'received_date' => now(),
+            'status' => 'active',
+        ]);
+
+        // Update product stock totals
+        if ($stock) {
+            $stock->available_stock += $quantity;
+            $stock->total_stock += $quantity;
+            $stock->save();
+        } else {
+            // Create new stock record
+            ProductStock::create([
+                'product_id' => $productId,
+                'available_stock' => $quantity,
+                'damage_stock' => 0,
+                'total_stock' => $quantity,
+                'sold_count' => 0,
+                'restocked_quantity' => $quantity,
+            ]);
+        }
+
+        // Update main product prices if no existing stock
+        if (!$hasExistingStock) {
+            if ($productPrice) {
+                $productPrice->supplier_price = $supplierPrice;
+                $productPrice->selling_price = $sellingPrice;
+                $productPrice->save();
             } else {
-                // If no stock record exists, create one
-                \App\Models\ProductStock::create([
+                ProductPrice::create([
                     'product_id' => $productId,
-                    'available_stock' => $quantity,
-                    'reserved_stock' => 0,
+                    'supplier_price' => $supplierPrice,
+                    'selling_price' => $sellingPrice,
+                    'discount_price' => 0,
                 ]);
             }
         }
@@ -757,15 +798,42 @@ class PurchaseOrderList extends Component
                 $discount = floatval($item['discount'] ?? 0);
                 $discountType = $item['discount_type'] ?? 'rs';
                 $subtotal = $receivedQty * $unitPrice;
-                
+
+                // Calculate supplier price (unit price after discount per unit)
+                $supplierPrice = $unitPrice;
                 if ($discountType === 'percent') {
                     $discountAmount = ($subtotal * $discount) / 100;
                     $itemTotal = $subtotal - $discountAmount;
+                    $supplierPrice = $unitPrice - ($unitPrice * $discount / 100);
                 } else {
                     $itemTotal = $subtotal - $discount;
+                    // Discount is total, so divide by quantity to get per unit discount
+                    $supplierPrice = $unitPrice - ($receivedQty > 0 ? $discount / $receivedQty : 0);
                 }
-                $orderTotal += max(0, $itemTotal);
+                $supplierPrice = max(0, $supplierPrice);
 
+                // Use selling price from the form if provided, otherwise calculate
+                $sellingPrice = floatval($item['selling_price'] ?? 0);
+
+                if ($sellingPrice <= 0) {
+                    // Calculate selling price based on markup ratio if not provided
+                    $product = ProductDetail::with('price')->find($productId);
+                    if ($product && $product->price) {
+                        $currentSupplierPrice = $product->price->supplier_price;
+                        $currentSellingPrice = $product->price->selling_price;
+                        if ($currentSupplierPrice > 0) {
+                            $ratio = $currentSellingPrice / $currentSupplierPrice;
+                            $sellingPrice = $supplierPrice * $ratio;
+                        } else {
+                            $sellingPrice = $currentSellingPrice;
+                        }
+                    } else {
+                        // Default markup of 20% if no existing price
+                        $sellingPrice = $supplierPrice * 1.2;
+                    }
+                }
+
+                $orderTotal += max(0, $itemTotal);
                 if (isset($item['id'])) {
                     // Update existing order item
                     $orderItem = PurchaseOrderItem::find($item['id']);
@@ -776,9 +844,9 @@ class PurchaseOrderList extends Component
                         $orderItem->discount_type = $item['discount_type'] ?? 'rs';
                         $orderItem->status = $status;
                         $orderItem->save();
-                        
+
                         if ($status === 'received' && $receivedQty > 0) {
-                            $this->updateProductStock($productId, $receivedQty);
+                            $this->updateProductStock($productId, $receivedQty, $supplierPrice, $sellingPrice, $this->selectedPO->id);
                         }
                     }
                 } else {
@@ -792,9 +860,9 @@ class PurchaseOrderList extends Component
                         'discount_type' => $item['discount_type'] ?? 'rs',
                         'status' => 'received',
                     ]);
-                    
+
                     if ($receivedQty > 0) {
-                        $this->updateProductStock($productId, $receivedQty);
+                        $this->updateProductStock($productId, $receivedQty, $supplierPrice, $sellingPrice, $this->selectedPO->id);
                     }
                 }
             }
@@ -852,7 +920,6 @@ class PurchaseOrderList extends Component
             ");
 
             Log::info("GRN processed successfully for order: " . $orderCode);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error processing GRN: " . $e->getMessage());
@@ -1003,6 +1070,7 @@ class PurchaseOrderList extends Component
             'unit_price' => 0,
             'discount' => 0,
             'discount_type' => 'rs',
+            'selling_price' => 0, // Add selling price
             'status' => 'received ',
             'is_new' => true // Flag to identify new products
         ];
@@ -1022,6 +1090,10 @@ class PurchaseOrderList extends Component
         // Initialize GRN items from purchase order items
         $this->grnItems = [];
         foreach ($this->selectedPO->items as $item) {
+            // Get current product price for selling price reference
+            $product = ProductDetail::with('price')->find($item->product_id);
+            $currentSellingPrice = $product && $product->price ? $product->price->selling_price : 0;
+
             $this->grnItems[] = [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -1031,7 +1103,8 @@ class PurchaseOrderList extends Component
                 'received_qty' => $item->quantity, // Default to ordered quantity
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount ?? 0, // Include discount
-                'discount_type' => 'rs', // Default to rupees
+                'discount_type' => $item->discount_type ?? 'rs', // Get discount type from order
+                'selling_price' => $currentSellingPrice, // Add selling price
                 'status' => 'received'
             ];
         }
@@ -1056,6 +1129,10 @@ class PurchaseOrderList extends Component
         foreach ($this->selectedPO->items as $item) {
             // Only include items that are pending or not received
             if (in_array(strtolower($item->status ?? 'pending'), ['pending', 'notreceived', ''])) {
+                // Get current product price for selling price reference
+                $product = ProductDetail::with('price')->find($item->product_id);
+                $currentSellingPrice = $product && $product->price ? $product->price->selling_price : 0;
+
                 $this->grnItems[] = [
                     'id' => $item->id,
                     'product_id' => $item->product_id,
@@ -1065,7 +1142,8 @@ class PurchaseOrderList extends Component
                     'received_qty' => $item->quantity, // Default to ordered quantity
                     'unit_price' => $item->unit_price,
                     'discount' => $item->discount ?? 0,
-                    'discount_type' => 'rs',
+                    'discount_type' => $item->discount_type ?? 'rs',
+                    'selling_price' => $currentSellingPrice, // Add selling price
                     'status' => 'pending'
                 ];
             }
@@ -1174,16 +1252,16 @@ class PurchaseOrderList extends Component
     {
         try {
             $order = PurchaseOrder::findOrFail($orderId);
-            
+
             DB::beginTransaction();
-            
+
             // Delete all order items first
             PurchaseOrderItem::where('order_id', $order->id)->delete();
-            
+
             // Delete the order
             $orderCode = $order->order_code;
             $order->delete();
-            
+
             DB::commit();
 
             $this->loadOrders();
@@ -1197,7 +1275,6 @@ class PurchaseOrderList extends Component
             });");
 
             Log::info("Purchase order permanently deleted: " . $orderCode);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error permanently deleting order: " . $e->getMessage());

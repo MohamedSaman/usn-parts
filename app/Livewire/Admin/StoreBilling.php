@@ -12,8 +12,10 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Payment;
 use App\Models\Cheque;
+use App\Services\FIFOStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -87,7 +89,7 @@ class StoreBilling extends Component
     {
         // Find or create walking customer (only one)
         $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
-        
+
         if (!$walkingCustomer) {
             $walkingCustomer = Customer::create([
                 'name' => 'Walking Customer',
@@ -97,10 +99,10 @@ class StoreBilling extends Component
                 'type' => 'retail',
                 'business_name' => null,
             ]);
-            
+
             $this->loadCustomers(); // Reload customers after creating new one
         }
-        
+
         $this->customerId = $walkingCustomer->id;
         $this->selectedCustomer = $walkingCustomer;
     }
@@ -625,24 +627,37 @@ class StoreBilling extends Component
 
             // Create sale items and update stock
             foreach ($this->cart as $item) {
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['id'],
-                    'product_code' => $item['code'],
-                    'product_name' => $item['name'],
-                    'product_model' => $item['model'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
-                    'discount_per_unit' => $item['discount'],
-                    'total_discount' => $item['discount'] * $item['quantity'],
-                    'total' => $item['total']
-                ]);
+                // Update product stock using FIFO method
+                try {
+                    $fifoResult = FIFOStockService::deductStock($item['id'], $item['quantity']);
 
-                // Update product stock
-                $product = ProductDetail::find($item['id']);
-                if ($product && $product->stock) {
-                    $product->stock->available_stock -= $item['quantity'];
-                    $product->stock->save();
+                    // Create sale items based on batch deductions
+                    // Each batch deduction creates a separate sale item with its selling price
+                    foreach ($fifoResult['deductions'] as $deduction) {
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $item['id'],
+                            'product_code' => $item['code'],
+                            'product_name' => $item['name'],
+                            'product_model' => $item['model'],
+                            'quantity' => $deduction['quantity'],
+                            'unit_price' => $deduction['selling_price'], // Use batch selling price
+                            'discount_per_unit' => $item['discount'],
+                            'total_discount' => $item['discount'] * $deduction['quantity'],
+                            'total' => ($deduction['selling_price'] - $item['discount']) * $deduction['quantity']
+                        ]);
+                    }
+
+                    // Log FIFO deduction details
+                    Log::info("FIFO Stock Deduction for Product {$item['id']}", [
+                        'quantity' => $item['quantity'],
+                        'batches_used' => count($fifoResult['deductions']),
+                        'average_cost' => $fifoResult['average_cost'],
+                        'deductions' => $fifoResult['deductions']
+                    ]);
+                } catch (\Exception $e) {
+                    // If FIFO fails, throw exception to rollback transaction
+                    throw new \Exception("Failed to deduct stock for {$item['name']}: " . $e->getMessage());
                 }
             }
 

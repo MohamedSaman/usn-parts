@@ -9,8 +9,10 @@ use App\Models\Customer;
 use App\Models\ProductDetail;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Services\FIFOStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Layout('components.layouts.admin')]
@@ -21,14 +23,14 @@ class SalesSystem extends Component
     public $search = '';
     public $searchResults = [];
     public $customerId = '';
-    
+
     // Cart Items
     public $cart = [];
-    
+
     // Customer Properties
     public $customers = [];
     public $selectedCustomer = null;
-    
+
     // Customer Form (for new customer - only used in modal)
     public $customerName = '';
     public $customerPhone = '';
@@ -36,14 +38,14 @@ class SalesSystem extends Component
     public $customerAddress = '';
     public $customerType = 'retail';
     public $businessName = '';
-    
+
     // Sale Properties
     public $notes = '';
-    
+
     // Discount Properties
     public $additionalDiscount = 0;
     public $additionalDiscountType = 'fixed'; // 'fixed' or 'percentage'
-    
+
     // Modals
     public $showSaleModal = false;
     public $showCustomerModal = false;
@@ -61,7 +63,7 @@ class SalesSystem extends Component
     {
         // Find or create walking customer (only one)
         $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
-        
+
         if (!$walkingCustomer) {
             $walkingCustomer = Customer::create([
                 'name' => 'Walking Customer',
@@ -71,10 +73,10 @@ class SalesSystem extends Component
                 'type' => 'retail',
                 'business_name' => null,
             ]);
-            
+
             $this->loadCustomers(); // Reload customers after creating new one
         }
-        
+
         $this->customerId = $walkingCustomer->id;
         $this->selectedCustomer = $walkingCustomer;
     }
@@ -93,7 +95,7 @@ class SalesSystem extends Component
 
     public function getTotalDiscountProperty()
     {
-        return collect($this->cart)->sum(function($item) {
+        return collect($this->cart)->sum(function ($item) {
             return ($item['discount'] * $item['quantity']);
         });
     }
@@ -112,7 +114,7 @@ class SalesSystem extends Component
         if ($this->additionalDiscountType === 'percentage') {
             return ($this->subtotalAfterItemDiscounts * $this->additionalDiscount) / 100;
         }
-        
+
         return min($this->additionalDiscount, $this->subtotalAfterItemDiscounts);
     }
 
@@ -185,7 +187,7 @@ class SalesSystem extends Component
             $this->customerId = $customer->id;
             $this->selectedCustomer = $customer;
             $this->closeCustomerModal();
-            
+
             $this->js("Swal.fire('success', 'Customer created successfully!', 'success')");
         } catch (\Exception $e) {
             $this->js("Swal.fire('error', 'Failed to create customer: ', 'error')");
@@ -202,7 +204,7 @@ class SalesSystem extends Component
                 ->orWhere('model', 'like', '%' . $this->search . '%')
                 ->take(10)
                 ->get()
-                ->map(function($product) {
+                ->map(function ($product) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -229,7 +231,7 @@ class SalesSystem extends Component
         }
 
         $existing = collect($this->cart)->firstWhere('id', $product['id']);
-        
+
         if ($existing) {
             // Check if adding more exceeds stock
             if (($existing['quantity'] + 1) > $product['stock']) {
@@ -237,7 +239,7 @@ class SalesSystem extends Component
                 return;
             }
 
-            $this->cart = collect($this->cart)->map(function($item) use ($product) {
+            $this->cart = collect($this->cart)->map(function ($item) use ($product) {
                 if ($item['id'] == $product['id']) {
                     $item['quantity'] += 1;
                     $item['total'] = ($item['price'] - $item['discount']) * $item['quantity'];
@@ -246,7 +248,7 @@ class SalesSystem extends Component
             })->toArray();
         } else {
             $discountPrice = ProductDetail::find($product['id'])->price->discount_price ?? 0;
-            
+
             $this->cart[] = [
                 'id' => $product['id'],
                 'name' => $product['name'],
@@ -259,7 +261,7 @@ class SalesSystem extends Component
                 'stock' => $product['stock']
             ];
         }
-        
+
         $this->search = '';
         $this->searchResults = [];
     }
@@ -268,14 +270,14 @@ class SalesSystem extends Component
     public function updateQuantity($index, $quantity)
     {
         if ($quantity < 1) $quantity = 1;
-        
+
         // Check stock availability
         $productStock = $this->cart[$index]['stock'];
         if ($quantity > $productStock) {
             $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
-        
+
         $this->cart[$index]['quantity'] = $quantity;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $this->cart[$index]['discount']) * $quantity;
     }
@@ -285,12 +287,12 @@ class SalesSystem extends Component
     {
         $currentQuantity = $this->cart[$index]['quantity'];
         $productStock = $this->cart[$index]['stock'];
-        
+
         if (($currentQuantity + 1) > $productStock) {
             $this->js("Swal.fire('error', 'Not enough stock available! Maximum: ' . $productStock, 'error')");
             return;
         }
-        
+
         $this->cart[$index]['quantity'] += 1;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $this->cart[$index]['discount']) * $this->cart[$index]['quantity'];
     }
@@ -311,7 +313,7 @@ class SalesSystem extends Component
         if ($discount > $this->cart[$index]['price']) {
             $discount = $this->cart[$index]['price'];
         }
-        
+
         $this->cart[$index]['discount'] = $discount;
         $this->cart[$index]['total'] = ($this->cart[$index]['price'] - $discount) * $this->cart[$index]['quantity'];
     }
@@ -345,7 +347,7 @@ class SalesSystem extends Component
             $this->additionalDiscount = 0;
             return;
         }
-        
+
         if ($this->additionalDiscountType === 'percentage' && $value > 100) {
             $this->additionalDiscount = 100;
             return;
@@ -418,27 +420,39 @@ class SalesSystem extends Component
                 'sale_type' => 'admin'
             ]);
 
-            // Create sale items and update stock
+            // Create sale items and update stock using FIFO
             foreach ($this->cart as $item) {
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $item['id'],
-                    'product_code' => $item['code'],
-                    'product_name' => $item['name'],
-                    'product_model' => $item['model'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['price'],
-                    'discount_per_unit' => $item['discount'],
-                    'total_discount' => $item['discount'] * $item['quantity'],
-                    'total' => $item['total']
-                ]);
+                // Update product stock using FIFO method
+                try {
+                    $fifoResult = FIFOStockService::deductStock($item['id'], $item['quantity']);
 
-                // Update product stock
-                $product = ProductDetail::find($item['id']);
-                if ($product && $product->stock) {
-                    $product->stock->available_stock -= $item['quantity'];
-                    $product->stock->sold_count += $item['quantity'];
-                    $product->stock->save();
+                    // Create sale items based on batch deductions
+                    // Each batch deduction creates a separate sale item with its selling price
+                    foreach ($fifoResult['deductions'] as $deduction) {
+                        SaleItem::create([
+                            'sale_id' => $sale->id,
+                            'product_id' => $item['id'],
+                            'product_code' => $item['code'],
+                            'product_name' => $item['name'],
+                            'product_model' => $item['model'],
+                            'quantity' => $deduction['quantity'],
+                            'unit_price' => $deduction['selling_price'], // Use batch selling price
+                            'discount_per_unit' => $item['discount'],
+                            'total_discount' => $item['discount'] * $deduction['quantity'],
+                            'total' => ($deduction['selling_price'] - $item['discount']) * $deduction['quantity']
+                        ]);
+                    }
+
+                    // Log FIFO deduction details
+                    Log::info("FIFO Stock Deduction for Product {$item['id']}", [
+                        'quantity' => $item['quantity'],
+                        'batches_used' => count($fifoResult['deductions']),
+                        'average_cost' => $fifoResult['average_cost'],
+                        'deductions' => $fifoResult['deductions']
+                    ]);
+                } catch (\Exception $e) {
+                    // If FIFO fails, throw exception to rollback transaction
+                    throw new \Exception("Failed to deduct stock for {$item['name']}: " . $e->getMessage());
                 }
             }
 
@@ -448,10 +462,9 @@ class SalesSystem extends Component
             $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);
             $this->showSaleModal = true;
             $this->js("Swal.fire('success', 'Sale created successfully!', 'success')");
-            
-            
-            session()->flash('success', 'Sale created successfully! Payment status: Pending');
 
+
+            session()->flash('success', 'Sale created successfully! Payment status: Pending');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->js("Swal.fire('error', 'Failed to create sale: ' , 'error')");
@@ -467,14 +480,14 @@ class SalesSystem extends Component
         }
 
         $sale = Sale::with(['customer', 'items'])->find($this->lastSaleId);
-        
+
         if (!$sale) {
             $this->js("Swal.fire('error', 'Sale not found.', 'error')");
             return;
         }
 
         $pdf = PDF::loadView('admin.sales.invoice', compact('sale'));
-        
+
         return response()->streamDownload(
             function () use ($pdf) {
                 echo $pdf->output();

@@ -52,10 +52,25 @@ class ProductDetail extends Model
     {
         return $this->hasMany(ReturnsProduct::class, 'product_id');
     }
+
+    public function batches()
+    {
+        return $this->hasMany(ProductBatch::class, 'product_id');
+    }
+
+    public function activeBatches()
+    {
+        return $this->hasMany(ProductBatch::class, 'product_id')
+            ->where('status', 'active')
+            ->where('remaining_quantity', '>', 0)
+            ->orderBy('received_date', 'asc')
+            ->orderBy('id', 'asc');
+    }
+
     public function detail()
-{
-    return $this->hasOne(ProductDetail::class, 'code');
-}
+    {
+        return $this->hasOne(ProductDetail::class, 'code');
+    }
 
     /**
      * Get the product image URL or default image
@@ -67,5 +82,4 @@ class ProductDetail extends Model
         // If image exists, return it; otherwise return default image path
         return $value ?: 'images/product.jpg';
     }
-
 }

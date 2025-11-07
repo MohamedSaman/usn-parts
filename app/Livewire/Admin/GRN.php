@@ -7,6 +7,8 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\ProductDetail;
 use App\Models\ProductStock;
+use App\Models\ProductBatch;
+use App\Models\ProductPrice;
 use Illuminate\Support\Str;
 
 use Livewire\Attributes\Layout;
@@ -94,6 +96,10 @@ class GRN extends Component
         $this->searchResults = ['unplanned' => []];
 
         foreach ($this->selectedPO->items as $item) {
+            // Get current product price for selling price reference
+            $product = ProductDetail::with('price')->find($item->product_id);
+            $currentSellingPrice = $product && $product->price ? $product->price->selling_price : 0;
+
             $this->grnItems[] = [
                 'id' => $item->id,
                 'product_id' => $item->product_id,
@@ -102,6 +108,8 @@ class GRN extends Component
                 'received_qty' => $item->quantity,
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount,
+                'discount_type' => $item->discount_type ?? 'rs',
+                'selling_price' => $currentSellingPrice, // Add selling price
                 'status' => $item->status,
             ];
         }
@@ -221,7 +229,34 @@ class GRN extends Component
 
         // Update stock immediately if we have a valid product and quantity
         if ($productId && $receivedQty > 0) {
-            $this->updateProductStock($productId, $receivedQty);
+            // Calculate prices
+            $unitPrice = $item['unit_price'] ?? 0;
+            $discount = $item['discount'] ?? 0;
+            $discountType = $item['discount_type'] ?? 'rs';
+
+            $supplierPrice = $unitPrice;
+            if ($discountType === 'percent') {
+                $supplierPrice = $unitPrice - ($unitPrice * $discount / 100);
+            } else {
+                $supplierPrice = $unitPrice - $discount;
+            }
+            $supplierPrice = max(0, $supplierPrice);
+
+            // Get selling price
+            $product = ProductDetail::with('price')->find($productId);
+            $sellingPrice = $supplierPrice;
+            if ($product && $product->price) {
+                $currentSupplierPrice = $product->price->supplier_price;
+                $currentSellingPrice = $product->price->selling_price;
+                if ($currentSupplierPrice > 0) {
+                    $ratio = $currentSellingPrice / $currentSupplierPrice;
+                    $sellingPrice = $supplierPrice * $ratio;
+                } else {
+                    $sellingPrice = $currentSellingPrice;
+                }
+            }
+
+            $this->updateProductStock($productId, $receivedQty, $supplierPrice, $sellingPrice, $this->selectedPO ? $this->selectedPO->id : null);
         }
     }
 
@@ -249,6 +284,42 @@ class GRN extends Component
 
             $totalItemsCount++;
 
+            // Calculate selling price based on unit price and discount
+            $unitPrice = $item['unit_price'] ?? 0;
+            $discount = $item['discount'] ?? 0;
+            $discountType = $item['discount_type'] ?? 'rs';
+
+            // Calculate supplier price (unit price after discount per unit)
+            $supplierPrice = $unitPrice;
+            if ($discountType === 'percent') {
+                $supplierPrice = $unitPrice - ($unitPrice * $discount / 100);
+            } else {
+                // Discount is total, so divide by quantity to get per unit discount
+                $supplierPrice = $unitPrice - ($receivedQty > 0 ? $discount / $receivedQty : 0);
+            }
+            $supplierPrice = max(0, $supplierPrice); // Ensure non-negative
+
+            // Use selling price from the form if provided, otherwise calculate
+            $sellingPrice = floatval($item['selling_price'] ?? 0);
+
+            if ($sellingPrice <= 0) {
+                // Calculate selling price based on markup ratio if not provided
+                $product = ProductDetail::with('price')->find($productId);
+                if ($product && $product->price) {
+                    $currentSupplierPrice = $product->price->supplier_price;
+                    $currentSellingPrice = $product->price->selling_price;
+                    if ($currentSupplierPrice > 0) {
+                        $ratio = $currentSellingPrice / $currentSupplierPrice;
+                        $sellingPrice = $supplierPrice * $ratio;
+                    } else {
+                        $sellingPrice = $currentSellingPrice;
+                    }
+                } else {
+                    // Default markup of 20% if no existing price
+                    $sellingPrice = $supplierPrice * 1.2;
+                }
+            }
+
             if (isset($item['id'])) {
                 // Update existing order item
                 $orderItem = PurchaseOrderItem::find($item['id']);
@@ -266,7 +337,7 @@ class GRN extends Component
                     if (strtolower($item['status'] ?? '') === 'received' && $receivedQty > 0) {
                         $delta = $receivedQty - $previousQty;
                         if ($delta > 0) {
-                            $this->updateProductStock($productId, $delta);
+                            $this->updateProductStock($productId, $delta, $supplierPrice, $sellingPrice, $this->selectedPO->id);
                         }
                         $receivedItemsCount++;
                     }
@@ -285,7 +356,7 @@ class GRN extends Component
 
                 // Update stock for new received item
                 if ($receivedQty > 0) {
-                    $this->updateProductStock($productId, $receivedQty);
+                    $this->updateProductStock($productId, $receivedQty, $supplierPrice, $sellingPrice, $this->selectedPO->id);
                     $receivedItemsCount++;
                 }
             }
@@ -313,10 +384,40 @@ class GRN extends Component
         $this->loadPurchaseOrders();
     }
 
-    private function updateProductStock($productId, $quantity)
+    private function updateProductStock($productId, $quantity, $supplierPrice = 0, $sellingPrice = 0, $purchaseOrderId = null)
     {
         $stock = ProductStock::where('product_id', $productId)->first();
 
+        // Get product details to check prices
+        $product = ProductDetail::with('price')->find($productId);
+        $productPrice = $product->price;
+
+        // If prices not provided, get from product
+        if ($supplierPrice == 0 && $productPrice) {
+            $supplierPrice = $productPrice->supplier_price;
+        }
+        if ($sellingPrice == 0 && $productPrice) {
+            $sellingPrice = $productPrice->selling_price;
+        }
+
+        // Check if product already has stock
+        $hasExistingStock = $stock && $stock->available_stock > 0;
+
+        // Create a new batch for this purchase
+        $batchNumber = ProductBatch::generateBatchNumber($productId);
+        $batch = ProductBatch::create([
+            'product_id' => $productId,
+            'batch_number' => $batchNumber,
+            'purchase_order_id' => $purchaseOrderId,
+            'supplier_price' => $supplierPrice,
+            'selling_price' => $sellingPrice,
+            'quantity' => $quantity,
+            'remaining_quantity' => $quantity,
+            'received_date' => now(),
+            'status' => 'active',
+        ]);
+
+        // Update product stock totals
         if ($stock) {
             // Update existing stock
             $stock->available_stock += $quantity;
@@ -325,7 +426,7 @@ class GRN extends Component
             $stock->save();
         } else {
             // Create new stock record
-            ProductStock::create([
+            $stock = ProductStock::create([
                 'product_id' => $productId,
                 'available_stock' => $quantity,
                 'damage_stock' => 0,
@@ -334,6 +435,26 @@ class GRN extends Component
                 'restocked_quantity' => $quantity,
             ]);
         }
+
+        // Update main product prices if no existing stock (FIFO logic)
+        // When old stock reaches 0, the new batch prices become the main prices
+        if (!$hasExistingStock) {
+            if ($productPrice) {
+                $productPrice->supplier_price = $supplierPrice;
+                $productPrice->selling_price = $sellingPrice;
+                $productPrice->save();
+            } else {
+                // Create price record if doesn't exist
+                ProductPrice::create([
+                    'product_id' => $productId,
+                    'supplier_price' => $supplierPrice,
+                    'selling_price' => $sellingPrice,
+                    'discount_price' => 0,
+                ]);
+            }
+        }
+
+        return $batch;
     }
 
     // Calculate discount amount in rupees
@@ -349,7 +470,7 @@ class GRN extends Component
             $subtotal = $receivedQty * $unitPrice;
             return ($subtotal * $discount) / 100;
         }
-        
+
         // Return discount as is (it's already in rupees)
         return $discount;
     }
@@ -361,7 +482,7 @@ class GRN extends Component
         $unitPrice = floatval($item['unit_price'] ?? 0);
         $subtotal = $receivedQty * $unitPrice;
         $discountAmount = $this->calculateDiscountAmount($item);
-        
+
         return max(0, $subtotal - $discountAmount);
     }
 
