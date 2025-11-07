@@ -21,7 +21,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Awaiting Receipt</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Fully Received</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
                             </div>
                         </div>
                     </div>

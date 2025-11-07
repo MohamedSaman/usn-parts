@@ -15,12 +15,17 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Livewire\WithPagination;
 
 #[Title("Purchase Order")]
 #[Layout('components.layouts.admin')]
 
 class PurchaseOrderList extends Component
 {
+    use WithPagination;
+
+    protected $paginationTheme = 'bootstrap';
+
     public $suppliers = [];
     public $supplier_id = '';
     public $Product_id = '';
@@ -29,7 +34,6 @@ class PurchaseOrderList extends Component
     public $selectedProduct = null;
     public $quantity = 1;
     public $orderItems = [];
-    public $orders;
     public $selectedOrder;
 
     // Edit flow
@@ -56,7 +60,6 @@ class PurchaseOrderList extends Component
     public function mount()
     {
         $this->suppliers = ProductSupplier::all();
-        $this->loadOrders();
         $this->searchResults = []; // Initialize searchResults array
     }
 
@@ -247,9 +250,6 @@ class PurchaseOrderList extends Component
 
             DB::commit();
 
-            // Refresh table
-            $this->loadOrders();
-
             // Reset form
             $this->reset(['supplier_id', 'search', 'selectedProduct', 'selectedProductPrice', 'quantity', 'orderItems', 'totalPrice', 'grandTotal', 'products']);
 
@@ -276,11 +276,7 @@ class PurchaseOrderList extends Component
 
     public function loadOrders()
     {
-        $this->orders = PurchaseOrder::whereIn('status', ['pending', 'complete', 'received', 'cancelled'])
-            ->with(['supplier', 'items.product'])
-            ->latest()
-            ->orderBy('id', 'desc')
-            ->get();
+        // This method is no longer needed - pagination handled in render()
     }
 
     public function viewOrder($id)
@@ -461,7 +457,6 @@ class PurchaseOrderList extends Component
 
             DB::commit();
 
-            $this->loadOrders();
             $this->editOrderId = null;
             $this->editOrderItems = [];
 
@@ -520,8 +515,6 @@ class PurchaseOrderList extends Component
 
             DB::commit();
 
-            $this->loadOrders();
-
             $this->js("Swal.fire({
                 icon: 'success',
                 title: 'Cancelled!',
@@ -572,8 +565,6 @@ class PurchaseOrderList extends Component
             $order->save();
 
             DB::commit();
-
-            $this->loadOrders();
 
             $this->js("Swal.fire({
                 icon: 'success',
@@ -639,8 +630,6 @@ class PurchaseOrderList extends Component
             $order->save();
 
             DB::commit();
-
-            $this->loadOrders();
 
             $this->js("Swal.fire({
                 icon: 'success',
@@ -802,13 +791,14 @@ class PurchaseOrderList extends Component
                 // Calculate supplier price (unit price after discount per unit)
                 $supplierPrice = $unitPrice;
                 if ($discountType === 'percent') {
+                    // Percentage discount - apply to unit price
                     $discountAmount = ($subtotal * $discount) / 100;
                     $itemTotal = $subtotal - $discountAmount;
                     $supplierPrice = $unitPrice - ($unitPrice * $discount / 100);
                 } else {
-                    $itemTotal = $subtotal - $discount;
-                    // Discount is total, so divide by quantity to get per unit discount
-                    $supplierPrice = $unitPrice - ($receivedQty > 0 ? $discount / $receivedQty : 0);
+                    // Fixed Rs discount - apply directly to unit price (not distributed)
+                    $supplierPrice = $unitPrice - $discount;
+                    $itemTotal = $supplierPrice * $receivedQty;
                 }
                 $supplierPrice = max(0, $supplierPrice);
 
@@ -896,9 +886,6 @@ class PurchaseOrderList extends Component
             $this->selectedPO->save();
 
             DB::commit();
-
-            // Refresh the orders table
-            $this->loadOrders();
 
             // Reset GRN data
             $orderCode = $this->selectedPO->order_code;
@@ -992,8 +979,6 @@ class PurchaseOrderList extends Component
         // Calculate subtotal
         $subtotal = $receivedQty * $unitPrice;
 
-        // Apply discount (discount is per item, not percentage)
-        $total = $subtotal - $discount;
         $discountType = $item['discount_type'] ?? 'rs';
         // Apply discount based on type
         if ($discountType === 'percent') {
@@ -1001,8 +986,9 @@ class PurchaseOrderList extends Component
             $discountAmount = ($subtotal * $discount) / 100;
             $total = $subtotal - $discountAmount;
         } else {
-            // Fixed rupees discount
-            $total = $subtotal - $discount;
+            // Fixed rupees discount - apply to unit price
+            $discountedUnitPrice = $unitPrice - $discount;
+            $total = $discountedUnitPrice * $receivedQty;
         }
 
 
@@ -1180,9 +1166,8 @@ class PurchaseOrderList extends Component
             $discountAmountPerUnit = ($unitPrice * $discount) / 100;
             $costPerUnit = $unitPrice - $discountAmountPerUnit;
         } else {
-            // Fixed rupees discount distributed per unit
-            $discountAmountPerUnit = $discount / $receivedQty;
-            $costPerUnit = $unitPrice - $discountAmountPerUnit;
+            // Fixed rupees discount - apply directly to unit price
+            $costPerUnit = $unitPrice - $discount;
         }
 
         // Ensure cost is not negative
@@ -1215,7 +1200,8 @@ class PurchaseOrderList extends Component
             return ($subtotal * $discount) / 100;
         }
 
-        return $discount;
+        // For Rs discount, it's applied per unit, so total discount = discount × quantity
+        return $discount * $receivedQty;
     }
 
 
@@ -1263,8 +1249,6 @@ class PurchaseOrderList extends Component
             $order->delete();
 
             DB::commit();
-
-            $this->loadOrders();
 
             $this->js("Swal.fire({
                 icon: 'success',
@@ -1389,6 +1373,13 @@ class PurchaseOrderList extends Component
             $query->where('status', '!=', 'received');
         })->count();
 
-        return view('livewire.admin.purchase-order-list', compact('pendingCount', 'completedCount', 'fullyReceivedCount'));
+        // Get paginated orders
+        $orders = PurchaseOrder::whereIn('status', ['pending', 'complete', 'received', 'cancelled'])
+            ->with(['supplier', 'items.product'])
+            ->orderByRaw("FIELD(status, 'pending', 'received', 'complete', 'cancelled')")
+            ->orderBy('id', 'desc')
+            ->paginate(20);
+
+        return view('livewire.admin.purchase-order-list', compact('pendingCount', 'completedCount', 'fullyReceivedCount', 'orders'));
     }
 }

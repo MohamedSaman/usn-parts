@@ -205,6 +205,12 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                </div>
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-center">
+                        {{ $orders->links('livewire.custom-pagination') }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -411,7 +417,7 @@
                                 <th style="width: 150px;">Selling Price</th>
                                 <th style="width: 80px;">Cost</th>
                                 <th style="width: 80px;">Total</th>
-                                <th style="width: 50px;">Actions</th>
+                                <th style="width: 80px;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -547,7 +553,7 @@
                                     {{ number_format($this->calculateGRNTotal($index), 2) }}
                                 </td>
                                 <td>
-                                    <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
                                         <!-- <span class="badge {{ $statusBadge }} mb-2">
                                                 {{ $statusText }}
                                             </span> -->
@@ -556,11 +562,11 @@
                                             title="Remove Item">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                        {{-- <button class="btn btn-sm btn-outline-success"
+                                        <button class="btn btn-sm btn-outline-success"
                                             wire:click="correctGRNItem({{ $index }})"
                                         title="Mark as Received">
                                         <i class="bi bi-check-circle"></i>
-                                        </button> --}}
+                                        </button> 
                                     </div>
                                 </td>
                             </tr>
