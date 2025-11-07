@@ -26,6 +26,8 @@ use App\Imports\ProductsImport;
 use App\Exports\ProductsTemplateExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ProductApiController;
+use App\Models\ProductBatch;
+use Illuminate\Support\Facades\DB;
 
 #[Title("Product List")]
 #[Layout('components.layouts.admin')]
@@ -246,10 +248,10 @@ class Products extends Component
     {
         $this->resetForm();
         $this->resetValidation();
-        
+
         // Set default values (like walking customer in sales system)
         $this->setDefaultValues();
-        
+
         $this->js("$('#createProductModal').modal('show')");
     }
 
@@ -294,12 +296,11 @@ class Products extends Component
             $this->resetForm();
             $this->js("$('#createProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product created successfully!', 'success')");
-            
+
             // Clear cache for client-side refresh
             ProductApiController::clearCache();
-            
-            $this->dispatch('refreshPage');
 
+            $this->dispatch('refreshPage');
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to create product. Please try again.', 'error')");
         }
@@ -320,7 +321,7 @@ class Products extends Component
         try {
             // Create import instance
             $import = new ProductsImport();
-            
+
             // Import the file
             Excel::import($import, $this->importFile->getRealPath());
 
@@ -332,7 +333,7 @@ class Products extends Component
             // Build success message
             $message = "Import completed! ";
             $message .= "✅ {$successCount} product(s) imported successfully. ";
-            
+
             if ($skipCount > 0) {
                 $message .= "⚠️ {$skipCount} product(s) skipped (duplicates or errors). ";
             }
@@ -346,17 +347,16 @@ class Products extends Component
             // Close modal and show success
             $this->js("$('#importProductsModal').modal('hide')");
             $this->js("Swal.fire('Import Complete!', '{$message}', 'success')");
-            
-            $this->dispatch('refreshPage');
 
+            $this->dispatch('refreshPage');
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
             $errorMessage = "Import failed due to validation errors: <br>";
-            
+
             foreach ($failures as $failure) {
                 $errorMessage .= "Row {$failure->row()}: " . implode(', ', $failure->errors()) . "<br>";
             }
-            
+
             $this->js("Swal.fire({
                 icon: 'error',
                 title: 'Validation Error',
@@ -484,7 +484,6 @@ class Products extends Component
             $this->js("$('#editProductModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Product updated successfully!', 'success')");
             $this->dispatch('refreshPage');
-
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to update product. Please try again.', 'error')");
         }
@@ -533,7 +532,6 @@ class Products extends Component
 
             $this->js("Swal.fire('Success!', 'Product deleted successfully!', 'success')");
             $this->dispatch('refreshPage');
-
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to delete product. Please try again.', 'error')");
         }
@@ -580,7 +578,7 @@ class Products extends Component
         ];
     }
 
-    // 🔹 Adjust Stock (Smart Logic for Available and Damage)
+    // 🔹 Adjust Stock (Smart Logic for Available and Damage with Batch Management)
     public function adjustStock()
     {
         $this->validate([
@@ -588,6 +586,7 @@ class Products extends Component
             'adjustmentAvailableStock' => 'nullable|integer|min:0',
         ]);
 
+        DB::beginTransaction();
         try {
             $product = ProductDetail::with(['stock'])->findOrFail($this->adjustmentProductId);
             $stock = $product->stock;
@@ -604,15 +603,15 @@ class Products extends Component
 
             $originalAvailable = $stock->available_stock;
             $originalDamage = $stock->damage_stock;
-            
+
             // Convert to int, treat empty/null as 0
-            $newDamageStock = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== '' 
-                ? (int)$this->adjustmentQuantity 
+            $newDamageStock = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== ''
+                ? (int)$this->adjustmentQuantity
                 : 0;
-            $newAvailableStock = $this->adjustmentAvailableStock !== null && $this->adjustmentAvailableStock !== '' 
-                ? (int)$this->adjustmentAvailableStock 
+            $newAvailableStock = $this->adjustmentAvailableStock !== null && $this->adjustmentAvailableStock !== ''
+                ? (int)$this->adjustmentAvailableStock
                 : 0;
-            
+
             // Check what changed
             $damageChanged = $newDamageStock != $originalDamage;
             $availableChanged = $newAvailableStock != $originalAvailable;
@@ -621,11 +620,88 @@ class Products extends Component
             if ($damageChanged && !$availableChanged) {
                 $damageDifference = $newDamageStock - $originalDamage;
                 $newAvailableStock = $originalAvailable - $damageDifference;
-                
+
                 // Prevent negative available stock
                 if ($newAvailableStock < 0) {
                     $this->js("Swal.fire('Error!', 'Not enough available stock. Available: {$originalAvailable}, Trying to damage: {$damageDifference}', 'error')");
                     return;
+                }
+            }
+
+            // 🔹 Handle Available Stock Increase - Add to Oldest Batch
+            if ($availableChanged && $newAvailableStock > $originalAvailable) {
+                $stockIncrease = $newAvailableStock - $originalAvailable;
+
+                // Get the oldest active batch
+                $oldestBatch = ProductBatch::where('product_id', $product->id)
+                    ->where('status', 'active')
+                    ->orderBy('received_date', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->first();
+
+                if ($oldestBatch) {
+                    // Add to oldest batch
+                    $oldestBatch->remaining_quantity += $stockIncrease;
+                    $oldestBatch->quantity += $stockIncrease;
+                    $oldestBatch->save();
+
+                    Log::info("Stock adjustment: Added {$stockIncrease} to batch {$oldestBatch->batch_number}");
+                } else {
+                    // No batch exists, create a manual adjustment batch
+                    $productPrice = ProductPrice::where('product_id', $product->id)->first();
+
+                    ProductBatch::create([
+                        'product_id' => $product->id,
+                        'batch_number' => ProductBatch::generateBatchNumber($product->id),
+                        'purchase_order_id' => null,
+                        'supplier_price' => $productPrice->supplier_price ?? 0,
+                        'selling_price' => $productPrice->selling_price ?? 0,
+                        'quantity' => $stockIncrease,
+                        'remaining_quantity' => $stockIncrease,
+                        'received_date' => now(),
+                        'status' => 'active',
+                    ]);
+
+                    Log::info("Stock adjustment: Created new batch for {$stockIncrease} units (no existing batches)");
+                }
+            }
+
+            // 🔹 Handle Damage Stock Change
+            if ($damageChanged) {
+                $damageIncrease = $newDamageStock - $originalDamage;
+
+                if ($damageIncrease > 0) {
+                    // Damage increased - deduct from oldest batches using FIFO
+                    $remainingDamage = $damageIncrease;
+
+                    $batches = ProductBatch::where('product_id', $product->id)
+                        ->where('status', 'active')
+                        ->where('remaining_quantity', '>', 0)
+                        ->orderBy('received_date', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->get();
+
+                    foreach ($batches as $batch) {
+                        if ($remainingDamage <= 0) break;
+
+                        $deductQty = min($remainingDamage, $batch->remaining_quantity);
+                        $batch->remaining_quantity -= $deductQty;
+
+                        if ($batch->remaining_quantity == 0) {
+                            $batch->status = 'depleted';
+                        }
+
+                        $batch->save();
+                        $remainingDamage -= $deductQty;
+
+                        Log::info("Damage adjustment: Deducted {$deductQty} from batch {$batch->batch_number}");
+                    }
+
+                    if ($remainingDamage > 0) {
+                        DB::rollBack();
+                        $this->js("Swal.fire('Error!', 'Not enough stock in batches to mark as damage', 'error')");
+                        return;
+                    }
                 }
             }
 
@@ -634,6 +710,8 @@ class Products extends Component
             $stock->damage_stock = $newDamageStock;
             $stock->total_stock = $newAvailableStock + $newDamageStock;
             $stock->save();
+
+            DB::commit();
 
             // Clear cache for client-side refresh
             ProductApiController::clearCache();
@@ -645,8 +723,9 @@ class Products extends Component
             $this->js("$('#stockAdjustmentModal').modal('hide')");
             $this->js("Swal.fire('Success!', 'Stock adjusted successfully!', 'success')");
             $this->dispatch('refreshPage');
-
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Stock adjustment failed: " . $e->getMessage());
             $this->js("Swal.fire('Error!', 'Failed to adjust stock: " . addslashes($e->getMessage()) . "', 'error')");
         }
     }
@@ -658,13 +737,13 @@ class Products extends Component
     {
         try {
             $product = ProductDetail::findOrFail($id);
-            
+
             $this->historyProductId = $product->id;
             $this->historyProductName = $product->name;
-            
+
             // Set default tab
             $this->historyTab = 'sales';
-            
+
             // Load ALL history data at once
             $this->loadSalesHistory();
             $this->loadPurchasesHistory();
@@ -687,7 +766,6 @@ class Products extends Component
                     modal.show();
                 }, 100);
             ");
-            
         } catch (\Exception $e) {
             $this->js("Swal.fire('Error!', 'Failed to load product history: " . addslashes($e->getMessage()) . "', 'error')");
         }
@@ -703,10 +781,10 @@ class Products extends Component
         if (!in_array($tab, $validTabs)) {
             $tab = 'sales';
         }
-        
+
         // Simply update the active tab
         $this->historyTab = $tab;
-        
+
         // Log for debugging
         Log::info('Tab switched', [
             'tab' => $tab,
@@ -715,7 +793,7 @@ class Products extends Component
             'returns_count' => count($this->returnsHistory),
             'quotations_count' => count($this->quotationsHistory)
         ]);
-        
+
         // Dispatch event for debugging
         $this->dispatch('historyTabSwitched', ['tab' => $tab]);
     }
@@ -730,8 +808,8 @@ class Products extends Component
                 ->where('sale_items.product_id', $this->historyProductId)
                 ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
                 ->select(
-                    'sale_items.*', 
-                    'sales.invoice_number', 
+                    'sale_items.*',
+                    'sales.invoice_number',
                     'sales.sale_type',
                     'sales.customer_type',
                     'sales.payment_type',
@@ -742,7 +820,7 @@ class Products extends Component
                 ->orderBy('sales.created_at', 'desc')
                 ->get();
 
-            $this->salesHistory = $salesItems->map(function($sale) {
+            $this->salesHistory = $salesItems->map(function ($sale) {
                 return [
                     'id' => $sale->id,
                     'invoice_number' => $sale->invoice_number,
@@ -762,7 +840,7 @@ class Products extends Component
                     'user_name' => $sale->sale && $sale->sale->user ? $sale->sale->user->name : 'N/A'
                 ];
             })->toArray();
-// dd(array_column($this->salesHistory, 'sale_status'));
+            // dd(array_column($this->salesHistory, 'sale_status'));
 
         } catch (\Exception $e) {
             $this->salesHistory = [];
@@ -779,21 +857,21 @@ class Products extends Component
                 ->where('purchase_order_items.product_id', $this->historyProductId)
                 ->join('purchase_orders', 'purchase_order_items.order_id', '=', 'purchase_orders.id')
                 ->select(
-                    'purchase_order_items.*', 
-                    'purchase_orders.order_code', 
-                    'purchase_orders.order_date', 
+                    'purchase_order_items.*',
+                    'purchase_orders.order_code',
+                    'purchase_orders.order_date',
                     'purchase_orders.received_date',
                     'purchase_orders.status as order_status'
                 )
                 ->orderBy('purchase_orders.order_date', 'desc')
                 ->get();
 
-            $this->purchasesHistory = $purchaseItems->map(function($purchase) {
+            $this->purchasesHistory = $purchaseItems->map(function ($purchase) {
                 $total = $purchase->quantity * $purchase->unit_price;
                 if (isset($purchase->discount) && $purchase->discount > 0) {
                     $total -= $purchase->discount;
                 }
-                
+
                 return [
                     'id' => $purchase->id,
                     'order_code' => $purchase->order_code,
@@ -808,7 +886,6 @@ class Products extends Component
                     'supplier_phone' => $purchase->order && $purchase->order->supplier ? $purchase->order->supplier->phone : 'N/A'
                 ];
             })->toArray();
-
         } catch (\Exception $e) {
             $this->purchasesHistory = [];
         }
@@ -830,7 +907,7 @@ class Products extends Component
                 ->orderBy('returns_products.created_at', 'desc')
                 ->get();
 
-            $this->returnsHistory = $returns->map(function($return) {
+            $this->returnsHistory = $returns->map(function ($return) {
                 return [
                     'id' => $return->id,
                     'invoice_number' => $return->invoice_number,
@@ -843,7 +920,6 @@ class Products extends Component
                     'customer_phone' => $return->sale && $return->sale->customer ? $return->sale->customer->phone : 'N/A'
                 ];
             })->toArray();
-
         } catch (\Exception $e) {
             $this->returnsHistory = [];
         }
@@ -861,10 +937,10 @@ class Products extends Component
                 ->get();
 
             $this->quotationsHistory = [];
-            
+
             foreach ($quotations as $quotation) {
                 $items = is_array($quotation->items) ? $quotation->items : json_decode($quotation->items, true);
-                
+
                 if (!empty($items)) {
                     foreach ($items as $item) {
                         if (isset($item['product_id']) && $item['product_id'] == $this->historyProductId) {
@@ -890,7 +966,6 @@ class Products extends Component
                     }
                 }
             }
-
         } catch (\Exception $e) {
             $this->quotationsHistory = [];
             // Log error for debugging
@@ -907,12 +982,24 @@ class Products extends Component
             $this->historyProductId = null;
             $this->adjustmentProductId = null;
         }
-        
+
         // Only validate specific fields in real-time to improve performance
         if (in_array($propertyName, [
-            'name', 'code', 'brand', 'category', 'supplier_price', 'selling_price', 
-            'available_stock', 'editName', 'editCode', 'editBrand', 'editCategory',
-            'editSupplierPrice', 'editSellingPrice', 'adjustmentQuantity', 'adjustmentAvailableStock'
+            'name',
+            'code',
+            'brand',
+            'category',
+            'supplier_price',
+            'selling_price',
+            'available_stock',
+            'editName',
+            'editCode',
+            'editBrand',
+            'editCategory',
+            'editSupplierPrice',
+            'editSellingPrice',
+            'adjustmentQuantity',
+            'adjustmentAvailableStock'
         ])) {
             $this->validateOnly($propertyName);
         }
@@ -923,17 +1010,17 @@ class Products extends Component
             if ($product && $product->stock) {
                 $originalAvailable = $product->stock->available_stock;
                 $originalDamage = $product->stock->damage_stock;
-                
+
                 // Convert to int, treat empty/null as 0
-                $newDamage = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== '' 
-                    ? (int)$this->adjustmentQuantity 
+                $newDamage = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== ''
+                    ? (int)$this->adjustmentQuantity
                     : 0;
-                
+
                 $damageDifference = $newDamage - $originalDamage;
-                
+
                 // Auto-reduce available stock
                 $this->adjustmentAvailableStock = $originalAvailable - $damageDifference;
-                
+
                 // Prevent negative values
                 if ($this->adjustmentAvailableStock < 0) {
                     $this->adjustmentAvailableStock = 0;
