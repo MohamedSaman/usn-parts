@@ -81,7 +81,7 @@
                             // Calculate totals for this order
                             $totalQuantity = $order->items->sum('quantity');
                             $totalAmount = $order->items->sum(function($item) {
-                            return $item->quantity * $item->unit_price;
+                            return floatval($item->quantity) * floatval($item->unit_price);
                             });
 
                             // Calculate GRN status
@@ -543,7 +543,7 @@
                                         placeholder="0.00"
                                         title="Selling Price (Editable)">
                                     <small class="text-muted d-block mt-1">
-                                        Old: Rs. {{ number_format($grnItems[$index]['selling_price'] ?? 0, 2) }}
+                                        Old: Rs. {{ number_format((float)($grnItems[$index]['selling_price'] ?? 0), 2) }}
                                     </small>
                                 </td>
                                 <td class="text-end fw-semibold text-success">
@@ -651,7 +651,7 @@
                             </td>
                             <td>{{ $item->quantity }}</td>
                             <td>{{ $item->unit_price }}</td>
-                            <td>{{ number_format($item->unit_price * $item->quantity, 2) }}</td>
+                            <td>{{ number_format(floatval($item->unit_price) * floatval($item->quantity), 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -769,7 +769,7 @@
                             </td>
                             <td class="text-end">
                                 <strong class="text-success">
-                                    Rs. {{ number_format(($item['quantity'] ?? 0) * ($item['unit_price'] ?? 0), 2) }}
+                                    Rs. {{ number_format(floatval($item['quantity'] ?? 0) * floatval($item['unit_price'] ?? 0), 2) }}
                                 </strong>
                             </td>
                             <td class="text-center">

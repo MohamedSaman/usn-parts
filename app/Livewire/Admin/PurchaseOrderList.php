@@ -65,7 +65,7 @@ class PurchaseOrderList extends Component
 
     public function calculateGrandTotal()
     {
-        $this->grandTotal = collect($this->orderItems)->sum('total_price');
+        $this->grandTotal = floatval(collect($this->orderItems)->sum('total_price'));
     }
 
     public function updatedSearch()
@@ -966,7 +966,7 @@ class PurchaseOrderList extends Component
     public function calculateGRNTotal($index)
     {
         if (!isset($this->grnItems[$index])) {
-            return 0;
+            return 0.0;
         }
 
         $item = $this->grnItems[$index];
@@ -993,7 +993,7 @@ class PurchaseOrderList extends Component
 
 
         // Ensure total is not negative
-        return max(0, $total);
+        return floatval(max(0, $total));
     }
 
     public function updatedGrnItems($value, $index)
@@ -1148,7 +1148,7 @@ class PurchaseOrderList extends Component
     public function calculateCost($index)
     {
         if (!isset($this->grnItems[$index])) {
-            return 0;
+            return 0.0;
         }
 
         $item = $this->grnItems[$index];
@@ -1158,7 +1158,7 @@ class PurchaseOrderList extends Component
         $receivedQty = floatval($item['received_qty'] ?? 0);
 
         if ($receivedQty <= 0) {
-            return $unitPrice;
+            return floatval($unitPrice);
         }
 
         if ($discountType === 'percent') {
@@ -1171,7 +1171,7 @@ class PurchaseOrderList extends Component
         }
 
         // Ensure cost is not negative
-        return max(0, $costPerUnit);
+        return floatval(max(0, $costPerUnit));
     }
     // Set discount type method
     public function setDiscountType($index, $type)
@@ -1186,7 +1186,7 @@ class PurchaseOrderList extends Component
     public function calculateDiscountAmount($index)
     {
         if (!isset($this->grnItems[$index])) {
-            return 0;
+            return 0.0;
         }
 
         $item = $this->grnItems[$index];
@@ -1197,11 +1197,11 @@ class PurchaseOrderList extends Component
 
         if ($discountType === 'percent') {
             $subtotal = $receivedQty * $unitPrice;
-            return ($subtotal * $discount) / 100;
+            return floatval(($subtotal * $discount) / 100);
         }
 
         // For Rs discount, it's applied per unit, so total discount = discount × quantity
-        return $discount * $receivedQty;
+        return floatval($discount * $receivedQty);
     }
 
 
@@ -1272,22 +1272,22 @@ class PurchaseOrderList extends Component
     public function getViewOrderTotalProperty()
     {
         if (!$this->selectedOrder) {
-            return 0;
+            return 0.0;
         }
 
-        return $this->selectedOrder->items->sum(function ($item) {
-            return $item->quantity * $item->unit_price;
-        });
+        return floatval($this->selectedOrder->items->sum(function ($item) {
+            return floatval($item->quantity) * floatval($item->unit_price);
+        }));
     }
 
     // Calculate grand total for GRN modal
     public function getGrnGrandTotalProperty()
     {
-        $total = 0;
+        $total = 0.0;
         foreach ($this->grnItems as $index => $item) {
             $total += $this->calculateGRNTotal($index);
         }
-        return $total;
+        return floatval($total);
     }
 
 
@@ -1339,12 +1339,12 @@ class PurchaseOrderList extends Component
                     <td>' . $item->product->code . '</td>
                     <td>' . $item->product->name . '</td>
                     <td>' . $item->quantity . '</td>
-                    <td>' . number_format($item->unit_price, 2) . '</td>
-                    <td>' . number_format($item->quantity * $item->unit_price, 2) . '</td>
+                    <td>' . number_format(floatval($item->unit_price), 2) . '</td>
+                    <td>' . number_format(floatval($item->quantity) * floatval($item->unit_price), 2) . '</td>
                   </tr>';
         }
 
-        $totalAmount = $order->items->sum(fn($item) => $item->quantity * $item->unit_price);
+        $totalAmount = floatval($order->items->sum(fn($item) => floatval($item->quantity) * floatval($item->unit_price)));
 
         $html .= '</tbody>
         </table>

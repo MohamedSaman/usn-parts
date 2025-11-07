@@ -192,7 +192,6 @@ class QuotationSystem extends Component
             $this->selectedCustomer = $customer;
             $this->closeCustomerModal();
             
-            session()->flash('message', 'Customer created successfully!');
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to create customer: ' . $e->getMessage());
         }
@@ -257,8 +256,6 @@ class QuotationSystem extends Component
         $this->search = '';
         $this->searchResults = [];
         
-        // Show success message
-        session()->flash('message', 'Product added to quotation!');
     }
 
     // Update Quantity
@@ -304,7 +301,6 @@ class QuotationSystem extends Component
     {
         unset($this->cart[$index]);
         $this->cart = array_values($this->cart); // Reindex array
-        session()->flash('message', 'Product removed from quotation!');
     }
 
     // Clear Cart
@@ -313,7 +309,6 @@ class QuotationSystem extends Component
         $this->cart = [];
         $this->additionalDiscount = 0;
         $this->additionalDiscountType = 'fixed';
-        session()->flash('message', 'Cart cleared!');
     }
 
     // Update additional discount with real-time validation
@@ -382,7 +377,6 @@ class QuotationSystem extends Component
     public function removeAdditionalDiscount()
     {
         $this->additionalDiscount = 0;
-        session()->flash('message', 'Additional discount removed!');
     }
 
    // Create Quotation
@@ -466,7 +460,6 @@ public function createQuotation()
         $this->createdQuotation = $quotation;
         $this->showQuotationModal = true;
         
-        session()->flash('success', 'Quotation created successfully!');
 
     } catch (\Exception $e) {
         DB::rollBack();
@@ -535,7 +528,7 @@ public function createQuotation()
         $this->validUntil = now()->addDays(30)->format('Y-m-d');
         $this->setDefaultCustomer(); // Set walking customer again for new quotation
         $this->showQuotationModal = false;
-        session()->flash('message', 'Ready to create new quotation!');
+       
     }
 
     public function render()
