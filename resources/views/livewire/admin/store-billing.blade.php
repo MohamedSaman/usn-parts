@@ -29,7 +29,7 @@
 
 
         <!-- Admin dropdown -->
-        <div class="dropdown ms-auto">
+        {{-- <div class="dropdown ms-auto">
             <div class="admin-info dropdown-toggle" id="adminDropdown" role="button" data-bs-toggle="dropdown"
                 aria-expanded="false">
                 <div class="admin-avatar">A</div>
@@ -37,12 +37,12 @@
             </div>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                 <li>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="{{ route('profile.show') }}">
                         <i class="bi bi-person me-2"></i>My Profile
                     </a>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="#">
+                    <a class="dropdown-item" href="{{ route('admin.settings') }}">
                         <i class="bi bi-gear me-2"></i>Settings
                     </a>
                 </li>
@@ -58,7 +58,7 @@
                     </form>
                 </li>
             </ul>
-        </div>
+        </div> --}}
     </nav>
     <div class="row">
        {{-- Customer Information --}}

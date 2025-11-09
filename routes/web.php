@@ -97,6 +97,11 @@ Route::post('/logout', function (Request $request) {
 // Routes that require authentication
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
     
+    // Profile route - accessible to all authenticated users
+    Route::get('/user/profile', function () {
+        return view('profile.show');
+    })->name('profile.show');
+    
     // Settings route - accessible to all authenticated users
     
     // API route for products (client-side caching)

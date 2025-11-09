@@ -1177,12 +1177,12 @@
 
                 <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ route('profile.show') }}">
                             <i class="bi bi-person me-2"></i>My Profile
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ route('staff.settings') }}">
                             <i class="bi bi-gear me-2"></i>Settings
                         </a>
                     </li>
