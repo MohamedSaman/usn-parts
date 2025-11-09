@@ -323,7 +323,7 @@
                                         wire:change="updateOrderItemPrice({{ $index }}, $event.target.value)"
                                         value="{{ $item['supplier_price'] }}"
                                         min="0"
-                                        step="0.01"
+                                        step="0"
                                         style="width: 100%;">
                                 </td>
                                 <td class="text-end">
@@ -499,33 +499,20 @@
                                         step="0.01"
                                         min="0"
                                         wire:change="calculateGRNTotal({{ $index }})"
-                                        placeholder="0.00">
+                                        placeholder="0">
                                 </td>
                                 <td>
                                     <div class="discount-container">
                                         <div class="input-group input-group-sm">
-                                            <input type="number"
-                                                class="form-control"
+                                            <input type="text"
+                                                class="form-control discount-input"
                                                 wire:model.live="grnItems.{{ $index }}.discount"
-                                                step="0.01"
-                                                min="0"
-                                                max="{{ ($grnItems[$index]['discount_type'] ?? 'rs') === 'percent' ? 100 : '' }}"
-                                                wire:change="calculateGRNTotal({{ $index }})"
-                                                placeholder="0.00">
-                                            <div class="input-group-append d-flex align-items-center">
-                                                <button type="button"
-                                                    class="btn btn-sm {{ ($grnItems[$index]['discount_type'] ?? 'rs') === 'rs' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                                                    wire:click="setDiscountType({{ $index }}, 'rs')"
-                                                    title="Rupees">
-                                                    Rs.
-                                                </button>
-                                                <button type="button"
-                                                    class="btn btn-sm {{ ($grnItems[$index]['discount_type'] ?? 'rs') === 'percent' ? 'btn-primary' : 'btn-outline-secondary' }}"
-                                                    wire:click="setDiscountType({{ $index }}, 'percent')"
-                                                    title="Percentage">
-                                                    %
-                                                </button>
-                                            </div>
+                                                data-index="{{ $index }}"
+                                                placeholder="10 or 10%"
+                                                autocomplete="off">
+                                            <span class="input-group-text">
+                                                {{ ($grnItems[$index]['discount_type'] ?? 'rs') === 'percent' ? '%' : 'Rs.' }}
+                                            </span>
                                         </div>
                                         @if(($grnItems[$index]['discount_type'] ?? 'rs') === 'percent' && floatval($grnItems[$index]['discount'] ?? 0) > 0)
                                         <small class="text-muted d-block mt-1">
@@ -540,7 +527,7 @@
                                         wire:model.live="grnItems.{{ $index }}.selling_price"
                                         step="0.01"
                                         min="0"
-                                        placeholder="0.00"
+                                        placeholder="0"
                                         title="Selling Price (Editable)">
                                     <small class="text-muted d-block mt-1">
                                         Old: Rs. {{ number_format((float)($grnItems[$index]['selling_price'] ?? 0), 2) }}
@@ -763,7 +750,7 @@
                             <td>
                                 <input type="number"
                                     class="form-control form-control-sm"
-                                    step="0.01"
+                                    step="0"
                                     wire:model.live="editOrderItems.{{ $index }}.unit_price"
                                     wire:change="updateEditItemTotal({{ $index }})">
                             </td>
@@ -820,6 +807,34 @@
 
 @push('scripts')
 <script>
-    // No additional event listeners needed - modals are opened directly via $this->js() in the component
+    // Handle discount input with % detection
+    document.addEventListener('DOMContentLoaded', function() {
+        // Use event delegation for dynamically added discount inputs
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('discount-input')) {
+                const input = e.target;
+                const value = input.value;
+                const index = input.dataset.index;
+                
+                // Check if value contains %
+                if (value.includes('%')) {
+                    // Set discount type to percent
+                    @this.set(`grnItems.${index}.discount_type`, 'percent');
+                    // Remove % and update the value
+                    const numericValue = value.replace(/[^0-9.]/g, '');
+                    @this.set(`grnItems.${index}.discount`, numericValue);
+                    
+                    console.log(`Discount ${index}: Detected % - Value: ${numericValue}`);
+                } else {
+                    // Set discount type to rs
+                    @this.set(`grnItems.${index}.discount_type`, 'rs');
+                    const numericValue = value.replace(/[^0-9.]/g, '');
+                    @this.set(`grnItems.${index}.discount`, numericValue);
+                    
+                    console.log(`Discount ${index}: Detected Rs - Value: ${numericValue}`);
+                }
+            }
+        });
+    });
 </script>
 @endpush

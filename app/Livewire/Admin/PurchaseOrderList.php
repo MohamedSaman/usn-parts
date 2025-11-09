@@ -980,17 +980,21 @@ class PurchaseOrderList extends Component
         $subtotal = $receivedQty * $unitPrice;
 
         $discountType = $item['discount_type'] ?? 'rs';
+        
         // Apply discount based on type
         if ($discountType === 'percent') {
-            // Calculate percentage discount
+            // Calculate percentage discount on total
             $discountAmount = ($subtotal * $discount) / 100;
             $total = $subtotal - $discountAmount;
+            
+            Log::info("GRN Total Calc (Percent): Qty={$receivedQty}, Price={$unitPrice}, Subtotal={$subtotal}, Discount={$discount}%, DiscountAmount={$discountAmount}, Total={$total}");
         } else {
-            // Fixed rupees discount - apply to unit price
+            // Fixed rupees discount - apply per unit
             $discountedUnitPrice = $unitPrice - $discount;
             $total = $discountedUnitPrice * $receivedQty;
+            
+            Log::info("GRN Total Calc (Rs): Qty={$receivedQty}, Price={$unitPrice}, DiscountPerUnit={$discount}, DiscountedPrice={$discountedUnitPrice}, Total={$total}");
         }
-
 
         // Ensure total is not negative
         return floatval(max(0, $total));
@@ -1006,6 +1010,11 @@ class PurchaseOrderList extends Component
 
             if ($field === 'name') {
                 $this->searchGRNProducts($value, $itemIndex);
+            }
+
+            // Log discount updates for debugging
+            if ($field === 'discount' || $field === 'discount_type') {
+                Log::info("Discount updated for item {$itemIndex}: Field={$field}, Value={$value}, Type={$this->grnItems[$itemIndex]['discount_type']}, Discount={$this->grnItems[$itemIndex]['discount']}");
             }
 
             // Auto-calculate when numeric fields change
@@ -1155,11 +1164,6 @@ class PurchaseOrderList extends Component
         $unitPrice = floatval($item['unit_price'] ?? 0);
         $discount = floatval($item['discount'] ?? 0);
         $discountType = $item['discount_type'] ?? 'rs';
-        $receivedQty = floatval($item['received_qty'] ?? 0);
-
-        if ($receivedQty <= 0) {
-            return floatval($unitPrice);
-        }
 
         if ($discountType === 'percent') {
             // Calculate percentage discount per unit
