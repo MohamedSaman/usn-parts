@@ -69,4 +69,49 @@ class User extends Authenticatable
     {
         return $this->hasMany(Attendance::class, 'user_id', 'id');
     }
+
+    // Relationship: User has many staff permissions
+    public function staffPermissions()
+    {
+        return $this->hasMany(StaffPermission::class, 'user_id', 'id');
+    }
+
+    /**
+     * Check if user has a specific permission
+     * If staff has no permissions assigned, grant full access by default
+     */
+    public function hasPermission($permissionKey)
+    {
+        if ($this->role === 'admin') {
+            return true; // Admin has all permissions
+        }
+
+        // If staff has no permissions assigned at all, grant full access
+        $hasAnyPermissions = $this->staffPermissions()->exists();
+        if (!$hasAnyPermissions) {
+            return true; // Default: full access when no permissions are set
+        }
+
+        // If permissions are assigned, check for specific permission
+        return $this->staffPermissions()
+            ->where('permission_key', $permissionKey)
+            ->where('is_active', true)
+            ->exists();
+    }
+
+    /**
+     * Check if user is admin
+     */
+    public function isAdmin()
+    {
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Check if user is staff
+     */
+    public function isStaff()
+    {
+        return $this->role === 'staff';
+    }
 }

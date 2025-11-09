@@ -10,11 +10,13 @@ use App\Models\ProductDetail;
 use App\Models\Quotation;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Create Quotation')]
 class QuotationSystem extends Component
 {
+    use WithDynamicLayout;
+
     // Basic Properties
     public $search = '';
     public $searchResults = [];
@@ -539,6 +541,6 @@ public function createQuotation()
             'subtotalAfterItemDiscounts' => $this->subtotalAfterItemDiscounts,
             'additionalDiscountAmount' => $this->additionalDiscountAmount,
             'grandTotal' => $this->grandTotal
-        ]);
+        ])->layout($this->layout);
     }
 }

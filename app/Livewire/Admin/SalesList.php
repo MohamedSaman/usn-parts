@@ -13,11 +13,13 @@ use App\Models\ProductStock;
 use App\Models\ReturnsProduct;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Admin Sales Management')]
 class SalesList extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $search = '';
@@ -529,6 +531,6 @@ class SalesList extends Component
             'sales' => $this->sales,
             'stats' => $this->salesStats,
             'customers' => $this->customers,
-        ]);
+        ])->layout($this->layout);
     }
 }

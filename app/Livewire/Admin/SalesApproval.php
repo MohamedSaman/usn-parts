@@ -11,11 +11,13 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Exception;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Sales Approvals')]
 class SalesApproval extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $search = '';
@@ -385,6 +387,6 @@ class SalesApproval extends Component
 
         $sales = $query->paginate(10);
 
-        return view('livewire.admin.sales-approval', compact('sales'));
+        return view('livewire.admin.sales-approval', compact('sales'))->layout($this->layout);
     }
 }

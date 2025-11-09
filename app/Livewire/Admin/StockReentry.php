@@ -9,13 +9,14 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-
-#[Layout('components.layouts.admin')]
 #[Title('Staff Product Stock Reentry')]
 
 class StockReentry extends Component
 {
+    use WithDynamicLayout;
+
     public $staffId;
     public $staff;
     public $selectedProduct;
@@ -96,7 +97,7 @@ public function render()
 
     return view('livewire.admin.stock-reentry', [
         'products' => $products,
-    ]);
+    ])->layout($this->layout);
 }
 }
 

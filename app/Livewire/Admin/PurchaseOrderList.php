@@ -16,12 +16,14 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\WithPagination;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Purchase Order")]
-#[Layout('components.layouts.admin')]
 
 class PurchaseOrderList extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     protected $paginationTheme = 'bootstrap';
@@ -1384,6 +1386,6 @@ class PurchaseOrderList extends Component
             ->orderBy('id', 'desc')
             ->paginate(20);
 
-        return view('livewire.admin.purchase-order-list', compact('pendingCount', 'completedCount', 'fullyReceivedCount', 'orders'));
+        return view('livewire.admin.purchase-order-list', compact('pendingCount', 'completedCount', 'fullyReceivedCount', 'orders'))->layout($this->layout);
     }
 }

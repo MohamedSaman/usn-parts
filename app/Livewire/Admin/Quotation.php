@@ -9,11 +9,13 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Purchase Order")]
-#[Layout('components.layouts.admin')]
 class Quotation extends Component
 {
+    use WithDynamicLayout;
+
     public $suppliers = [];
     public $supplier_id = '';
     public $search = '';
@@ -289,6 +291,6 @@ class Quotation extends Component
         $pendingCount = PurchaseOrder::where('status', 'pending')->count();
         $completedCount = PurchaseOrder::where('status', 'complete')->count();
 
-        return view('livewire.admin.quotation', compact('pendingCount', 'completedCount'));
+        return view('livewire.admin.quotation', compact('pendingCount', 'completedCount'))->layout($this->layout);
     }
 }

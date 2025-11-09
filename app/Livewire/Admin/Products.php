@@ -28,11 +28,13 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\ProductApiController;
 use App\Models\ProductBatch;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Product List")]
-#[Layout('components.layouts.admin')]
 class Products extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination, WithFileUploads;
 
     public $search = '';
@@ -189,7 +191,7 @@ class Products extends Component
             'brands' => $brands,
             'categories' => $categories,
             'suppliers' => $suppliers,
-        ]);
+        ])->layout($this->layout);
     }
 
     // 🔹 Validation Rules for Create

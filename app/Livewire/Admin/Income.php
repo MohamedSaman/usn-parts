@@ -8,11 +8,13 @@ use App\Models\Deposit;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Deposit By Cash")]
-#[Layout('components.layouts.admin')]
 class Income extends Component
 {
+    use WithDynamicLayout;
+
     public $todayIncome;
     public $cashIncome;
     public $chequeIncome;
@@ -178,6 +180,6 @@ class Income extends Component
 
         return view('livewire.admin.income', [
             'deposits' => $deposits,
-        ]);
+        ])->layout($this->layout);
     }
 }

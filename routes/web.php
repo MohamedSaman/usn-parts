@@ -161,13 +161,79 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     ->name('admin.updateCashInHand')
     ->middleware(['auth', 'role:admin']);
 
-    //!! Staff routes
+    //!! Staff routes - All admin routes available to staff (permissions control access)
     Route::middleware('role:staff')->prefix('staff')->name('staff.')->group(function () {
+        // Dashboard
         Route::get('/dashboard', StaffDashboard::class)->name('dashboard');
+        
+        // Products
+        Route::get('/Product-list', Products::class)->name('Productes');
+        Route::get('/add-Product-brand', ProductBrandlist::class)->name('Product-brand');
+        Route::get('/Product-category', ProductCategorylist::class)->name('Product-category');
+        Route::get('/Product-stock-details', ProductStockDetails::class)->name('Product-stock-details');
+        
+        // Sales
         Route::get('/billing', Billing::class)->name('billing');
+        Route::get('/billing-page', BillingPage::class)->name('billing-page');
+        Route::get('/sales-system', SalesSystem::class)->name('sales-system');
+        Route::get('/pos-sales', PosSales::class)->name('pos-sales');
+        Route::get('/sales-list', SalesList::class)->name('sales-list');
+        Route::get('/store-billing', StoreBilling::class)->name('store-billing');
+        
+        // Customers
+        Route::get('/manage-customer', ManageCustomer::class)->name('manage-customer');
+        Route::get('/customer-sale-details', CustomerSaleDetails::class)->name('customer-sale-details');
         Route::get('/customer-sale-management', CustomerSaleManagement::class)->name('customer-sale-management');
+        
+        // Stock/Inventory
         Route::get('/staff-stock-overview', StaffStockOverview::class)->name('staff-stock-overview');
+        Route::get('/staff-stock-details', StaffStockDetails::class)->name('staff-stock-details');
+        
+        // Purchases
+        Route::get('/goods-receive-note', GRN::class)->name('grn');
+        Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
+        Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
+        
+        // Quotations
+        Route::get('/quotation', Quotation::class)->name('quotation');
+        Route::get('/quotation-system', QuotationSystem::class)->name('quotation-system');
+        Route::get('/quotation-list', QuotationList::class)->name('quotation-list');
+        
+        // Returns
+        Route::get('/return-product', ReturnProduct::class)->name('return-product');
+        Route::get('/return-list', ReturnList::class)->name('return-list');
+        Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
+        Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
+        
+        // Payments
         Route::get('/due-payments', DuePayments::class)->name('due-payments');
+        Route::get('/view-payments', ViewPayments::class)->name('view-payments');
+        Route::get('/add-customer-receipt', AddCustomerReceipt::class)->name('add-customer-receipt');
+        Route::get('/list-customer-receipt', ListCustomerReceipt::class)->name('list-customer-receipt');
+        Route::get('/add-supplier-receipt', AddSupplierReceipt::class)->name('add-supplier-receipt');
+        Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
+        
+        // Cheques/Banks
+        Route::get('/cheque-list', ChequeList::class)->name('cheque-list');
+        Route::get('/return-cheque', ReturnCheque::class)->name('return-cheque');
+        
+        // Finance
+        Route::get('/expenses', Expenses::class)->name('expenses');
+        Route::get('/income', Income::class)->name('income');
+        Route::get('/loan-management', LoanManage::class)->name('loan-management');
+        
+        // HR/Staff Management
+        Route::get('/manage-staff', ManageStaff::class)->name('manage-staff');
+        Route::get('/staff-attendance', StaffAttendance::class)->name('staff-attendance');
+        Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
+        Route::get('/staff-due-details', StaffDueDetails::class)->name('staff-due-details');
+        
+        // Reports & Analytics
+        Route::get('/reports', Reports::class)->name('reports');
+        Route::get('/analytics', Analytics::class)->name('analytics');
+        
+        // Settings
+        Route::get('/settings', Settings::class)->name('settings');
     });
 
     // !! Export routes (accessible to authenticated users)

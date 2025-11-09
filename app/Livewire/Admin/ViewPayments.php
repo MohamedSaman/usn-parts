@@ -7,11 +7,13 @@ use App\Models\Payment;
 use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('View Payments')]
 class ViewPayments extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
     
     public $search = '';
@@ -83,6 +85,6 @@ class ViewPayments extends Component
             'pendingPayments' => $pendingPayments,
             'approvedPayments' => $approvedPayments,
             'completedPayments' => $completedPayments,
-        ]);
+        ])->layout($this->layout);
     }
 }

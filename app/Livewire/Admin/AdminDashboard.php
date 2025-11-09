@@ -9,11 +9,13 @@ use Livewire\Attributes\Title;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Dashboard')]
 class AdminDashboard extends Component
 {
+    use WithDynamicLayout;
+
     public $totalRevenue = 0;
     public $totalDueAmount = 0;
     public $totalSales = 0;
@@ -334,6 +336,6 @@ class AdminDashboard extends Component
 
     public function render()
     {
-        return view('livewire.admin.admin-dashboard');
+        return view('livewire.admin.admin-dashboard')->layout($this->layout);
     }
 }

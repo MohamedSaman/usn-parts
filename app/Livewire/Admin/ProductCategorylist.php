@@ -8,18 +8,20 @@ use Livewire\Attributes\On;
 use App\Models\CategoryList;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Product Category List")]
-#[Layout('components.layouts.admin')]
 class ProductCategorylist extends Component
 {
+    use WithDynamicLayout;
+
     public $categoryName;
     public function render()
     {
         $categories = CategoryList::orderBy('id', 'desc')->get();
         return view('livewire.admin.Product-categorylist', [
             'categories' => $categories,
-        ]);
+        ])->layout($this->layout);
     }
 
     public function createCategory()

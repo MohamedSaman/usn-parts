@@ -7,11 +7,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Staff Due Details')]
 class StaffDueDetails extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
     
     public function render()
@@ -33,7 +35,7 @@ class StaffDueDetails extends Component
 
         return view('livewire.admin.staff-due-details', [
             'staffDues' => $staffDues
-        ]);
+        ])->layout($this->layout);
     }
     
     // For CSV export

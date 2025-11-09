@@ -7,11 +7,13 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Expense;
 use Carbon\Carbon;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Expenses")]
-#[Layout('components.layouts.admin')]
 class Expenses extends Component
 {
+    use WithDynamicLayout;
+
     // Data variables
     public $dailyExpenses = [];
     public $monthlyExpenses = [];
@@ -224,6 +226,6 @@ class Expenses extends Component
 
     public function render()
     {
-        return view('livewire.admin.expenses');
+        return view('livewire.admin.expenses')->layout($this->layout);
     }
 }

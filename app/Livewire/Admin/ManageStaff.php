@@ -8,11 +8,13 @@ use Livewire\Component;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\Hash;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Manage Staff')]
 class ManageStaff extends Component
 {
+    use WithDynamicLayout;
+
     public $viewUserDetail = [];
     public $name;
     public $contactNumber;
@@ -56,7 +58,7 @@ class ManageStaff extends Component
         $staffs = User::where('role', 'staff')->get();
         return view('livewire.admin.manage-staff', [
             'staffs' => $staffs,
-        ]);
+        ])->layout($this->layout);
     }
 
     /** ----------------------------

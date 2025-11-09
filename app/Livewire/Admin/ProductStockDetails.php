@@ -8,11 +8,13 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\ProductStock;
 use App\Models\ProductDetail;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Product Stock Details')]
 class ProductStockDetails extends Component
 {
+    use WithDynamicLayout;
+
     public function render()
     {
         $ProductStocks = ProductDetail::join('product_stocks', 'product_details.id', '=', 'product_stocks.product_id')
@@ -28,7 +30,7 @@ class ProductStockDetails extends Component
             ->get();
         return view('livewire.admin.Product-stock-details', [
             'ProductStocks' => $ProductStocks
-        ]);
+        ])->layout($this->layout);
     }
 
     public function exportToCSV()

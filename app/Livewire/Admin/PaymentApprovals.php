@@ -9,11 +9,13 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Payment Approvals')]
 class PaymentApprovals extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
     
     public $search = '';
@@ -202,7 +204,7 @@ class PaymentApprovals extends Component
         return view('livewire.admin.payment-approvals', [
             'payments' => $payments,
             'stats' => $stats
-        ]);
+        ])->layout($this->layout);
     }
     
     // Helper method to check if file is a PDF

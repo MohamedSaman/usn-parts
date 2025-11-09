@@ -13,11 +13,13 @@ use Illuminate\Support\Str;
 
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Goods Receive Note")]
-#[Layout('components.layouts.admin')]
 class GRN extends Component
 {
+    use WithDynamicLayout;
+
     public $purchaseOrders = [];
     public $selectedPO = null;
     public $grnItems = [];
@@ -490,6 +492,6 @@ class GRN extends Component
     {
         return view('livewire.admin.g-r-n', [
             'purchaseOrders' => $this->purchaseOrders,
-        ]);
+        ])->layout($this->layout);
     }
 }

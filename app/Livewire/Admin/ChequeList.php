@@ -9,11 +9,13 @@ use App\Models\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Log;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Cheque List')]
 class ChequeList extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public function getChequesProperty()
@@ -149,6 +151,6 @@ class ChequeList extends Component
             'pendingCount' => $this->pendingCount,
             'completeCount' => $this->completeCount,
             'overdueCount' => $this->overdueCount,
-        ]);
+        ])->layout($this->layout);
     }
 }

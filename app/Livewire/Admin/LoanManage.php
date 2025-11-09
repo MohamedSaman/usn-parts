@@ -9,12 +9,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Loan Management")]
-#[Layout('components.layouts.admin')]
 class LoanManage extends Component
 {
+    use WithDynamicLayout;
+
     public $form = [
         'employee_id' => '',
         'loan_amount' => '',
@@ -158,6 +159,6 @@ class LoanManage extends Component
             'loanBreakdown' => $this->loanBreakdown,
             'showLoanDetailsModal' => $this->showLoanDetailsModal,
             'loanDetails' => $this->loanDetails,
-        ]);
+        ])->layout($this->layout);
     }
 }

@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Add Supplier Receipt")]
-#[Layout('components.layouts.admin')]
 class AddSupplierReceipt extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $search = '';
@@ -496,6 +498,6 @@ class AddSupplierReceipt extends Component
     {
         return view('livewire.admin.add-supplier-receipt', [
             'suppliers' => $this->suppliers
-        ]);
+        ])->layout($this->layout);
     }
 }

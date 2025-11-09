@@ -21,11 +21,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Billing Page')]
 class BillingPage extends Component
 {
+    use WithDynamicLayout;
+
     use WithFileUploads;
 
     public $search = '';
@@ -351,6 +353,6 @@ class BillingPage extends Component
         $staffs = User::where('role', 'staff')->get();
         return view('livewire.admin.billing-page', [
             'staffs' => $staffs,
-        ]);
+        ])->layout($this->layout);
     }
 }

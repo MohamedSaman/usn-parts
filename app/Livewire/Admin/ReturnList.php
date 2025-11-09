@@ -7,11 +7,13 @@ use App\Models\ReturnsProduct;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Product Return")]
-#[Layout('components.layouts.admin')]
 class ReturnList extends Component
 {
+    use WithDynamicLayout;
+
     public $returns = [];
     public $selectedReturn = null;
     public $showReceiptModal = false;
@@ -124,6 +126,6 @@ class ReturnList extends Component
             'returns' => $this->returns,
             'selectedReturn' => $this->selectedReturn,
             'currentReturnId' => $this->currentReturnId,
-        ]);
+        ])->layout($this->layout);
     }
 }

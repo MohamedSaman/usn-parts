@@ -8,11 +8,13 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\ProductSupplier;
 use Livewire\WithPagination;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Supplier Management")]
-#[Layout('components.layouts.admin')]
 class SupplierManage extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $supplierId;
@@ -202,6 +204,6 @@ class SupplierManage extends Component
     public function render()
     {
         $suppliers = ProductSupplier::latest()->paginate(10);
-        return view('livewire.admin.supplier-manage', compact('suppliers'));
+        return view('livewire.admin.supplier-manage', compact('suppliers'))->layout($this->layout);
     }
 }

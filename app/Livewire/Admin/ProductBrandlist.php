@@ -9,11 +9,13 @@ use App\Models\BrandList;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Product Brand List")]
-#[Layout('components.layouts.admin')]
 class ProductBrandlist extends Component
 {
+    use WithDynamicLayout;
+
     public $brandName;
     public $editBrandId;
     public $editBrandName;
@@ -24,7 +26,7 @@ class ProductBrandlist extends Component
         $brands = BrandList::orderBy('id', 'desc')->get();
         return view('livewire.admin.Product-brandlist', [
             'brands' => $brands,
-        ]);
+        ])->layout($this->layout);
     }
 
     public function createBrand()

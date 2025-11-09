@@ -12,11 +12,13 @@ use App\Models\SaleItem;
 use App\Models\ProductStock;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('POS Sales Management')]
 class PosSales extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $search = '';
@@ -400,6 +402,6 @@ class PosSales extends Component
             'sales' => $this->sales,
             'stats' => $this->salesStats,
             'customers' => $this->customers,
-        ]);
+        ])->layout($this->layout);
     }
 }

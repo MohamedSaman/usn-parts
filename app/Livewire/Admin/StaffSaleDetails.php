@@ -10,11 +10,13 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Layout;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Staff Sale Details')]
 class StaffSaleDetails extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $isViewModalOpen = false;
@@ -54,7 +56,7 @@ class StaffSaleDetails extends Component
             ->select(
                 'staff_products.*',
                 'product_details.name as Product_name',
-                'brand_lists.name as Product_brand',
+                'brand_lists.brand_name as Product_brand',
                 'product_details.model as Product_model',
                 'product_details.code as Product_code',
                 'product_details.image as Product_image'
@@ -108,7 +110,7 @@ class StaffSaleDetails extends Component
             ->select(
                 'staff_products.*',
                 'product_details.name as Product_name',
-                'brand_lists.name as Product_brand',
+                'brand_lists.brand_name as Product_brand',
                 'product_details.model as Product_model',
                 'product_details.code as Product_code',
                 'product_details.image as Product_image'
@@ -116,7 +118,7 @@ class StaffSaleDetails extends Component
             ->get();
 
         // Return a view optimized for printing
-        return view('admin.print.staff-details', compact('staffDetails', 'summaryStats', 'productDetails'));
+        return view('admin.print.staff-details', compact('staffDetails', 'summaryStats', 'productDetails'))->layout($this->layout);
     }
 
     public function render()
@@ -141,6 +143,6 @@ class StaffSaleDetails extends Component
 
         return view('livewire.admin.staff-sale-details', [
             'staffSales' => $staffSales
-        ]);
+        ])->layout($this->layout);
     }
 }

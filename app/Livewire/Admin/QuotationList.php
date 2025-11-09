@@ -10,11 +10,12 @@ use App\Models\Customer;
 use App\Models\ProductDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[\Livewire\Attributes\Layout('components.layouts.admin')]
 #[\Livewire\Attributes\Title('Quotation Management')]
 class QuotationList extends Component
 {
+    use WithDynamicLayout;
     public $quotations;
     public $search = '';
     public $selectedQuotation = null;
@@ -559,6 +560,6 @@ class QuotationList extends Component
 
     public function render()
     {
-        return view('livewire.admin.quotation-list');
+        return view('livewire.admin.quotation-list')->layout($this->layout);
     }
 }

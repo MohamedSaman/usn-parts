@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Product Return")]
-#[Layout('components.layouts.admin')]
 class ReturnProduct extends Component
 {
+    use WithDynamicLayout;
+
     public $searchCustomer = '';
     public $customers = [];
     public $selectedCustomer = null;
@@ -412,6 +414,6 @@ class ReturnProduct extends Component
 
     public function render()
     {
-        return view('livewire.admin.return-product');
+        return view('livewire.admin.return-product')->layout($this->layout);
     }
 }

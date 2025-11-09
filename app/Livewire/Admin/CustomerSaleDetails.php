@@ -9,11 +9,13 @@ use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Customer;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Customer Sales Details')]
 class CustomerSaleDetails extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $modalData = null;
@@ -148,6 +150,6 @@ class CustomerSaleDetails extends Component
 
         return view('livewire.admin.customer-sale-details', [
             'customerSales' => $customerSales
-        ]);
+        ])->layout($this->layout);
     }
 }

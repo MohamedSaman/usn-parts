@@ -8,11 +8,13 @@ use App\Models\Cheque;
 use App\Models\Customer;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Return Cheque')]
 class ReturnCheque extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $selectedChequeId = null;
@@ -126,6 +128,6 @@ class ReturnCheque extends Component
             'returnCount' => $this->returnCount,
             'cancelledCount' => $this->cancelledCount,
             'overdueCount' => $this->overdueCount,
-        ]);
+        ])->layout($this->layout);
     }
 }

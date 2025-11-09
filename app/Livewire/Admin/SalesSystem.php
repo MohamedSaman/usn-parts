@@ -14,11 +14,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
+use App\Livewire\Concerns\WithPagination;
 
-#[Layout('components.layouts.admin')]
+
+
 #[Title('Create Sale')]
 class SalesSystem extends Component
 {
+    use WithDynamicLayout;
     // Basic Properties
     public $search = '';
     public $searchResults = [];
@@ -515,12 +519,14 @@ class SalesSystem extends Component
 
     public function render()
     {
+        $layoutPath = $this->layout;
+        
         return view('livewire.admin.sales-system', [
             'subtotal' => $this->subtotal,
             'totalDiscount' => $this->totalDiscount,
             'subtotalAfterItemDiscounts' => $this->subtotalAfterItemDiscounts,
             'additionalDiscountAmount' => $this->additionalDiscountAmount,
             'grandTotal' => $this->grandTotal
-        ]);
+        ])->layout($layoutPath);
     }
 }

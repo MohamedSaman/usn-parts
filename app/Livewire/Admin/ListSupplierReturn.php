@@ -11,11 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Supplier Returns List")]
-#[Layout('components.layouts.admin')]
 class ListSupplierReturn extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $search = '';
@@ -311,6 +313,6 @@ class ListSupplierReturn extends Component
             'suppliers', 
             'purchaseOrders', 
             'summaryStats'
-        ));
+        ))->layout($this->layout);
     }
 }

@@ -162,7 +162,7 @@ class StaffDashboard extends Component
                 'product_details.name',
                 'product_details.model',
                 'product_details.code',
-                'brand_lists.name as brand_name',
+                'brand_lists.brand_name as brand_name',
                 'product_details.image',
                 DB::raw('SUM(staff_products.quantity) as total_quantity'),
                 DB::raw('SUM(staff_products.sold_quantity) as sold_quantity'),
@@ -174,7 +174,7 @@ class StaffDashboard extends Component
                 'product_details.name',
                 'product_details.model',
                 'product_details.code',
-                'brand_lists.name',
+                'brand_lists.brand_name',
                 'product_details.image'
             )
             ->get();
@@ -188,8 +188,8 @@ class StaffDashboard extends Component
             ->join('product_details', 'sale_items.product_id', '=', 'product_details.id')
             ->leftJoin('brand_lists', 'brand_lists.id', '=', 'product_details.brand_id')
             ->where('sales.user_id', $userId)
-            ->select('brand_lists.name as brand_name', DB::raw('SUM(sale_items.total) as total_sales'))
-            ->groupBy('brand_lists.name')
+            ->select('brand_lists.brand_name as brand_name', DB::raw('SUM(sale_items.total) as total_sales'))
+            ->groupBy('brand_lists.brand_name')
             ->orderBy('total_sales', 'desc')
             ->get()
             ->toArray();

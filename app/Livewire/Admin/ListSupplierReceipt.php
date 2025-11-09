@@ -9,11 +9,13 @@ use App\Models\PurchasePayment;
 use App\Models\PurchaseOrder;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("List Supplier Receipt")]
-#[Layout('components.layouts.admin')]
 class ListSupplierReceipt extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
 
     public $showPaymentModal = false;
@@ -69,6 +71,6 @@ class ListSupplierReceipt extends Component
             'showPaymentModal' => $this->showPaymentModal,
             'selectedSupplier' => $this->selectedSupplier,
             'payments' => $this->payments,
-        ]);
+        ])->layout($this->layout);
     }
 }

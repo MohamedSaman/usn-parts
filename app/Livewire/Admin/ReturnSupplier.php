@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Supplier Return")]
-#[Layout('components.layouts.admin')]
 class ReturnSupplier extends Component
 {
+    use WithDynamicLayout;
+
     public $searchSupplier = '';
     public $suppliers = [];
     public $selectedSupplier = null;
@@ -419,6 +421,6 @@ class ReturnSupplier extends Component
 
     public function render()
     {
-        return view('livewire.admin.return-supplier');
+        return view('livewire.admin.return-supplier')->layout($this->layout);
     }
 }

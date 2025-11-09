@@ -10,12 +10,14 @@ use Livewire\Attributes\Title;
 use App\Models\StaffSale;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Staff Product Stock')]
 
 class StaffStockDetails extends Component
 {
+    use WithDynamicLayout;
+
 
     public $stockDetails;
 
@@ -32,7 +34,7 @@ class StaffStockDetails extends Component
                     'users.name as staff_name',
                     'users.email as staff_email',
                     'product_details.name as Product_name',
-                    'brand_lists.name as Product_brand',
+                    'brand_lists.brand_name as Product_brand',
                     'product_details.model as Product_model',
                     'product_details.code as Product_code',
                     'product_details.image as Product_image'
@@ -102,6 +104,6 @@ class StaffStockDetails extends Component
 
         return view('livewire.admin.staff-stock-details', [
             'staffStocks' => $staffStocks,
-        ]);
+        ])->layout($this->layout);
     }
 }

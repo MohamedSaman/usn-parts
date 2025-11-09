@@ -13,11 +13,13 @@ use Carbon\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\On;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Staff Salary')]
 class StaffSallary extends Component
 {
+    use WithDynamicLayout;
+
     public $selectedUser;
     public $selectedMonth;
     public $selectedYear;
@@ -196,6 +198,6 @@ class StaffSallary extends Component
 
     public function render()
     {
-        return view('livewire.admin.staff-sallary');
+        return view('livewire.admin.staff-sallary')->layout($this->layout);
     }
 }

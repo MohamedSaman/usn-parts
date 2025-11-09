@@ -8,11 +8,13 @@ use Livewire\Attributes\Title;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Analytics')]
 class Analytics extends Component
 {
+    use WithDynamicLayout;
+
     public $totalRevenue = 0;
     public $totalDueAmount = 0;
     public $totalSales = 0;
@@ -185,6 +187,6 @@ class Analytics extends Component
             'invoiceStatusData' => $this->invoiceStatusData,
             'paymentTrendsData' => $this->paymentTrendsData,
             'topPerformingMonths' => $this->topPerformingMonths,
-        ]);
+        ])->layout($this->layout);
     }
 }

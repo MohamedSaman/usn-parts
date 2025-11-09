@@ -7,11 +7,13 @@ use Livewire\Component;
 use Exception;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Manage Customer')]
 class ManageCustomer extends Component
 {
+    use WithDynamicLayout;
+
     public $name;
     public $contactNumber;
     public $address;
@@ -39,7 +41,7 @@ class ManageCustomer extends Component
         $customers = Customer::all();
         return view('livewire.admin.manage-customer', [
             'customers' => $customers,
-        ]);
+        ])->layout($this->layout);
     }
 
     /** ----------------------------

@@ -12,11 +12,13 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Sale;
 use App\Models\Payment;
 use Exception;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Due Payments")]
-#[Layout('components.layouts.admin')]
 class DuePayments extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination, WithFileUploads;
 
     public $search = '';
@@ -296,6 +298,6 @@ class DuePayments extends Component
             'awaitingApprovalCount' => $awaitingApprovalCount,
             'totalDueAmount' => $totalDueAmount,
             'pendingAmount' => $pendingAmount,
-        ]);
+        ])->layout($this->layout);
     }
 }

@@ -13,11 +13,13 @@ use Livewire\WithPagination;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Storage;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Staff Attendance')]
 class StaffAttendance extends Component
 {
+    use WithDynamicLayout;
+
     use WithPagination;
     use WithFileUploads;
 
@@ -186,7 +188,7 @@ class StaffAttendance extends Component
         return view('livewire.admin.staff-attendance', [
             'form' => $this->form,
             'employees' => $this->employees,
-        ]);
+        ])->layout($this->layout);
     }
   
 }

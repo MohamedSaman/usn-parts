@@ -4,13 +4,17 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use App\Models\Setting;
+use App\Models\User;
+use App\Models\StaffPermission;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("System Settings")]
-#[Layout('components.layouts.admin')]
 class Settings extends Component
 {
+    use WithDynamicLayout;
+
     public $settings = [];
     public $key;
     public $value;
@@ -18,6 +22,15 @@ class Settings extends Component
     public $isEdit = false;
     public $editingId = null;
     public $deleteId = null;
+
+    // Staff Permission Management
+    public $staffMembers = [];
+    public $selectedStaffId = null;
+    public $selectedStaffName = '';
+    public $staffPermissions = [];
+    public $showPermissionModal = false;
+    public $availablePermissions = [];
+    public $permissionCategories = [];
 
     protected $listeners = ['deleteConfirmed' => 'deleteConfiguration'];
 
@@ -37,6 +50,14 @@ class Settings extends Component
     public function mount()
     {
         $this->loadSettings();
+        $this->loadStaffMembers();
+        $this->availablePermissions = StaffPermission::availablePermissions();
+        $this->permissionCategories = StaffPermission::permissionCategories();
+    }
+
+    public function loadStaffMembers()
+    {
+        $this->staffMembers = User::where('role', 'staff')->get();
     }
 
     public function loadSettings()
@@ -143,8 +164,68 @@ class Settings extends Component
         }
     }
 
+    // Staff Permission Management Methods
+    public function openPermissionModal($staffId)
+    {
+        $staff = User::findOrFail($staffId);
+        $this->selectedStaffId = $staffId;
+        $this->selectedStaffName = $staff->name;
+        
+        // Load current permissions for this staff
+        $this->staffPermissions = StaffPermission::getUserPermissions($staffId);
+        
+        $this->showPermissionModal = true;
+    }
+
+    public function closePermissionModal()
+    {
+        $this->showPermissionModal = false;
+        $this->selectedStaffId = null;
+        $this->selectedStaffName = '';
+        $this->staffPermissions = [];
+    }
+
+    public function togglePermission($permissionKey)
+    {
+        if (in_array($permissionKey, $this->staffPermissions)) {
+            // Remove permission
+            $this->staffPermissions = array_diff($this->staffPermissions, [$permissionKey]);
+        } else {
+            // Add permission
+            $this->staffPermissions[] = $permissionKey;
+        }
+    }
+
+    public function savePermissions()
+    {
+        try {
+            if (!$this->selectedStaffId) {
+                throw new \Exception('No staff member selected.');
+            }
+
+            StaffPermission::syncPermissions($this->selectedStaffId, $this->staffPermissions);
+
+            $this->closePermissionModal();
+            $this->loadStaffMembers();
+
+            $this->js("Swal.fire('Success!', 'Staff permissions have been updated successfully.', 'success')");
+        } catch (\Exception $e) {
+            $this->js("Swal.fire('Error!', 'Unable to update permissions. Please try again.', 'error')");
+        }
+    }
+
+    public function selectAllPermissions()
+    {
+        $this->staffPermissions = array_keys($this->availablePermissions);
+    }
+
+    public function clearAllPermissions()
+    {
+        $this->staffPermissions = [];
+    }
+
     public function render()
     {
-        return view('livewire.admin.settings');
+        return view('livewire.admin.settings')->layout($this->layout);
     }
 }

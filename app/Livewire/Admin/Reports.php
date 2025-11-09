@@ -15,11 +15,13 @@ use App\Exports\StaffReportExport;
 use App\Exports\PaymentsReportExport;
 use App\Exports\AttendanceReportExport;
 use Illuminate\Support\Facades\DB;
+use App\Livewire\Concerns\WithDynamicLayout;
 
-#[Layout('components.layouts.admin')]
 #[Title('Reports')]
 class Reports extends Component
 {
+    use WithDynamicLayout;
+
     public $selectedReport = 'sales';
     public $reportStartDate;
     public $reportEndDate;
@@ -268,6 +270,6 @@ class Reports extends Component
             'currentReportData' => $this->getCurrentReportData(),
             'currentReportTotal' => $this->getCurrentReportTotal(),
             'reportTitle' => $this->getReportTitle(),
-        ]);
+        ])->layout($this->layout);
     }
 }

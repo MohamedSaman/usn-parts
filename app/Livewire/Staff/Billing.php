@@ -104,14 +104,14 @@ class Billing extends Component
                     'product_prices.selling_price as selling_price',
                     'product_prices.discount_price as discount_price',
                     DB::raw('COALESCE(product_stocks.available_stock, 0) as available_stock'),
-                    'brand_lists.name as brand_name',
+                    'brand_lists.brand_name as brand_name',
                     'category_lists.name as category_name'
                 )
                 ->where(function ($query) {
                     $query->where('product_details.code', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.model', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%')
-                        ->orWhere('brand_lists.name', 'like', '%' . $this->search . '%')
+                        ->orWhere('brand_lists.brand_name', 'like', '%' . $this->search . '%')
                         ->orWhere('category_lists.name', 'like', '%' . $this->search . '%')
                         ->orWhere('product_details.name', 'like', '%' . $this->search . '%');
                 })
