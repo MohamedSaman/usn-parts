@@ -65,6 +65,8 @@ use App\Livewire\Admin\ReturnProduct;
 use App\Livewire\Admin\AddCustomerReceipt;
 use App\Livewire\Admin\AddSupplierReceipt;
 use App\Livewire\Admin\ChequeList;
+use App\Livewire\Admin\DaySummary;
+use App\Livewire\Admin\DaySummaryDetails;
 use App\Livewire\Admin\ListCustomerReceipt;
 use App\Livewire\Admin\ListSupplierReceipt;
 use App\Livewire\Admin\ReturnCheque;
@@ -158,6 +160,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
         Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
+        Route::get('/day-summary', DaySummary::class)->name('day-summary');
+        Route::get('/day-summary-details/{sessionId}', DaySummaryDetails::class)->name('day-summary-details');
     });
     Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])
         ->name('admin.updateCashInHand')

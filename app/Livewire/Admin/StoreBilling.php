@@ -434,9 +434,10 @@ class StoreBilling extends Component
                         'model' => $product->model,
                         'price' => $product->price->selling_price ?? 0,
                         'stock' => $product->stock->available_stock ?? 0,
+                        'sold' => $product->stock->sold_count ?? 0,
                         'image' => $product->image
                     ];
-                })->toArray(); // Convert to array
+                });
         } else {
             $this->searchResults = [];
         }
@@ -445,6 +446,7 @@ class StoreBilling extends Component
     // Add to Cart
     public function addToCart($product)
     {
+        // Check stock availability
         if (($product['stock'] ?? 0) <= 0) {
             $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
             return;
@@ -453,6 +455,7 @@ class StoreBilling extends Component
         $existing = collect($this->cart)->firstWhere('id', $product['id']);
 
         if ($existing) {
+            // Check if adding more exceeds stock
             if (($existing['quantity'] + 1) > $product['stock']) {
                 $this->js("Swal.fire('error', 'Not enough stock available!', 'error')");
                 return;
@@ -818,6 +821,33 @@ class StoreBilling extends Component
                 echo $pdf->output();
             },
             'invoice-' . $sale->invoice_number . '.pdf'
+        );
+    }
+
+    // Download Close Register Report
+    public function downloadCloseRegisterReport()
+    {
+        if (!$this->currentSession) {
+            $this->js("Swal.fire('error', 'No session found to download.', 'error')");
+            return;
+        }
+
+        // Prepare data for PDF
+        $sessionData = [
+            'session' => $this->currentSession,
+            'summary' => $this->sessionSummary,
+            'close_date' => now()->format('d/m/Y'),
+            'close_time' => now()->format('H:i'),
+            'user' => Auth::user()->name,
+        ];
+
+        $pdf = PDF::loadView('admin.pos.close-register-report', $sessionData);
+
+        return response()->streamDownload(
+            function () use ($pdf) {
+                echo $pdf->output();
+            },
+            'close-register-' . now()->format('Y-m-d-His') . '.pdf'
         );
     }
 

@@ -1072,9 +1072,14 @@
             </ul>
         </div>
     </li>
-    <li>
+    {{--<li>
         <a class="nav-link" href="{{ route('admin.store-billing') }}" target="_blank">
             <i class="bi bi-cash"></i> <span>POS</span>
+        </a>
+    </li>--}}
+    <li>
+        <a class="nav-link" href="{{ route('admin.day-summary') }}">
+            <i class="bi bi-file-earmark-bar-graph"></i> <span>Day Summary</span>
         </a>
     </li>
     <li>

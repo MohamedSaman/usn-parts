@@ -24,95 +24,95 @@
     <div class="row">
     
     <div class="row">
-    {{-- Customer Information --}}
-    <div class="col-md-6 mb-4">
-        <div class="card h-100 shadow-sm border-1">
-          <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fw-semibold">
-                    <i class="bi bi-person me-2 text-primary"></i> Customer Information
-                </h5>
-                <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
-                    <i class="bi bi-plus-circle me-1"></i> Add New Customer
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Select Customer *</label>
-                    <select class="form-select shadow-sm" wire:model.live="customerId">
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
-                                {{ $customer->name }}
-                                @if($customer->phone)
-                                    - {{ $customer->phone }}
-                                @endif
-                                @if($customer->name === 'Walking Customer')
-                                    (Default)
-                                @endif
-                            </option>
-                        @endforeach
-                    </select>
+        {{-- Customer Information --}}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-1">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-semibold">
+                        <i class="bi bi-person me-2 text-primary"></i> Customer Information
+                    </h5>
+                    <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add New Customer
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select Customer *</label>
+                        <select class="form-select shadow-sm" wire:model.live="customerId">
+                            @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
+                                    {{ $customer->name }}
+                                    @if($customer->phone)
+                                        - {{ $customer->phone }}
+                                    @endif
+                                    @if($customer->name === 'Walking Customer')
+                                        (Default)
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
 
-                    <div class="form-text mt-2">
-                        @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
-                            <span class="text-info">
-                                <i class="bi bi-info-circle me-1"></i> Using default walking customer
-                            </span>
-                        @else
-                            Select an existing customer or add a new one.
-                        @endif
+                        <div class="form-text mt-2">
+                            @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
+                                <span class="text-info">
+                                    <i class="bi bi-info-circle me-1"></i> Using default walking customer
+                                </span>
+                            @else
+                                Select an existing customer or add a new one.
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Add Products Card --}}
-    <div class="col-md-6 mb-4">
-        <div class="card h-100 shadow-sm border-1">
-           <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0 fw-semibold">
-                    <i class="bi bi-search me-2 text-success"></i> Add Products
-                </h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <input type="text" class="form-control shadow-sm"
-                        wire:model.live="search"
-                        placeholder="Search by product name, code, or model...">
+        {{-- Add Products Card --}}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm border-1">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0 fw-semibold">
+                        <i class="bi bi-search me-2 text-success"></i> Add Products
+                    </h5>
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="text" class="form-control shadow-sm"
+                            wire:model.live="search"
+                            placeholder="Search by product name, code, or model...">
+                    </div>
 
-                {{-- Search Results --}}
-                @if($search && count($searchResults) > 0)
-                    <div class="search-results border rounded bg-white shadow-sm" style="max-height: 300px; overflow-y: auto;">
-                        @foreach($searchResults as $product)
-                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center"
-                                 wire:key="product-{{ $product['id'] }}">
-                                <div>
-                                    <h6 class="mb-1 fw-semibold">{{ $product['name'] }}</h6>
-                                    <p class="text-muted small mb-0">
-                                        Code: {{ $product['code'] }} | Model: {{ $product['model'] }}
-                                    </p>
-                                    <p class="text-success small mb-0">
-                                        Rs.{{ number_format($product['price'], 2) }} | Stock: {{ $product['stock'] }}
-                                    </p>
+                    {{-- Search Results --}}
+                    @if($search && count($searchResults) > 0)
+                        <div class="search-results mt-1 position-absolute w-100 z-10 shadow-lg " style="max-height: 300px; max-width: 96%;">
+                            @foreach($searchResults as $product)
+                                <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white rounded-1"
+                                    wire:key="product-{{ $product['id'] }}">
+                                    <div>
+                                        <h6 class="mb-1 fw-semibold">{{ $product['name'] }}</h6>
+                                        <p class="text-muted small mb-0">
+                                            Code: {{ $product['code'] }} | Model: {{ $product['model'] }}
+                                        </p>
+                                        <p class="text-success small mb-0">
+                                            Rs.{{ number_format($product['price'], 2) }} | Stock: {{ $product['stock'] }}
+                                        </p>
+                                    </div>
+                                    <button class="btn btn-sm btn-outline-primary"
+                                        wire:click="addToCart({{ json_encode($product) }})"
+                                        {{ $product['stock'] <= 0 ? 'disabled' : '' }}>
+                                        <i class="bi bi-plus-lg"></i> Add
+                                    </button>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary"
-                                    wire:click="addToCart({{ json_encode($product) }})"
-                                    {{ $product['stock'] <= 0 ? 'disabled' : '' }}>
-                                    <i class="bi bi-plus-lg"></i> Add
-                                </button>
-                            </div>
-                        @endforeach
-                    </div>
-                @elseif($search)
-                    <div class="text-center text-muted p-3">
-                        <i class="bi bi-exclamation-circle me-1"></i> No products found
-                    </div>
-                @endif
+                            @endforeach
+                        </div>
+                    @elseif($search)
+                        <div class="text-center text-muted p-3">
+                            <i class="bi bi-exclamation-circle me-1"></i> No products found
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
         {{-- Sale Items Table --}}
@@ -369,16 +369,19 @@
                     {{-- Sale Preview --}}
                     <div class="sale-preview p-4">
                         {{-- Header --}}
-                        <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
-                            <div class="w-100">
-                                <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                                    class="img-fluid mb-2" style="max-height:100px;">
-
+                        <div class="screen-only-header ">
+                            <div class="text-end">
+                                <button type="button" class="btn-close btn-close-black" wire:click="createNewSale"></button>
                             </div>
-                            <button type="button" class="btn-close btn-close-black closebtn"
-                                wire:click="closeModal"></button>
+                            <div class="text-center mb-4">
+                                <div class="w-100 d-flex justify-content-center">
+                                <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:100px;">
+                                </div>
+                                <p class="mb-0">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                                <p class="mb-0">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+                            </div>
+                            <hr class="my-3">
                         </div>
-
                         {{-- Customer & Sale Details --}}
                         <div class="row mb-4">
                             <div class="col-md-6">

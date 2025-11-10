@@ -124,20 +124,26 @@ class PurchaseOrderList extends Component
         }
 
         if ($existingIndex !== null) {
-            // Product already exists, increment quantity
+            // Product already exists, increment quantity and move to top
             $this->orderItems[$existingIndex]['quantity'] += 1;
             $this->orderItems[$existingIndex]['total_price'] =
                 $this->orderItems[$existingIndex]['quantity'] * $this->orderItems[$existingIndex]['supplier_price'];
+
+            // Move the updated item to the top
+            $item = $this->orderItems[$existingIndex];
+            unset($this->orderItems[$existingIndex]);
+            $this->orderItems = array_values($this->orderItems); // Re-index array
+            array_unshift($this->orderItems, $item); // Add to top
         } else {
-            // Add new product to order items directly
-            $this->orderItems[] = [
+            // Add new product to the top of order items
+            array_unshift($this->orderItems, [
                 'product_id' => $product->id,
                 'code' => $product->code,
                 'name' => $product->name,
                 'quantity' => 1,
                 'supplier_price' => $price,
                 'total_price' => $price
-            ];
+            ]);
         }
 
         // Clear search
@@ -363,18 +369,24 @@ class PurchaseOrderList extends Component
         }
 
         if ($existingIndex !== null) {
-            // Product already exists, increment quantity
+            // Product already exists, increment quantity and move to top
             $this->editOrderItems[$existingIndex]['quantity'] += 1;
+
+            // Move the updated item to the top
+            $item = $this->editOrderItems[$existingIndex];
+            unset($this->editOrderItems[$existingIndex]);
+            $this->editOrderItems = array_values($this->editOrderItems); // Re-index array
+            array_unshift($this->editOrderItems, $item); // Add to top
         } else {
-            // Add new product to edit items
-            $this->editOrderItems[] = [
+            // Add new product to the top of edit items
+            array_unshift($this->editOrderItems, [
                 'id' => null, // New item, no database ID yet
                 'product_id' => $product->id,
                 'code' => $product->code,
                 'name' => $product->name,
                 'quantity' => 1,
                 'unit_price' => $price,
-            ];
+            ]);
         }
 
         // Clear search
@@ -982,19 +994,19 @@ class PurchaseOrderList extends Component
         $subtotal = $receivedQty * $unitPrice;
 
         $discountType = $item['discount_type'] ?? 'rs';
-        
+
         // Apply discount based on type
         if ($discountType === 'percent') {
             // Calculate percentage discount on total
             $discountAmount = ($subtotal * $discount) / 100;
             $total = $subtotal - $discountAmount;
-            
+
             Log::info("GRN Total Calc (Percent): Qty={$receivedQty}, Price={$unitPrice}, Subtotal={$subtotal}, Discount={$discount}%, DiscountAmount={$discountAmount}, Total={$total}");
         } else {
             // Fixed rupees discount - apply per unit
             $discountedUnitPrice = $unitPrice - $discount;
             $total = $discountedUnitPrice * $receivedQty;
-            
+
             Log::info("GRN Total Calc (Rs): Qty={$receivedQty}, Price={$unitPrice}, DiscountPerUnit={$discount}, DiscountedPrice={$discountedUnitPrice}, Total={$total}");
         }
 
