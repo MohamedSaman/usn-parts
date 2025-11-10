@@ -87,6 +87,7 @@
                                 <option value="cash">Cash</option>
                                 <option value="cheque">Cheque</option>
                                 <option value="bank_transfer">Bank Transfer</option>
+                                <option value="others">Others</option>
                             </select>
                             @error('paymentData.payment_method') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>

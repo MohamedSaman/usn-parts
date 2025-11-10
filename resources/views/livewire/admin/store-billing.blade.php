@@ -1,31 +1,20 @@
-<div class="container-fluid py-3">
-
-    <nav class="top-bar d-flex justify-content-between align-items-center">
-        <!-- Sidebar toggle button -->
-        <button id="sidebarToggler" class="btn btn-sm px-2 py-1  d-flex align-items-center" style="color:#ffffff; border-color:#ffffff;">
-            <i class="bi bi-list fs-5"></i>
-        </button>
-
-        <!-- Centered Company Name (hidden on small screens) -->
-        <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-
-        </div>
-        @php
-        use App\Models\CashInHand as CashModel;
-        $cashInHand = CashModel::where('key', 'cash in hand')->value('value') ?? 0;
-        @endphp
-
-        <!-- Editable Cash in Hand Display -->
-        <div class="badge  bg-opacity-10 rounded-pill shadow-sm border  border-opacity-25 d-flex align-items-center gap-2 me-2 "
-            style="color:#8eb922;border-color:#8eb922; font-size: 0.9rem; cursor: pointer;"
-            onclick="handlePOSClick()"
-            role="button">
-            <div class="d-flex align-items-center gap-1 px-2 py-1 fs-6">
-                <i class="bi bi-plus-circle"></i>
-                <span class="fw-semibold">POS</span>
+<div class="container-fluid py-3" style="background-color:#f5fdf1ff;">
+    <!-- Enhanced Header -->
+    <div class="header-section mb-4">
+        <div class="d-flex justify-content-between align-items-center p-3 bg-white rounded shadow-sm border">
+            <!-- Logo and Company Info -->
+            <div class="d-flex align-items-center">
+                <div class="company-logo me-3">
+                    <i class="bi bi-shop fs-3 text-success"></i>
+                </div>
+                <div>
+                    <h4 class="mb-0 fw-bold" style="color:#3b5b0c;">USN AUTO PARTS</h4>
+                    <small class="text-muted">Point of Sale System</small>
+                </div>
             </div>
-        </div>
 
+            <!-- Header Bar -->
+            <div class="d-flex justify-content-between align-items-center bg-white shadow-sm px-4 py-2 rounded-3 gap-2" >
 
 
         <!-- Admin dropdown -->
@@ -95,37 +84,133 @@
                         @else
                         Select existing customer or add new
                         @endif
+                <!-- POS Button -->
+                <div class="d-flex align-items-center">
+                    <div class="badge d-flex align-items-center  px-3 py-1 rounded-2 shadow-sm"
+                        style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); color:white; border:1px solid #3b5b0c; cursor: pointer; transition: all 0.2s ease;"
+                        onclick="handlePOSClick()"
+                        role="button"
+                        onmouseover="this.style.background='linear-gradient(0deg, rgba(40, 70, 5, 1) 0%, rgba(120, 160, 25, 1) 100%)';"
+                        onmouseout="this.style.background='linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%)';">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        <span class="fw-semibold">POS</span>
                     </div>
                 </div>
 
-               
+                <!-- Admin Section -->
+                <div class="dropdown">
+                    <div class="d-flex align-items-center dropdown-toggle" id="adminDropdown" data-bs-toggle="dropdown"
+                        aria-expanded="false" style="cursor:pointer;">
+                        <div class="admin-avatar text-white rounded-circle d-flex align-items-center justify-content-center me-2"
+                            style="width:36px; height:36px; background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
+                            <i class="bi bi-person-fill fs-5"></i>
+                        </div>
+                        <div class="admin-details text-start">
+                            <div class="fw-bold" style="color:#3b5b0c;">Admin</div>
+                        </div>
+                    </div>
+                    <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm border-0 rounded-3" aria-labelledby="adminDropdown">
+                        <li>
+                            <a class="dropdown-item py-2" href="#">
+                                <i class="bi bi-person me-2" style="color:#8eb922;"></i> My Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item py-2" href="#">
+                                <i class="bi bi-gear me-2" style="color:#8eb922;"></i> Settings
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger py-2">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
             </div>
+
         </div>
     </div>
-</div>
+
+    <div class="row">
+        {{-- Customer Information --}}
+        <div class="col-6 mb-4">
+            <div class="card border-2 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0 fw-bold" style="color:#3b5b0c;">
+                        <i class="bi bi-person me-2" style="color:#8eb922;"></i>Customer Information
+                    </h5>
+                    <button class="btn btn-sm rounded-1 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color: #3b5b0c;" wire:click="openCustomerModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add New Customer
+                    </button>
+                </div>
+                <div class="card-body">
+                    {{-- Customer Success Alert --}}
+                    @if(session()->has('customer_success'))
+                    <div class="alert alert-success alert-dismissible fade show rounded-0 mb-3" role="alert">
+                        <i class="bi bi-check-circle-fill me-2"></i>
+                        <strong>Success!</strong> {{ session('customer_success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    @endif
+
+                    <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Select Customer *</label>
+                            <select class="form-select rounded-0 border" wire:model.live="customerId">
+                                @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
+                                    {{ $customer->name }}
+                                    @if($customer->phone)
+                                    - {{ $customer->phone }}
+                                    @endif
+                                    @if($customer->name === 'Walking Customer') (Default) @endif
+                                </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">
+                                @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
+                                <span class="text-info">
+                                    <i class="bi bi-info-circle"></i> Using default walking customer
+                                </span>
+                                @else
+                                Select existing customer or add new
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {{-- Add Products Card --}}
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-search me-2"></i>Add Products
+            <div class="card h-100 border-2 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold" style="color:#3b5b0c;">
+                        <i class="bi bi-search me-2" style="color:#8eb922;"></i>Add Products
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <input type="text" class="form-control" wire:model.live="search"
+                        <input type="text" class="form-control rounded-0 border" wire:model.live="search"
                             placeholder="Search by product name, code or model...">
                     </div>
 
                     {{-- Search Results --}}
                     @if($search && count($searchResults) > 0)
-                    <div class="search-results border rounded bg-white">
+                    <div class="search-results border rounded-0 bg-white">
                         @foreach($searchResults as $product)
                         <div class="p-3 border-bottom" wire:key="product-{{ $product['id'] }}">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <h6 class="mb-1">{{ $product['name'] }}</h6>
+                                    <h6 class="mb-1 fw-semibold">{{ $product['name'] }}</h6>
                                     <p class="text-muted small mb-0">
                                         Code: {{ $product['code'] }} |
                                         Model: {{ $product['model'] }}
@@ -135,7 +220,7 @@
                                         Stock: {{ $product['stock'] }}
                                     </p>
                                 </div>
-                                <button class="btn btn-sm btn-primary"
+                                <button class="btn btn-sm rounded-0 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;"
                                     wire:click="addToCart({{ json_encode($product) }})"
                                     {{ $product['stock'] <= 0 ? 'disabled' : '' }}>
                                     <i class="bi bi-plus"></i> Add
@@ -155,12 +240,12 @@
 
         {{-- Sale Items Table --}}
         <div class="col-md-12 mb-4">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-cart me-2"></i>Sale Items
+            <div class="card border-2 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="card-title mb-0 fw-bold" style="color:#3b5b0c;">
+                        <i class="bi bi-cart me-2" style="color:#8eb922;"></i>Sale Items
                     </h5>
-                    <span class="badge bg-primary">{{ count($cart) }} items</span>
+                    <span class="badge rounded-1 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">{{ count($cart) }} items</span>
                 </div>
                 <div class="card-body p-0">
                     @if(count($cart) > 0)
@@ -197,17 +282,17 @@
                                     </td>
                                     <td>
                                         <div class="input-group input-group-sm">
-                                            <button class="btn btn-outline-secondary" type="button"
+                                            <button class="btn btn-outline-secondary rounded-0" type="button"
                                                 wire:click="decrementQuantity({{ $index }})">-</button>
-                                            <input type="number" class="form-control text-center"
+                                            <input type="number" class="form-control text-center rounded-0"
                                                 wire:change="updateQuantity({{ $index }}, $event.target.value)"
                                                 value="{{ $item['quantity'] }}" min="1" max="{{ $item['stock'] }}">
-                                            <button class="btn btn-outline-secondary" type="button"
+                                            <button class="btn btn-outline-secondary rounded-0" type="button"
                                                 wire:click="incrementQuantity({{ $index }})">+</button>
                                         </div>
                                     </td>
                                     <td>
-                                        <input type="number" class="form-control form-control-sm text-danger"
+                                        <input type="number" class="form-control form-control-sm text-danger rounded-0"
                                             wire:change="updateDiscount({{ $index }}, $event.target.value)"
                                             value="{{ $item['discount'] }}" min="0" step="0.01"
                                             placeholder="0.00">
@@ -216,7 +301,7 @@
                                         Rs.{{ number_format($item['total'], 2) }}
                                     </td>
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-danger"
+                                        <button class="btn btn-sm btn-outline-danger rounded-0"
                                             wire:click="removeFromCart({{ $index }})"
                                             title="Delete">
                                             <i class="bi bi-trash"></i>
@@ -231,7 +316,7 @@
                                     <td class="fw-bold">Rs.{{ number_format($subtotal, 2) }}</td>
                                     <td></td>
                                 </tr>
-                               
+
                                 {{-- Additional Discount Section --}}
                                 <tr>
                                     <td colspan="3" class="text-end fw-bold align-middle">
@@ -246,19 +331,19 @@
                                     <td colspan="2">
                                         <div class="input-group input-group-sm">
                                             <input type="number"
-                                                class="form-control form-control-sm text-danger"
+                                                class="form-control form-control-sm text-danger rounded-0"
                                                 wire:model.live="additionalDiscount"
                                                 min="0"
                                                 step="{{ $additionalDiscountType === 'percentage' ? '1' : '0.01' }}"
-                                                @if($additionalDiscountType==='percentage') max="100" @endif
+                                                @if($additionalDiscountType==='percentage' ) max="100" @endif
                                                 placeholder="0{{ $additionalDiscountType === 'percentage' ? '' : '.00' }}">
 
-                                            <span class="input-group-text">
+                                            <span class="input-group-text rounded-0">
                                                 {{ $additionalDiscountType === 'percentage' ? '%' : 'Rs.' }}
                                             </span>
 
                                             <button type="button"
-                                                class="btn btn-outline-secondary"
+                                                class="btn btn-outline-secondary rounded-0"
                                                 wire:click="toggleDiscountType"
                                                 title="Switch Discount Type">
                                                 <i class="bi bi-arrow-repeat"></i>
@@ -281,7 +366,7 @@
                                 {{-- Grand Total --}}
                                 <tr>
                                     <td colspan="5" class="text-end fw-bold fs-5">Grand Total:</td>
-                                    <td class="fw-bold fs-5 text-primary">Rs.{{ number_format($grandTotal, 2) }}</td>
+                                    <td class="fw-bold fs-5" style="color:#8eb922;">Rs.{{ number_format($grandTotal, 2) }}</td>
                                     <td></td>
                                 </tr>
                             </tfoot>
@@ -289,14 +374,14 @@
                     </div>
                     @else
                     <div class="text-center text-muted py-5">
-                        <i class="bi bi-cart display-4 d-block mb-2"></i>
+                        <i class="bi bi-cart display-4 d-block mb-2 text-muted"></i>
                         No items added yet
                     </div>
                     @endif
                 </div>
                 @if(count($cart) > 0)
-                <div class="card-footer">
-                    <button class="btn btn-danger" wire:click="clearCart">
+                <div class="card-footer bg-white">
+                    <button class="btn btn-danger rounded-0" wire:click="clearCart">
                         <i class="bi bi-trash me-2"></i>Clear All Items
                     </button>
                 </div>
@@ -306,17 +391,17 @@
 
         {{-- Payment Information Card --}}
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-credit-card me-2"></i>Payment Information
+            <div class="card h-100 border-2 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold" style="color:#3b5b0c;">
+                        <i class="bi bi-credit-card me-2" style="color:#8eb922;"></i>Payment Information
                     </h5>
                 </div>
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-12">
-                            <label class="form-label">Payment Method *</label>
-                            <select class="form-select" wire:model.live="paymentMethod">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Payment Method *</label>
+                            <select class="form-select rounded-0 border" wire:model.live="paymentMethod">
                                 <option value="cash">Cash</option>
                                 <option value="cheque">Cheque</option>
                                 <option value="bank_transfer">Bank Transfer</option>
@@ -327,12 +412,12 @@
                         {{-- Cash Payment Fields --}}
                         @if($paymentMethod === 'cash')
                         <div class="col-md-12">
-                            <label class="form-label">Cash Amount *</label>
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Cash Amount *</label>
                             <div class="input-group">
-                                <span class="input-group-text">Rs.</span>
-                                <input type="number" class="form-control" 
+                                <span class="input-group-text rounded-0">Rs.</span>
+                                <input type="number" class="form-control rounded-0"
                                     wire:model.live="cashAmount"
-                                    min="0" 
+                                    min="0"
                                     step="0.01"
                                     placeholder="0.00">
                             </div>
@@ -345,42 +430,42 @@
                         {{-- Cheque Payment Fields --}}
                         @if($paymentMethod === 'cheque')
                         <div class="col-md-12">
-                            <div class="card bg-light">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">Add Cheque Details</h6>
+                            <div class="card bg-light border-0">
+                                <div class="card-header d-flex justify-content-between align-items-center bg-white py-2">
+                                    <h6 class="mb-0 fw-semibold" style="color:#3b5b0c;">Add Cheque Details</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row g-2">
                                         <div class="col-md-6">
-                                            <label class="form-label small">Cheque Number *</label>
-                                            <input type="text" class="form-control form-control-sm" 
+                                            <label class="form-label small fw-semibold" style="color:#3b5b0c;">Cheque Number *</label>
+                                            <input type="text" class="form-control form-control-sm rounded-0"
                                                 wire:model="tempChequeNumber"
                                                 placeholder="Enter cheque number">
                                             @error('tempChequeNumber') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small">Bank Name *</label>
-                                            <input type="text" class="form-control form-control-sm" 
+                                            <label class="form-label small fw-semibold" style="color:#3b5b0c;">Bank Name *</label>
+                                            <input type="text" class="form-control form-control-sm rounded-0"
                                                 wire:model="tempBankName"
                                                 placeholder="Enter bank name">
                                             @error('tempBankName') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small">Cheque Date *</label>
-                                            <input type="date" class="form-control form-control-sm" 
+                                            <label class="form-label small fw-semibold" style="color:#3b5b0c;">Cheque Date *</label>
+                                            <input type="date" class="form-control form-control-sm rounded-0"
                                                 wire:model="tempChequeDate">
                                             @error('tempChequeDate') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small">Cheque Amount *</label>
-                                            <input type="number" class="form-control form-control-sm" 
+                                            <label class="form-label small fw-semibold" style="color:#3b5b0c;">Cheque Amount *</label>
+                                            <input type="number" class="form-control form-control-sm rounded-0"
                                                 wire:model="tempChequeAmount"
                                                 min="0" step="0.01"
                                                 placeholder="0.00">
                                             @error('tempChequeAmount') <span class="text-danger small">{{ $message }}</span> @enderror
                                         </div>
                                         <div class="col-12">
-                                            <button type="button" class="btn btn-sm btn-primary w-100" 
+                                            <button type="button" class="btn btn-sm w-100 rounded-0 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;"
                                                 wire:click="addCheque">
                                                 <i class="bi bi-plus-circle me-1"></i> Add Cheque
                                             </button>
@@ -392,7 +477,7 @@
                             {{-- Cheques List --}}
                             @if(count($cheques) > 0)
                             <div class="mt-3">
-                                <h6 class="mb-2">Added Cheques ({{ count($cheques) }})</h6>
+                                <h6 class="mb-2 fw-semibold" style="color:#3b5b0c;">Added Cheques ({{ count($cheques) }})</h6>
                                 <div class="table-responsive">
                                     <table class="table table-sm table-bordered">
                                         <thead class="table-light">
@@ -412,7 +497,7 @@
                                                 <td>{{ date('d/m/Y', strtotime($cheque['date'])) }}</td>
                                                 <td class="fw-bold">Rs.{{ number_format($cheque['amount'], 2) }}</td>
                                                 <td class="text-center">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-0"
                                                         wire:click="removeCheque({{ $index }})">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
@@ -438,25 +523,25 @@
                         {{-- Bank Transfer Fields --}}
                         @if($paymentMethod === 'bank_transfer')
                         <div class="col-md-12">
-                            <label class="form-label">Bank Transfer Amount *</label>
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Bank Transfer Amount *</label>
                             <div class="input-group">
-                                <span class="input-group-text">Rs.</span>
-                                <input type="number" class="form-control" 
+                                <span class="input-group-text rounded-0">Rs.</span>
+                                <input type="number" class="form-control rounded-0"
                                     wire:model.live="bankTransferAmount"
-                                    min="0" 
+                                    min="0"
                                     step="0.01"
                                     placeholder="0.00">
                             </div>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label">Transfer Receipt (Optional)</label>
-                            <input type="file" class="form-control" 
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Transfer Receipt (Optional)</label>
+                            <input type="file" class="form-control rounded-0"
                                 wire:model="bankTransferFile"
                                 accept="image/*,application/pdf">
                             <div class="form-text">Upload transfer receipt or proof</div>
                             @if($bankTransferFile)
                             <div class="mt-2">
-                                <span class="badge bg-success">
+                                <span class="badge rounded-1 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
                                     <i class="bi bi-check-circle me-1"></i> File selected: {{ $bankTransferFile->getClientOriginalName() }}
                                 </span>
                             </div>
@@ -467,7 +552,7 @@
                         {{-- Credit Payment Info --}}
                         @if($paymentMethod === 'credit')
                         <div class="col-md-12">
-                            <div class="alert alert-warning mb-0">
+                            <div class="alert alert-warning mb-0 rounded-0">
                                 <i class="bi bi-exclamation-triangle me-2"></i>
                                 <strong>Credit Sale</strong>
                                 <p class="mb-0 mt-2">The full amount of Rs.{{ number_format($grandTotal, 2) }} will be marked as due. Customer can pay later.</p>
@@ -478,8 +563,8 @@
                         {{-- Payment Summary --}}
                         @if($paymentMethod !== 'credit')
                         <div class="col-md-12">
-                            <div class="border rounded p-3 bg-light">
-                                <h6 class="mb-3">Payment Summary</h6>
+                            <div class="border rounded-0 p-3 bg-light">
+                                <h6 class="mb-3 fw-semibold" style="color:#3b5b0c;">Payment Summary</h6>
                                 <div class="d-flex justify-content-between mb-2">
                                     <span>Grand Total:</span>
                                     <span class="fw-bold">Rs.{{ number_format($grandTotal, 2) }}</span>
@@ -496,22 +581,22 @@
                                 </div>
                                 <div class="d-flex justify-content-between">
                                     <span>Status:</span>
-                                    <span class="badge bg-{{ $paymentStatus === 'paid' ? 'success' : ($paymentStatus === 'partial' ? 'warning' : 'danger') }}">
+                                    <span class="badge bg-{{ $paymentStatus === 'paid' ? 'success' : ($paymentStatus === 'partial' ? 'warning' : 'danger') }} rounded-1">
                                         {{ ucfirst($paymentStatus) }}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        @if($totalPaidAmount < $grandTotal && $totalPaidAmount > 0)
-                        <div class="col-md-12">
-                            <div class="alert alert-info small mb-0">
-                                <i class="bi bi-info-circle me-1"></i>
-                                Partial payment. Remaining Rs.{{ number_format($dueAmount, 2) }} will be marked as due.
+                        @if($totalPaidAmount < $grandTotal && $totalPaidAmount> 0)
+                            <div class="col-md-12">
+                                <div class="alert alert-info small mb-0 rounded-0">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Partial payment. Remaining Rs.{{ number_format($dueAmount, 2) }} will be marked as due.
+                                </div>
                             </div>
-                        </div>
-                        @endif
-                        @endif
+                            @endif
+                            @endif
                     </div>
                 </div>
             </div>
@@ -519,14 +604,14 @@
 
         {{-- Notes Card --}}
         <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="bi bi-chat-text me-2"></i>Notes
+            <div class="card h-100 border-2 shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="card-title mb-0 fw-bold" style="color:#3b5b0c;">
+                        <i class="bi bi-chat-text me-2" style="color:#8eb922;"></i>Notes
                     </h5>
                 </div>
                 <div class="card-body">
-                    <textarea class="form-control" wire:model="notes" rows="8"
+                    <textarea class="form-control rounded-0" wire:model="notes" rows="8"
                         placeholder="Add any notes for this sale..."></textarea>
                 </div>
             </div>
@@ -534,9 +619,9 @@
 
         {{-- Create Sale Button --}}
         <div class="col-12">
-            <div class="card">
-                <div class="card-body text-center">
-                    <button class="btn btn-success btn-lg px-5" wire:click="validateAndCreateSale"
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center bg-light py-4">
+                    <button class="btn btn-lg px-5 rounded-0 fw-bold text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;" wire:click="validateAndCreateSale"
                         {{ count($cart) == 0 ? 'disabled' : '' }}>
                         <i class="bi bi-cart-check me-2"></i>Complete Sale
                     </button>
@@ -549,9 +634,9 @@
     @if($showCustomerModal)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
+            <div class="modal-content rounded-0">
+                <div class="modal-header text-white rounded-0" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
+                    <h5 class="modal-title fw-bold">
                         <i class="bi bi-person-plus me-2"></i>Add New Customer
                     </h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="closeCustomerModal"></button>
@@ -559,45 +644,44 @@
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label">Name *</label>
-                            <input type="text" class="form-control" wire:model="customerName" placeholder="Enter customer name">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Name *</label>
+                            <input type="text" class="form-control rounded-0" wire:model="customerName" placeholder="Enter customer name">
                             @error('customerName') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Phone *</label>
-                            <input type="text" class="form-control" wire:model="customerPhone" placeholder="Enter phone number">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Phone *</label>
+                            <input type="text" class="form-control rounded-0" wire:model="customerPhone" placeholder="Enter phone number">
                             @error('customerPhone') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" wire:model="customerEmail" placeholder="Enter email address">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Email</label>
+                            <input type="email" class="form-control rounded-0" wire:model="customerEmail" placeholder="Enter email address">
                             @error('customerEmail') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Customer Type *</label>
-                            <select class="form-select" wire:model="customerType">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Customer Type *</label>
+                            <select class="form-select rounded-0" wire:model="customerType">
                                 <option value="retail">Retail</option>
                                 <option value="wholesale">Wholesale</option>
-                               
                             </select>
                             @error('customerType') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Business Name</label>
-                            <input type="text" class="form-control" wire:model="businessName" placeholder="Enter business name">
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Business Name</label>
+                            <input type="text" class="form-control rounded-0" wire:model="businessName" placeholder="Enter business name">
                         </div>
                         <div class="col-12">
-                            <label class="form-label">Address *</label>
-                            <textarea class="form-control" wire:model="customerAddress" rows="3" placeholder="Enter address"></textarea>
+                            <label class="form-label fw-semibold" style="color:#3b5b0c;">Address *</label>
+                            <textarea class="form-control rounded-0" wire:model="customerAddress" rows="3" placeholder="Enter address"></textarea>
                             @error('customerAddress') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="closeCustomerModal">
-                        <i class="bi bi-x-circle me-2"></i>Cancel
+                <div class="modal-footer rounded-0">
+                    <button type="button" class="btn btn-secondary rounded-0" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);"wire:click="closeCustomerModal">
+                        <i class="bi bi-x-circle me-2"  ></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-primary" wire:click="createCustomer">
+                    <button type="button" class="btn rounded-0 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;" wire:click="createCustomer">
                         <i class="bi bi-check-circle me-2"></i>Create Customer
                     </button>
                 </div>
@@ -610,14 +694,14 @@
     @if($showPaymentConfirmModal)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.7);">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">
+            <div class="modal-content rounded-0">
+                <div class="modal-header text-white rounded-0" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
+                    <h5 class="modal-title fw-bold">
                         <i class="bi bi-exclamation-triangle me-2"></i>Partial Payment Confirmation
                     </h5>
                 </div>
                 <div class="modal-body">
-                    <div class="alert alert-warning mb-3">
+                    <div class="alert alert-warning mb-3 rounded-0">
                         <h6 class="alert-heading">Payment Amount Less Than Grand Total</h6>
                         <hr>
                         <div class="d-flex justify-content-between mb-2">
@@ -634,15 +718,15 @@
                         </div>
                     </div>
                     <p class="mb-0">
-                        The due amount of <strong class="text-danger">Rs.{{ number_format($pendingDueAmount, 2) }}</strong> 
+                        The due amount of <strong class="text-danger">Rs.{{ number_format($pendingDueAmount, 2) }}</strong>
                         will be added to the customer's account. Do you want to proceed?
                     </p>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="cancelSaleConfirmation">
+                <div class="modal-footer rounded-0">
+                    <button type="button" class="btn btn-secondary rounded-0" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);" wire:click="cancelSaleConfirmation">
                         <i class="bi bi-x-circle me-2"></i>Cancel
                     </button>
-                    <button type="button" class="btn btn-warning" wire:click="confirmSaleWithDue">
+                    <button type="button" class="btn rounded-0 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;" wire:click="confirmSaleWithDue">
                         <i class="bi bi-check-circle me-2"></i>Yes, Proceed with Due
                     </button>
                 </div>
@@ -655,9 +739,9 @@
     @if($showSaleModal && $createdSale)
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
+            <div class="modal-content rounded-0">
+                <div class="modal-header text-white rounded-0" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
+                    <h5 class="modal-title fw-bold">
                         <i class="bi bi-cart-check me-2"></i>
                         Sale Completed Successfully! - {{ $createdSale->invoice_number }}
                     </h5>
@@ -669,7 +753,7 @@
                     <div class="sale-preview p-4">
                         {{-- Header --}}
                         <div class="header text-center mb-4">
-                            <h2 class="text-success mb-1">USN AUTO PARTS</h2>
+                            <h2 class="mb-1 fw-bold" style="color:#3b5b0c;">USN AUTO PARTS</h2>
                             <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
                             <p class="mb-1">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
                         </div>
@@ -677,9 +761,9 @@
                         {{-- Customer & Sale Details --}}
                         <div class="row mb-4">
                             <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Customer Information</h6>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light rounded-0">
+                                        <h6 class="mb-0 fw-bold" style="color:#3b5b0c;">Customer Information</h6>
                                     </div>
                                     <div class="card-body">
                                         <p class="mb-1"><strong>{{ $createdSale->customer->name }}</strong></p>
@@ -693,20 +777,20 @@
                             </div>
 
                             <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Sale Details</h6>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light rounded-0">
+                                        <h6 class="mb-0 fw-bold" style="color:#3b5b0c;">Sale Details</h6>
                                     </div>
                                     <div class="card-body">
                                         <p class="mb-1"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
                                         <p class="mb-1"><strong>Invoice No:</strong> {{ $createdSale->invoice_number }}</p>
                                         <p class="mb-1"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-                                        <p class="mb-1"><strong>Payment Status:</strong> 
-                                            <span class="badge bg-{{ $createdSale->payment_status == 'paid' ? 'success' : ($createdSale->payment_status == 'partial' ? 'warning' : 'danger') }}">
+                                        <p class="mb-1"><strong>Payment Status:</strong>
+                                            <span class="badge bg-{{ $createdSale->payment_status == 'paid' ? 'success' : ($createdSale->payment_status == 'partial' ? 'warning' : 'danger') }} rounded-1">
                                                 {{ ucfirst($createdSale->payment_status) }}
                                             </span>
                                         </p>
-                                        <p class="mb-0"><strong>Payment Method:</strong> 
+                                        <p class="mb-0"><strong>Payment Method:</strong>
                                             {{ ucfirst($paymentMethod) }}
                                         </p>
                                     </div>
@@ -717,7 +801,7 @@
                         {{-- Items Table --}}
                         <div class="table-responsive mb-4">
                             <table class="table table-bordered">
-                                <thead class="table-primary">
+                                <thead style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); color:white;">
                                     <tr>
                                         <th width="40">#</th>
                                         <th>Item Code</th>
@@ -758,7 +842,7 @@
 
                                     <tr>
                                         <td colspan="6" class="text-end fw-bold fs-5">Grand Total:</td>
-                                        <td class="text-end fw-bold fs-5 text-primary">
+                                        <td class="text-end fw-bold fs-5" style="color:#8eb922;">
                                             {{ number_format($createdSale->total_amount, 2) }}
                                         </td>
                                     </tr>
@@ -789,9 +873,9 @@
                         @if($createdSale->payments->count() > 0)
                         <div class="row mb-4">
                             <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Payment Details</h6>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light rounded-0">
+                                        <h6 class="mb-0 fw-bold" style="color:#3b5b0c;">Payment Details</h6>
                                     </div>
                                     <div class="card-body">
                                         @foreach($createdSale->payments as $payment)
@@ -815,9 +899,9 @@
                         @if($createdSale->notes)
                         <div class="row">
                             <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header bg-light">
-                                        <h6 class="mb-0">Notes</h6>
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light rounded-0">
+                                        <h6 class="mb-0 fw-bold" style="color:#3b5b0c;">Notes</h6>
                                     </div>
                                     <div class="card-body">
                                         <p class="mb-0">{!! nl2br(e($createdSale->notes)) !!}</p>
@@ -830,11 +914,11 @@
                 </div>
 
                 {{-- Footer Buttons --}}
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewSale">
+                <div class="modal-footer justify-content-center rounded-0">
+                    <button type="button" class="btn btn-outline-secondary me-2 rounded-0" wire:click="createNewSale">
                         <i class="bi bi-plus-circle me-2"></i>Create New Sale
                     </button>
-                    <button type="button" class="btn btn-success" wire:click="downloadInvoice">
+                    <button type="button" class="btn rounded-0 text-white" style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); border-color:#3b5b0c;" wire:click="downloadInvoice">
                         <i class="bi bi-download me-2"></i>Download Invoice
                     </button>
                 </div>
@@ -846,11 +930,45 @@
 
 @push('styles')
 <style>
+    .container-fluid{
+        background-color: #f5fdf1ff !important;
+    }
+    /* Header Styles */
+    .header-section {
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .company-logo {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-avatar {
+        font-size: 0.9rem;
+    }
+
+    .admin-details {
+        line-height: 1.2;
+    }
+
+    /* Form Controls with Square Corners */
+    .form-control,
+    .form-select,
+    .input-group-text,
+    .btn {
+        border-radius: 0 !important;
+    }
+
+    /* Search Results */
     .search-results {
         max-height: 300px;
         overflow-y: auto;
         border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
+        border-radius: 0;
     }
 
     .search-results .p-3 {
@@ -858,7 +976,8 @@
     }
 
     .search-results .p-3:hover {
-        background-color: #f8f9fa;
+        background-color: #f5fdf1ff;
+        ;
     }
 
     .table th {
@@ -874,7 +993,7 @@
 
     .card {
         border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
+        border-radius: 0;
         box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
     }
 
@@ -900,14 +1019,8 @@
     }
 
     .sale-preview .header {
-        border-bottom: 2px solid #057642ff;
+        border-bottom: 2px solid #3b5b0c;
         padding-bottom: 1rem;
-    }
-
-    .sale-preview table th {
-        background-color: #038d4fff;
-        color: white;
-        border: none;
     }
 
     .sale-preview table td {
@@ -921,7 +1034,8 @@
     }
 
     /* Cheque table styling */
-    .table-sm td, .table-sm th {
+    .table-sm td,
+    .table-sm th {
         padding: 0.5rem;
         font-size: 0.875rem;
     }
@@ -943,6 +1057,15 @@
         .modal-dialog {
             margin: 0.5rem;
         }
+
+        .header-section .d-flex {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .admin-details {
+            text-align: center;
+        }
     }
 
     /* Stock warning */
@@ -954,6 +1077,11 @@
     input[type="file"]:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+    }
+
+    /* Professional color scheme */
+    .btn:hover {
+        opacity: 0.9;
     }
 </style>
 @endpush
@@ -971,6 +1099,16 @@
         });
     });
 
+
+    // Auto-hide alert after 3 seconds
+        setTimeout(() => {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                // Add Bootstrap fade-out effect
+                alert.classList.remove('show');
+                setTimeout(() => alert.remove(), 500); // remove from DOM
+            }
+        }, 3000);
     // Prevent form submission on enter key in search
     document.addEventListener('keydown', function(e) {
         if (e.target.type === 'text' && e.target.getAttribute('wire:model') === 'search') {
@@ -979,5 +1117,10 @@
             }
         }
     });
+
+    function handlePOSClick() {
+        // Handle POS button click
+        console.log('POS button clicked');
+    }
 </script>
 @endpush
