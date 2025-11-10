@@ -899,6 +899,10 @@
                 e.preventDefault();
             }
         }
+
+         window.addEventListener('refreshPage', () => {
+            window.location.reload();
+        });
     });
 </script>
 @endpush

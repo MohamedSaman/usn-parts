@@ -332,7 +332,7 @@ class AddSupplierReceipt extends Component
         // Base validation
         $this->validate([
             'paymentData.payment_date' => 'required|date',
-            'paymentData.payment_method' => 'required|in:cash,cheque,bank_transfer',
+            'paymentData.payment_method' => 'required|in:cash,cheque,bank_transfer,others',
             'totalPaymentAmount' => 'required|numeric|min:0.01',
         ]);
 

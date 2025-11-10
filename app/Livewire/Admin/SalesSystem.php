@@ -465,8 +465,6 @@ class SalesSystem extends Component
             $this->lastSaleId = $sale->id;
             $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);
             $this->showSaleModal = true;
-            $this->js("Swal.fire('success', 'Sale created successfully!', 'success')");
-
 
             session()->flash('success', 'Sale created successfully! Payment status: Pending');
         } catch (\Exception $e) {
@@ -505,7 +503,7 @@ class SalesSystem extends Component
     {
         $this->showSaleModal = false;
         $this->lastSaleId = null;
-        $this->createdSale = null;
+        $this->dispatch('refreshPage');
     }
 
     // Continue creating new sale
