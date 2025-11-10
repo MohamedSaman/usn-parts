@@ -13,128 +13,18 @@
                 </div>
             </div>
 
-            <!-- Header Bar -->
-            <div class="d-flex justify-content-between align-items-center bg-white shadow-sm px-4 py-2 rounded-3 gap-2" >
-
-
-        <!-- Admin dropdown -->
-        {{-- <div class="dropdown ms-auto">
-            <div class="admin-info dropdown-toggle" id="adminDropdown" role="button" data-bs-toggle="dropdown"
-                aria-expanded="false">
-                <div class="admin-avatar">A</div>
-                <div class="admin-name">Admin</div>
-            </div>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminDropdown">
-                <li>
-                    <a class="dropdown-item" href="{{ route('profile.show') }}">
-                        <i class="bi bi-person me-2"></i>My Profile
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{{ route('admin.settings') }}">
-                        <i class="bi bi-gear me-2"></i>Settings
-                    </a>
-                </li>
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-                <li>
-                    <form method="POST" action="{{ route('logout') }}" class="mb-0">
-                        @csrf
-                        <button type="submit" class="dropdown-item text-danger">
-                            <i class="bi bi-box-arrow-right me-2"></i>Logout
-                        </button>
-                    </form>
-                </li>
-            </ul>
-        </div> --}}
-    </nav>
-    <div class="row">
-       {{-- Customer Information --}}
-<div class="col-6 mb-4">
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
-                <i class="bi bi-person me-2"></i>Customer Information
-            </h5>
-            <button class="btn btn-sm btn-primary" wire:click="openCustomerModal">
-                <i class="bi bi-plus-circle me-1"></i> Add New Customer
-            </button>
-        </div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-12">
-                    <label class="form-label">Select Customer *</label>
-                    <select class="form-select" wire:model.live="customerId">
-                        @foreach($customers as $customer)
-                        <option value="{{ $customer->id }}" {{ $customer->name === 'Walking Customer' ? 'selected' : '' }}>
-                            {{ $customer->name }}
-                            @if($customer->phone)
-                             - {{ $customer->phone }}
-                            @endif
-                            @if($customer->name === 'Walking Customer') (Default) @endif
-                        </option>
-                        @endforeach
-                    </select>
-                    <div class="form-text">
-                        @if($selectedCustomer && $selectedCustomer->name === 'Walking Customer')
-                        <span class="text-info">
-                            <i class="bi bi-info-circle"></i> Using default walking customer
-                        </span>
-                        @else
-                        Select existing customer or add new
-                        @endif
-                <!-- POS Button -->
-                <div class="d-flex align-items-center">
-                    <div class="badge d-flex align-items-center  px-3 py-1 rounded-2 shadow-sm"
-                        style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); color:white; border:1px solid #3b5b0c; cursor: pointer; transition: all 0.2s ease;"
-                        onclick="handlePOSClick()"
-                        role="button"
-                        onmouseover="this.style.background='linear-gradient(0deg, rgba(40, 70, 5, 1) 0%, rgba(120, 160, 25, 1) 100%)';"
-                        onmouseout="this.style.background='linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%)';">
-                        <i class="bi bi-plus-circle me-1"></i>
-                        <span class="fw-semibold">POS</span>
-                    </div>
-                </div>
-
-                <!-- Admin Section -->
-                <div class="dropdown">
-                    <div class="d-flex align-items-center dropdown-toggle" id="adminDropdown" data-bs-toggle="dropdown"
-                        aria-expanded="false" style="cursor:pointer;">
-                        <div class="admin-avatar text-white rounded-circle d-flex align-items-center justify-content-center me-2"
-                            style="width:36px; height:36px; background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%);">
-                            <i class="bi bi-person-fill fs-5"></i>
-                        </div>
-                        <div class="admin-details text-start">
-                            <div class="fw-bold" style="color:#3b5b0c;">Admin</div>
-                        </div>
-                    </div>
-                    <ul class="dropdown-menu dropdown-menu-end mt-2 shadow-sm border-0 rounded-3" aria-labelledby="adminDropdown">
-                        <li>
-                            <a class="dropdown-item py-2" href="#">
-                                <i class="bi bi-person me-2" style="color:#8eb922;"></i> My Profile
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item py-2" href="#">
-                                <i class="bi bi-gear me-2" style="color:#8eb922;"></i> Settings
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <form method="POST" action="{{ route('logout') }}" class="mb-0">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger py-2">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+            <!-- POS Button -->
+            <div class="d-flex align-items-center">
+                <div class="badge d-flex align-items-center px-3 py-2 rounded-2 shadow-sm"
+                    style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); color:white; border:1px solid #3b5b0c; cursor: pointer; transition: all 0.2s ease;"
+                    onclick="handlePOSClick()"
+                    role="button"
+                    onmouseover="this.style.background='linear-gradient(0deg, rgba(40, 70, 5, 1) 0%, rgba(120, 160, 25, 1) 100%)';"
+                    onmouseout="this.style.background='linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%)';">
+                    <i class="bi bi-cart-plus me-2"></i>
+                    <span class="fw-semibold">POS</span>
                 </div>
             </div>
-
         </div>
     </div>
 
