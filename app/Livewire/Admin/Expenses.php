@@ -7,6 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Expense;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Expenses")]
@@ -74,6 +75,18 @@ class Expenses extends Component
             'expense_type' => 'daily',
         ]);
 
+        // Update cash in hands - subtract expense amount
+        $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+        if ($cashInHandRecord) {
+            DB::table('cash_in_hands')
+                ->where('key', 'cash_amount')
+                ->update([
+                    'value' => $cashInHandRecord->value - $this->amount,
+                    'updated_at' => now()
+                ]);
+        }
+
         $this->reset(['category', 'amount', 'description']);
         $this->loadExpenses();
         $this->js("swal.fire('Success!', 'Daily expense added successfully.', 'success')");
@@ -97,6 +110,18 @@ class Expenses extends Component
             'description' => $this->description,
             'expense_type' => 'monthly',
         ]);
+
+        // Update cash in hands - subtract expense amount
+        $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+        if ($cashInHandRecord) {
+            DB::table('cash_in_hands')
+                ->where('key', 'cash_amount')
+                ->update([
+                    'value' => $cashInHandRecord->value - $this->amount,
+                    'updated_at' => now()
+                ]);
+        }
 
         $this->reset(['date', 'category', 'amount', 'status', 'description']);
         $this->loadExpenses();
@@ -188,8 +213,13 @@ class Expenses extends Component
     public function resetEditFields()
     {
         $this->reset([
-            'expenseId', 'edit_category', 'edit_amount', 'edit_date', 
-            'edit_status', 'edit_description', 'edit_expense_type'
+            'expenseId',
+            'edit_category',
+            'edit_amount',
+            'edit_date',
+            'edit_status',
+            'edit_description',
+            'edit_expense_type'
         ]);
         $this->resetErrorBag();
     }

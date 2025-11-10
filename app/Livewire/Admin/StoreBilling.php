@@ -12,15 +12,32 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Payment;
 use App\Models\Cheque;
+use App\Models\POSSession;
+use App\Services\FIFOStockService;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 #[Title('POS')]
 class StoreBilling extends Component
 {
     use WithFileUploads;
+
+    // POS Session Management
+    public $currentSession = null;
+    public $showCloseRegisterModal = false;
+    public $closeRegisterCash = 0;
+    public $closeRegisterNotes = '';
+
+    // Opening Cash Modal
+    public $showOpeningCashModal = false;
+    public $openingCashAmount = 0;
+
+    // Session Summary Data
+    public $sessionSummary = [];
 
     // Basic Properties
     public $search = '';
@@ -77,9 +94,61 @@ class StoreBilling extends Component
 
     public function mount()
     {
+        // Check for today's closed session - if exists, redirect to dashboard
+        $todayClosedSession = POSSession::where('user_id', Auth::id())
+            ->whereDate('session_date', now()->toDateString())
+            ->where('status', 'closed')
+            ->first();
+
+        if ($todayClosedSession) {
+            // Session is already closed today, redirect to dashboard
+            return redirect()->route('admin.dashboard')
+                ->with('error', 'POS register is already closed for today. Cannot access store billing.');
+        }
+
+        // Check for open session
+        $this->currentSession = POSSession::getTodaySession(Auth::id());
+
+        // If no session exists, show opening cash modal
+        if (!$this->currentSession || $this->currentSession->isClosed()) {
+            // Get cash in hand from cash_in_hands table as default
+            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+            $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->value : 0;
+
+            // Show opening cash modal
+            $this->showOpeningCashModal = true;
+        }
+
         $this->loadCustomers();
         $this->setDefaultCustomer();
         $this->tempChequeDate = now()->format('Y-m-d');
+    }
+
+    /**
+     * Update Cash in Hands Table
+     * Add for cash payments, subtract for expenses
+     */
+    private function updateCashInHands($amount)
+    {
+        $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+        if ($cashInHandRecord) {
+            // Update existing record
+            DB::table('cash_in_hands')
+                ->where('key', 'cash_amount')
+                ->update([
+                    'value' => $cashInHandRecord->value + $amount,
+                    'updated_at' => now()
+                ]);
+        } else {
+            // Create new record
+            DB::table('cash_in_hands')->insert([
+                'key' => 'cash_amount',
+                'value' => $amount,
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
     }
 
     // Set default walking customer
@@ -87,7 +156,7 @@ class StoreBilling extends Component
     {
         // Find or create walking customer (only one)
         $walkingCustomer = Customer::where('name', 'Walking Customer')->first();
-        
+
         if (!$walkingCustomer) {
             $walkingCustomer = Customer::create([
                 'name' => 'Walking Customer',
@@ -97,10 +166,10 @@ class StoreBilling extends Component
                 'type' => 'retail',
                 'business_name' => null,
             ]);
-            
+
             $this->loadCustomers(); // Reload customers after creating new one
         }
-        
+
         $this->customerId = $walkingCustomer->id;
         $this->selectedCustomer = $walkingCustomer;
     }
@@ -342,7 +411,6 @@ class StoreBilling extends Component
 
             // Set success message in session
             session()->flash('customer_success', 'Customer created successfully!');
-
         } catch (\Exception $e) {
             $this->js("Swal.fire('error', 'Failed to create customer: " . $e->getMessage() . "', 'error')");
         }
@@ -368,7 +436,7 @@ class StoreBilling extends Component
                         'stock' => $product->stock->available_stock ?? 0,
                         'image' => $product->image
                     ];
-                });
+                })->toArray(); // Convert to array
         } else {
             $this->searchResults = [];
         }
@@ -664,6 +732,9 @@ class StoreBilling extends Component
                     $payment->update([
                         'payment_reference' => 'CASH-' . now()->format('YmdHis'),
                     ]);
+
+                    // Update cash in hands - add cash payment
+                    $this->updateCashInHands((int)$this->totalPaidAmount);
                 } elseif ($this->paymentMethod === 'cheque') {
                     // Create cheque records
                     foreach ($this->cheques as $cheque) {
@@ -705,6 +776,16 @@ class StoreBilling extends Component
             if ($this->dueAmount > 0) {
                 $statusMessage .= ' | Due Amount: Rs.' . number_format($this->dueAmount, 2);
             }
+
+            // Clear cart and reset payment fields after successful sale
+            $this->cart = [];
+            $this->additionalDiscount = 0;
+            $this->additionalDiscountType = 'fixed';
+            $this->resetPaymentFields();
+            $this->notes = '';
+
+            // Reset to walking customer
+            $this->setDefaultCustomer();
 
             $this->js("Swal.fire('success', '$statusMessage', 'success')");
         } catch (\Exception $e) {
@@ -751,12 +832,263 @@ class StoreBilling extends Component
     // Continue creating new sale
     public function createNewSale()
     {
-        $this->resetExcept(['customers']);
+        $this->resetExcept(['customers', 'currentSession']);
         $this->loadCustomers();
         $this->setDefaultCustomer(); // Set walking customer again for new sale
         $this->showSaleModal = false;
+
+        // Dispatch event to clean up modal backdrop
+        $this->dispatch('saleSaved');
     }
 
+    /**
+     * Submit Opening Cash and Create POS Session
+     */
+    public function submitOpeningCash()
+    {
+        $this->validate([
+            'openingCashAmount' => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Create new POS session with opening cash
+            $this->currentSession = POSSession::openSession(Auth::id(), $this->openingCashAmount);
+
+            // Update cash_in_hands table with opening cash
+            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+            if ($cashInHandRecord) {
+                DB::table('cash_in_hands')
+                    ->where('key', 'cash_amount')
+                    ->update([
+                        'value' => $this->openingCashAmount,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                DB::table('cash_in_hands')->insert([
+                    'key' => 'cash_amount',
+                    'value' => $this->openingCashAmount,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+            DB::commit();
+
+            // Close the modal
+            $this->showOpeningCashModal = false;
+
+            $this->js("Swal.fire({
+                icon: 'success',
+                title: 'POS Session Started!',
+                text: 'Opening cash: Rs. " . number_format($this->openingCashAmount, 2) . "',
+                timer: 2000,
+                showConfirmButton: false
+            })");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to open POS session: ' . $e->getMessage());
+            $this->js("Swal.fire('Error!', 'Failed to start POS session: " . addslashes($e->getMessage()) . "', 'error')");
+        }
+    }
+
+    /**
+     * Open Close Register Modal - Auto close session and show summary
+     */
+    public function openCloseRegisterModal()
+    {
+        // Refresh session data
+        $this->currentSession = POSSession::getTodaySession(Auth::id());
+
+        // If no session exists or session is closed, show alert
+        if (!$this->currentSession || $this->currentSession->isClosed()) {
+            $this->js("Swal.fire({
+                icon: 'warning',
+                title: 'Register Already Closed',
+                text: 'The POS register has already been closed for today. You cannot access the close register function again.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3b5b0c'
+            })");
+            return;
+        }
+
+        $today = now()->toDateString();
+
+        // Get cash in hand from cash_in_hands table
+        $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+        $cashInHand = $cashInHandRecord ? $cashInHandRecord->value : 0;
+
+        // Get today's POS sales (sale_type = 'pos')
+        $posSalesToday = Sale::whereDate('created_at', $today)
+            ->where('sale_type', 'pos')
+            ->pluck('id');
+
+        // Get cash payments from POS sales today
+        $cashPayments = Payment::whereIn('sale_id', $posSalesToday)
+            ->where('payment_method', 'cash')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Get late payments (bulk) - payments made today for old sales (due payments)
+        // Get all late payment IDs first
+        $latePaymentIds = Payment::whereNotIn('sale_id', $posSalesToday)
+            ->whereDate('payment_date', $today)
+            ->where('is_completed', true)
+            ->pluck('id');
+
+        // Get late payment breakdown by payment method
+        $latePaymentCash = Payment::whereIn('id', $latePaymentIds)
+            ->where('payment_method', 'cash')
+            ->sum('amount');
+
+        $latePaymentCheque = Payment::whereIn('id', $latePaymentIds)
+            ->where('payment_method', 'cheque')
+            ->sum('amount');
+
+        $latePaymentBankTransfer = Payment::whereIn('id', $latePaymentIds)
+            ->where('payment_method', 'bank_transfer')
+            ->sum('amount');
+
+        $latePaymentsBulk = $latePaymentCash + $latePaymentCheque + $latePaymentBankTransfer;
+
+        // Get cheque payments from POS sales today
+        $chequePayments = Payment::whereIn('sale_id', $posSalesToday)
+            ->where('payment_method', 'cheque')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Get credit card payments from POS sales today
+        $cardPayments = Payment::whereIn('sale_id', $posSalesToday)
+            ->where('payment_method', 'card')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Get bank transfer payments from POS sales today
+        $bankTransfers = Payment::whereIn('sale_id', $posSalesToday)
+            ->where('payment_method', 'bank_transfer')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Get total sales today
+        $totalSalesToday = Sale::whereDate('created_at', $today)
+            ->where('sale_type', 'pos')
+            ->sum('total_amount');
+
+        // Get refunds today (returns)
+        $refundsToday = DB::table('returns_products')
+            ->whereDate('created_at', $today)
+            ->sum('total_amount');
+
+        // Get expenses today
+        $expensesToday = DB::table('expenses')
+            ->whereDate('date', $today)
+            ->sum('amount');
+
+        // Cash deposit to bank (if any)
+        $cashDepositBank = 0; // You can add this feature later
+
+        // Calculate total cash (include late cash payments in cash in hand)
+        $totalCash = $cashInHand + $cashPayments + $latePaymentCash - $refundsToday - $expensesToday - $cashDepositBank;
+
+        // Update session data (don't update opening_cash, it should remain the same as when session was opened)
+        $this->currentSession->update([
+            'total_sales' => $totalSalesToday,
+            'cash_sales' => $cashPayments,
+            'late_payment_bulk' => $latePaymentsBulk,
+            'cheque_payment' => $chequePayments,
+            'credit_card_payment' => $cardPayments,
+            'bank_transfer' => $bankTransfers,
+            'refunds' => $refundsToday,
+            'expenses' => $expensesToday,
+            'cash_deposit_bank' => $cashDepositBank,
+        ]);
+
+        // Get the original opening cash from session (set when session was created)
+        $sessionOpeningCash = $this->currentSession->opening_cash;
+
+        // Prepare summary data with late payment breakdown
+        $this->sessionSummary = [
+            'opening_cash' => $sessionOpeningCash,
+            'cash_sales' => $cashPayments,
+            'late_payment_bulk' => $latePaymentsBulk,
+            'late_payment_cash' => $latePaymentCash,
+            'late_payment_cheque' => $latePaymentCheque,
+            'late_payment_bank_transfer' => $latePaymentBankTransfer,
+            'total_sales' => $totalSalesToday,
+            'cheque_payment' => $chequePayments,
+            'credit_card_payment' => $cardPayments,
+            'bank_transfer' => $bankTransfers,
+            'refunds' => $refundsToday,
+            'expenses' => $expensesToday,
+            'cash_deposit_bank' => $cashDepositBank,
+            'expected_cash' => $sessionOpeningCash + $cashPayments + $latePaymentCash - $refundsToday - $expensesToday - $cashDepositBank,
+        ];
+
+        $this->closeRegisterCash = $this->sessionSummary['expected_cash'];
+
+        // Auto-close the session with expected cash
+        try {
+            DB::beginTransaction();
+
+            // Close the session with the expected closing cash amount
+            $this->currentSession->closeSession($this->closeRegisterCash, 'Auto-closed when POS button clicked');
+
+            // Update cash_in_hands table with closing cash for next day's opening
+            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+            if ($cashInHandRecord) {
+                DB::table('cash_in_hands')
+                    ->where('key', 'cash_amount')
+                    ->update([
+                        'value' => $this->closeRegisterCash,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                DB::table('cash_in_hands')->insert([
+                    'key' => 'cash_amount',
+                    'value' => $this->closeRegisterCash,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
+            DB::commit();
+
+            $this->showCloseRegisterModal = true;
+
+            // Use multiple methods to ensure modal opens
+            $this->dispatch('showModal', 'closeRegisterModal');
+            $this->js("
+                setTimeout(() => {
+                    const modalEl = document.getElementById('closeRegisterModal');
+                    if (modalEl) {
+                        const modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
+                        modal.show();
+                        
+                        // Redirect to dashboard when modal is closed
+                        modalEl.addEventListener('hidden.bs.modal', function () {
+                            window.location.href = '" . route('admin.dashboard') . "';
+                        });
+                    }
+                }, 100);
+            ");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Auto close register failed: ' . $e->getMessage());
+            $this->js("Swal.fire('Error!', 'Failed to close register: " . addslashes($e->getMessage()) . "', 'error')");
+        }
+    }
+
+    /**
+     * Cancel Close Register - Redirect to dashboard
+     */
+    public function cancelCloseRegister()
+    {
+        // Redirect to dashboard
+        return redirect()->route('admin.dashboard');
+    }
     public function render()
     {
         return view('livewire.admin.store-billing', [
@@ -769,6 +1101,7 @@ class StoreBilling extends Component
             'paymentStatus' => $this->paymentStatus,
             'databasePaymentType' => $this->databasePaymentType,
             'totalPaidAmount' => (int)$this->totalPaidAmount,
+            'searchResults' => $this->searchResults, // Explicitly pass search results
         ]);
     }
 }

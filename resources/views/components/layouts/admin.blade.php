@@ -1162,7 +1162,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-wallet2 text-warning me-2"></i> Update Cash-in-Hand
+                        <i class="bi bi-wallet2 text-warning me-2"></i> Open POS Session - {{ date('M d, Y') }}
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1170,24 +1170,56 @@
                 <form action="{{ route('admin.updateCashInHand') }}" method="POST" id="cashInHandForm">
                     @csrf
                     <div class="modal-body">
+                        @php
+                        // Get yesterday's closing cash
+                        use App\Models\POSSession;
+                        use Carbon\Carbon;
+
+                        $yesterday = Carbon::yesterday();
+                        $yesterdaySession = POSSession::where('user_id', Auth::id())
+                        ->where('session_date', $yesterday)
+                        ->where('status', 'closed')
+                        ->first();
+
+                        $lastClosingCash = $yesterdaySession ? $yesterdaySession->closing_cash : $cashInHand;
+                        @endphp
 
                         <!-- Amount Input -->
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">POS</label>
+                            <label class="form-label fw-semibold">Opening Cash Amount *</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">Rs.</span>
-                                <input type="number" step="0.01" class="form-control" name="newCashInHand"
-                                    placeholder="Enter new cash amount" required>
+                                <input type="number"
+                                    step="0.01"
+                                    class="form-control form-control-lg"
+                                    name="newCashInHand"
+                                    id="openingCashInput"
+                                    value="{{ number_format($lastClosingCash, 2, '.', '') }}"
+                                    placeholder="Enter opening cash amount"
+                                    required>
+                            </div>
+                            <div class="form-text">
+                                Enter the cash amount to start your POS session
                             </div>
                         </div>
 
-                        <!-- Current Total Preview -->
+                        <!-- Previous Day Info -->
+                        @if($yesterdaySession)
+                        <div class="alert alert-info mb-3">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Yesterday's Closing Cash:</strong> Rs. {{ number_format($yesterdaySession->closing_cash, 2) }}
+                            <br>
+                            <small class="text-muted">{{ $yesterday->format('M d, Y') }}</small>
+                        </div>
+                        @endif
+
+                        <!-- Current Cash in Hand -->
                         <div class="p-3 bg-success bg-opacity-10 rounded-3 border border-success border-opacity-25">
                             <h6 class="fw-bold text-dark mb-2">
-                                <i class="bi bi-calculator text-success me-2"></i> Current Cash in Hand
+                                <i class="bi bi-calculator text-success me-2"></i> System Cash in Hand
                             </h6>
                             <div class="d-flex justify-content-between small">
-                                <span class="text-muted">Current:</span>
+                                <span class="text-muted">Current Balance:</span>
                                 <span class="fw-semibold text-success">Rs. {{ number_format($cashInHand, 2) }}</span>
                             </div>
                         </div>
@@ -1196,8 +1228,8 @@
 
                     <div class="modal-footer border-0">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning text-white">
-                            <i class="bi bi-check2-circle me-1"></i> Update Cash-in-Hand
+                        <button type="submit" class="btn btn-success text-white">
+                            <i class="bi bi-check2-circle me-1"></i> Open POS Session
                         </button>
                     </div>
                 </form>
@@ -1529,25 +1561,42 @@
             if (modal) modal.hide();
         });
 
-        // Handle POS button click - show modal on first click of the day
+        // Handle POS button click - check if closed before redirecting
         function handlePOSClick() {
-            // Get today's date as a string (YYYY-MM-DD)
-            const today = new Date().toISOString().split('T')[0];
+            // First check if POS session is already closed for today
+            fetch("{{ route('admin.check-pos-session') }}", {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.closed) {
+                        // Session is already closed, show alert and don't redirect
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Register Already Closed',
+                            text: 'The POS register has already been closed for today. You cannot access the POS system again until tomorrow.',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3b5b0c'
+                        });
+                        return;
+                    }
 
-            // Check if modal was already shown today
-            const lastShown = localStorage.getItem('posCashModalShown');
-
-            if (lastShown === today) {
-                // Modal already shown today, open POS in new tab
-                window.open("{{ route('admin.store-billing') }}", '_blank');
-            } else {
-                // First time today, show modal
-                const modal = new bootstrap.Modal(document.getElementById('editCashAdminModal'));
-                modal.show();
-
-                // Mark as shown for today
-                localStorage.setItem('posCashModalShown', today);
-            }
+                    // Session is not closed, redirect to store billing
+                    window.open("{{ route('admin.store-billing') }}", '_blank');
+                })
+                .catch(error => {
+                    console.error('Error checking POS session:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to check POS session status. Please try again.',
+                        confirmButtonColor: '#3b5b0c'
+                    });
+                });
         }
 
         // Update the form submission to redirect to POS after updating cash
@@ -1570,10 +1619,16 @@
                         const modal = bootstrap.Modal.getInstance(document.getElementById('editCashAdminModal'));
                         modal.hide();
 
-                        // Show success message
-                        Swal.fire('Success!', 'Cash-in-Hand updated successfully!', 'success').then(() => {
-                            // Open POS in new tab
-                            window.open("{{ route('admin.store-billing') }}", '_blank');
+                        // Show success message and redirect to POS
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Cash-in-Hand updated successfully!',
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            // Redirect to store billing page in same window
+                            window.location.href = "{{ route('admin.store-billing') }}";
                         });
                     } else {
                         Swal.fire('Error!', data.message || 'Failed to update cash-in-hand', 'error');

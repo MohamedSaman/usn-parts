@@ -103,8 +103,6 @@ class DuePayments extends Component
                 $attachmentPath = "due-receipts/{$receiptName}";
             }
 
-            
-
             // Create a new payment record for this due payment
             $payment = Payment::create([
                 'sale_id' => $sale->id,
@@ -116,6 +114,27 @@ class DuePayments extends Component
                 'status' => 'paid',
                 'payment_date' => now(),
             ]);
+
+            // Update cash in hands if payment method is cash
+            if ($this->duePaymentMethod === 'cash') {
+                $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+
+                if ($cashInHandRecord) {
+                    DB::table('cash_in_hands')
+                        ->where('key', 'cash_amount')
+                        ->update([
+                            'value' => $cashInHandRecord->value + $receivedAmount,
+                            'updated_at' => now()
+                        ]);
+                } else {
+                    DB::table('cash_in_hands')->insert([
+                        'key' => 'cash_amount',
+                        'value' => $receivedAmount,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+            }
 
             // Update sale's due amount
             $remainingDue = $sale->due_amount - $receivedAmount;
@@ -171,7 +190,7 @@ class DuePayments extends Component
 
             // Add a note to track this extension
             $noteText = "Due date extended on " . now()->format('Y-m-d H:i') . " to {$this->newDueDate}. Reason: {$this->extensionReason}";
-            
+
             $sale->update([
                 'notes' => ($sale->notes ? $sale->notes . "\n" : '') . $noteText
             ]);
@@ -283,7 +302,7 @@ class DuePayments extends Component
             ->sum('due_amount');
 
         $awaitingApprovalCount = Payment::where('status', 'pending')
-            ->whereHas('sale', function($q) {
+            ->whereHas('sale', function ($q) {
                 $q->where('due_amount', '>', 0);
             })
             ->count();

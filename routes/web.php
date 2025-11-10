@@ -96,14 +96,14 @@ Route::post('/logout', function (Request $request) {
 
 // Routes that require authentication
 Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified'])->group(function () {
-    
+
     // Profile route - accessible to all authenticated users
     Route::get('/user/profile', function () {
         return view('profile.show');
     })->name('profile.show');
-    
+
     // Settings route - accessible to all authenticated users
-    
+
     // API route for products (client-side caching)
     Route::get('/api/products/all', [ProductApiController::class, 'getAllProducts'])->name('api.products.all');
 
@@ -119,11 +119,11 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/manage-customer', ManageCustomer::class)->name('manage-customer');
         Route::get('/Product-stock-details', ProductStockDetails::class)->name('Product-stock-details');
         Route::get('/staff-stock-details', StaffStockDetails::class)->name('staff-stock-details');
-        
-        
+
+
         Route::get('/staff-due-details', StaffDueDetails::class)->name('staff-due-details');
         Route::get('/customer-sale-details', CustomerSaleDetails::class)->name('customer-sale-details');
-       
+
         Route::get('/view-payments', ViewPayments::class)->name('view-payments');
         Route::get('/admin/staff/{staffId}/reentry', \App\Livewire\Admin\StockReentry::class)->name('staff.reentry');
         Route::get('/store-billing', StoreBilling::class)->name('store-billing');
@@ -158,25 +158,26 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
         Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
-
-
-
     });
     Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])
-    ->name('admin.updateCashInHand')
-    ->middleware(['auth', 'role:admin']);
+        ->name('admin.updateCashInHand')
+        ->middleware(['auth', 'role:admin']);
+
+    Route::get('/admin/check-pos-session', [CashController::class, 'checkPOSSession'])
+        ->name('admin.check-pos-session')
+        ->middleware(['auth', 'role:admin']);
 
     //!! Staff routes - All admin routes available to staff (permissions control access)
     Route::middleware('role:staff')->prefix('staff')->name('staff.')->group(function () {
         // Dashboard
         Route::get('/dashboard', StaffDashboard::class)->name('dashboard');
-        
+
         // Products
         Route::get('/Product-list', Products::class)->name('Productes');
         Route::get('/add-Product-brand', ProductBrandlist::class)->name('Product-brand');
         Route::get('/Product-category', ProductCategorylist::class)->name('Product-category');
         Route::get('/Product-stock-details', ProductStockDetails::class)->name('Product-stock-details');
-        
+
         // Sales
         Route::get('/billing', Billing::class)->name('billing');
         Route::get('/billing-page', BillingPage::class)->name('billing-page');
@@ -184,32 +185,32 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/pos-sales', PosSales::class)->name('pos-sales');
         Route::get('/sales-list', SalesList::class)->name('sales-list');
         Route::get('/store-billing', StoreBilling::class)->name('store-billing');
-        
+
         // Customers
         Route::get('/manage-customer', ManageCustomer::class)->name('manage-customer');
         Route::get('/customer-sale-details', CustomerSaleDetails::class)->name('customer-sale-details');
         Route::get('/customer-sale-management', CustomerSaleManagement::class)->name('customer-sale-management');
-        
+
         // Stock/Inventory
         Route::get('/staff-stock-overview', StaffStockOverview::class)->name('staff-stock-overview');
         Route::get('/staff-stock-details', StaffStockDetails::class)->name('staff-stock-details');
-        
+
         // Purchases
         Route::get('/goods-receive-note', GRN::class)->name('grn');
         Route::get('/purchase-order-list', PurchaseOrderList::class)->name('purchase-order-list');
         Route::get('/supplier-management', SupplierManage::class)->name('supplier-management');
-        
+
         // Quotations
         Route::get('/quotation', Quotation::class)->name('quotation');
         Route::get('/quotation-system', QuotationSystem::class)->name('quotation-system');
         Route::get('/quotation-list', QuotationList::class)->name('quotation-list');
-        
+
         // Returns
         Route::get('/return-product', ReturnProduct::class)->name('return-product');
         Route::get('/return-list', ReturnList::class)->name('return-list');
         Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
-        
+
         // Payments
         Route::get('/due-payments', DuePayments::class)->name('due-payments');
         Route::get('/view-payments', ViewPayments::class)->name('view-payments');
@@ -217,26 +218,26 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-customer-receipt', ListCustomerReceipt::class)->name('list-customer-receipt');
         Route::get('/add-supplier-receipt', AddSupplierReceipt::class)->name('add-supplier-receipt');
         Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
-        
+
         // Cheques/Banks
         Route::get('/cheque-list', ChequeList::class)->name('cheque-list');
         Route::get('/return-cheque', ReturnCheque::class)->name('return-cheque');
-        
+
         // Finance
         Route::get('/expenses', Expenses::class)->name('expenses');
         Route::get('/income', Income::class)->name('income');
         Route::get('/loan-management', LoanManage::class)->name('loan-management');
-        
+
         // HR/Staff Management
         Route::get('/manage-staff', ManageStaff::class)->name('manage-staff');
         Route::get('/staff-attendance', StaffAttendance::class)->name('staff-attendance');
         Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
         Route::get('/staff-due-details', StaffDueDetails::class)->name('staff-due-details');
-        
+
         // Reports & Analytics
         Route::get('/reports', Reports::class)->name('reports');
         Route::get('/analytics', Analytics::class)->name('analytics');
-        
+
         // Settings
         Route::get('/settings', Settings::class)->name('settings');
     });
@@ -244,32 +245,32 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
     // !! Export routes (accessible to authenticated users)
     Route::get('/Productes/export', [ProductsExportController::class, 'export'])->name('Productes.export');
     Route::get('/staff-sales/export', [StaffSaleExportController::class, 'export'])->name('staff-sales.export');
-    
+
     // Receipt download (accessible to authenticated users)
     Route::get('/receipts/{id}/download', [ReceiptController::class, 'download'])->name('receipts.download');
 
     // Export staff stock details
-    Route::get('/export/staff-stock', function() {
+    Route::get('/export/staff-stock', function () {
         return app(StaffStockDetails::class)->exportToCSV();
     })->name('export.staff-stock');
 
     // Test route for product history
-    Route::get('/test/product-history/{id}', function($id) {
+    Route::get('/test/product-history/{id}', function ($id) {
         $product = \App\Models\ProductDetail::with(['price', 'stock'])->findOrFail($id);
-        
+
         // Debug: Check raw sale items count
         $rawCount = \App\Models\SaleItem::where('product_id', $id)->count();
-        
+
         // Debug: Get raw sale items
         $rawSaleItems = \App\Models\SaleItem::where('product_id', $id)->get();
-        
+
         // Load sales history with join
         $salesItems = \App\Models\SaleItem::with(['sale.customer', 'sale.user'])
             ->where('sale_items.product_id', $id)
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->select(
-                'sale_items.*', 
-                'sales.invoice_number', 
+                'sale_items.*',
+                'sales.invoice_number',
                 'sales.sale_type',
                 'sales.customer_type',
                 'sales.payment_type',
@@ -280,7 +281,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             ->orderBy('sales.created_at', 'desc')
             ->get();
 
-        $salesHistory = $salesItems->map(function($sale) {
+        $salesHistory = $salesItems->map(function ($sale) {
             return [
                 'id' => $sale->id,
                 'invoice_number' => $sale->invoice_number,
@@ -306,21 +307,21 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             ->where('purchase_order_items.product_id', $id)
             ->join('purchase_orders', 'purchase_order_items.order_id', '=', 'purchase_orders.id')
             ->select(
-                'purchase_order_items.*', 
-                'purchase_orders.order_code', 
-                'purchase_orders.order_date', 
+                'purchase_order_items.*',
+                'purchase_orders.order_code',
+                'purchase_orders.order_date',
                 'purchase_orders.received_date',
                 'purchase_orders.status as order_status'
             )
             ->orderBy('purchase_orders.order_date', 'desc')
             ->get();
 
-        $purchasesHistory = $purchaseItems->map(function($purchase) {
+        $purchasesHistory = $purchaseItems->map(function ($purchase) {
             $total = $purchase->quantity * $purchase->unit_price;
             if (isset($purchase->discount) && $purchase->discount > 0) {
                 $total -= $purchase->discount;
             }
-            
+
             return [
                 'id' => $purchase->id,
                 'order_code' => $purchase->order_code,
@@ -347,7 +348,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             ->orderBy('returns_products.created_at', 'desc')
             ->get();
 
-        $returnsHistory = $returns->map(function($return) {
+        $returnsHistory = $returns->map(function ($return) {
             return [
                 'id' => $return->id,
                 'invoice_number' => $return->invoice_number,
@@ -368,10 +369,10 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
             ->get();
 
         $quotationsHistory = [];
-        
+
         foreach ($quotations as $quotation) {
             $items = is_array($quotation->items) ? $quotation->items : json_decode($quotation->items, true);
-            
+
             if (!empty($items)) {
                 foreach ($items as $item) {
                     if (isset($item['product_id']) && $item['product_id'] == $id) {
