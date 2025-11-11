@@ -1074,8 +1074,8 @@
     </li>
     {{--<li>
         <a class="nav-link" href="{{ route('admin.store-billing') }}" target="_blank">
-            <i class="bi bi-cash"></i> <span>POS</span>
-        </a>
+    <i class="bi bi-cash"></i> <span>POS</span>
+    </a>
     </li>--}}
     <li>
         <a class="nav-link" href="{{ route('admin.day-summary') }}">
@@ -1576,9 +1576,19 @@
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.closed) {
+                    console.log('POS Session Check Response:', data); // Debug log
+                    console.log('Closed status:', data.closed);
+                    console.log('Has session:', data.hasSession);
+
+                    // Only block if there's actually a closed session
+                    if (data.closed === true) {
                         // Session is already closed, show alert and don't redirect
                         Swal.fire({
                             icon: 'warning',
@@ -1590,17 +1600,17 @@
                         return;
                     }
 
-                    // Session is not closed, redirect to store billing
+                    // If session is not closed (or no session exists), open POS
+                    // The StoreBilling component will handle showing the opening cash modal if needed
+                    console.log('Opening POS - Session is open or does not exist');
                     window.open("{{ route('admin.store-billing') }}", '_blank');
                 })
                 .catch(error => {
                     console.error('Error checking POS session:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to check POS session status. Please try again.',
-                        confirmButtonColor: '#3b5b0c'
-                    });
+
+                    // Even if check fails, allow opening POS (fail-open approach)
+                    console.log('Opening POS despite error...');
+                    window.open("{{ route('admin.store-billing') }}", '_blank');
                 });
         }
 
