@@ -1233,6 +1233,41 @@ class StoreBilling extends Component
         // Redirect to dashboard
         return redirect()->route('admin.dashboard');
     }
+
+    /**
+     * Reopen today's closed POS session (for admin)
+     * Called via AJAX from header modal
+     */
+    public function reopenPOSSession()
+    {
+        $today = now()->toDateString();
+        $userId = Auth::id();
+        $session = POSSession::where('user_id', $userId)
+            ->whereDate('session_date', $today)
+            ->where('status', 'closed')
+            ->first();
+
+        if (!$session) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No closed POS session found for today.'
+            ], 404);
+        }
+
+        try {
+            $session->status = 'open';
+            $session->save();
+            return response()->json([
+                'success' => true,
+                'message' => 'POS session reopened successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reopen POS session: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     public function render()
     {
         return view('livewire.admin.store-billing', [

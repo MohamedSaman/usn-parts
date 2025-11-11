@@ -6,6 +6,7 @@ use App\Models\Payment;
 use App\Models\CashInHand;
 use App\Models\Deposit;
 use App\Models\Sale;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -36,6 +37,10 @@ class Income extends Component
     public $previousMonthDeposit = 0;
     public $todayDeposits = 0;
 
+    // New properties
+    public $openingCash = 0; // POS opening cash for today
+    public $todayReturns = 0; // Today's return amount (cash refunded)
+
     public function mount()
     {
         $today = now()->toDateString();
@@ -65,11 +70,21 @@ class Income extends Component
         $this->cashInHand = (int) $cashRecord->value;
         $this->newCashInHand = $this->cashInHand;
 
+        // Get today's POS session opening cash
+        $todaySession = \App\Models\POSSession::whereDate('session_date', $today)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        $this->openingCash = $todaySession ? $todaySession->opening_cash : 0;
+
+        // Get today's returns (cash refunded to customers)
+        $this->todayReturns = DB::table('returns_products')
+            ->whereDate('created_at', $today)
+            ->sum('total_amount');
+
         // Calculate deposits
         $this->calculateDeposits();
         $this->calculateTodayDeposits();
-
-
 
         $this->depositDate = $today;
     }

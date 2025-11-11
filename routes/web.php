@@ -162,6 +162,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
         Route::get('/day-summary', DaySummary::class)->name('day-summary');
         Route::get('/day-summary-details/{sessionId}', DaySummaryDetails::class)->name('day-summary-details');
+        // Route to reopen today's closed POS session (AJAX)
+        Route::post('/reopen-pos-session', [StoreBilling::class, 'reopenPOSSession'])->name('reopen-pos-session');
     });
     Route::post('/admin/update-cash', [CashController::class, 'updateCashInHand'])
         ->name('admin.updateCashInHand')
