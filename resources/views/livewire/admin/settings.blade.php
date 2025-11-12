@@ -12,18 +12,83 @@
     {{-- Accordion --}}
     <div class="accordion" id="settingsAccordion">
         
+
+
+        {{-- Expense Categories Management Accordion --}}
+        <div class="accordion-item border-0 mb-4 shadow-sm rounded-4">
+            <h2 class="accordion-header" id="headingExpenseCategories">
+                <button class="accordion-button fw-semibold bg-white text-dark rounded-4 collapsed"
+                    type="button" data-bs-toggle="collapse"
+                    data-bs-target="#collapseExpenseCategories" aria-expanded="false"
+                    aria-controls="collapseExpenseCategories">
+                    <i class="bi bi-tag fs-5 me-3 text-info"></i>
+                    Expense Categories & Types
+                </button>
+            </h2>
+            <div id="collapseExpenseCategories" class="accordion-collapse collapse"
+                aria-labelledby="headingExpenseCategories" data-bs-parent="#settingsAccordion">
+                <div class="accordion-body">
+                    {{-- Add Button --}}
+                    <div class="mb-3 d-flex justify-content-end">
+                        <button class="btn btn-info shadow-sm" wire:click="openAddCategoryModal">
+                            <i class="bi bi-plus-circle"></i> Add Expense Category/Type
+                        </button>
+                    </div>
+                    @php
+                        $allCategories = \App\Models\ExpenseCategory::orderBy('expense_category')->orderBy('type')->get()->groupBy('expense_category');
+                    @endphp
+
+                    @if($allCategories->isNotEmpty())
+                    <div class="row">
+                        @foreach($allCategories as $categoryName => $items)
+                        <div class="col-md-6 mb-4">
+                            <div class="card shadow-sm border-0 h-100">
+                                <div class="card-header bg-info bg-opacity-10">
+                                    <h6 class="mb-0 fw-bold text-dark">
+                                        <i class="bi bi-folder2-open me-2"></i>{{ $categoryName }}
+                                    </h6>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        @foreach($items as $item)
+                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                            <span><i class="bi bi-tag me-2 text-muted"></i>{{ $item->type }}</span>
+                                            <button class="btn btn-sm btn-outline-danger" 
+                                                    wire:click="confirmDeleteCategoryType({{ $item->id }})"
+                                                    title="Delete this type">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                    @else
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox display-4 d-block mb-3"></i>
+                        No expense categories found.
+                    </div>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+
         {{-- Staff Permissions Accordion --}}
         <div class="accordion-item border-0 mb-4 shadow-sm rounded-4">
             <h2 class="accordion-header" id="headingStaffPermissions">
-                <button class="accordion-button fw-semibold bg-white text-dark rounded-4"
+                <button class="accordion-button fw-semibold bg-white text-dark rounded-4 collapsed"
                     type="button" data-bs-toggle="collapse"
-                    data-bs-target="#collapseStaffPermissions" aria-expanded="true"
+                    data-bs-target="#collapseStaffPermissions" aria-expanded="false"
                     aria-controls="collapseStaffPermissions">
                     <i class="bi bi-shield-lock fs-5 me-3 text-primary"></i>
                     Staff Permissions Management
                 </button>
             </h2>
-            <div id="collapseStaffPermissions" class="accordion-collapse collapse show"
+            <div id="collapseStaffPermissions" class="accordion-collapse collapse"
                 aria-labelledby="headingStaffPermissions" data-bs-parent="#settingsAccordion">
                 <div class="accordion-body">
                     <div class="alert alert-info border-0 shadow-sm mb-4">
@@ -316,6 +381,209 @@
     </div>
     @endif
 
+    {{-- Expense Modal --}}
+    @if($showExpenseModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:key="expense-modal-{{ $isEditExpense ? 'edit' : 'add' }}">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-warning text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold">
+                        @if($isEditExpense)
+                        <i class="bi bi-pencil-square"></i> Edit Expense
+                        @else
+                        <i class="bi bi-plus-circle"></i> Add New Expense
+                        @endif
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeExpenseModal"></button>
+                </div>
+
+                <form wire:submit.prevent="{{ $isEditExpense ? 'updateExpense' : 'saveExpense' }}">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                                <select wire:model.live="expenseCategory"
+                                    class="form-select @error('expenseCategory') is-invalid @enderror">
+                                    <option value="">Select Category</option>
+                                    @foreach($expenseCategories as $category)
+                                        <option value="{{ $category }}">{{ $category }}</option>
+                                    @endforeach
+                                </select>
+                                @error('expenseCategory')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Expense Type <span class="text-danger">*</span></label>
+                                <select wire:model="expenseType"
+                                    class="form-select @error('expenseType') is-invalid @enderror"
+                                    {{ empty($expenseCategory) ? 'disabled' : '' }}>
+                                    <option value="">Select Type</option>
+                                    @foreach($expenseTypes as $type)
+                                        <option value="{{ $type }}">{{ $type }}</option>
+                                    @endforeach
+                                </select>
+                                @error('expenseType')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                                @if(empty($expenseCategory))
+                                    <small class="text-muted">Please select a category first</small>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Amount <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₱</span>
+                                    <input type="number" step="0.01" wire:model="expenseAmount"
+                                        class="form-control @error('expenseAmount') is-invalid @enderror"
+                                        placeholder="0.00">
+                                    @error('expenseAmount')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                                <input type="date" wire:model="expenseDate"
+                                    class="form-control @error('expenseDate') is-invalid @enderror">
+                                @error('expenseDate')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                            <select wire:model="expenseStatus"
+                                class="form-select @error('expenseStatus') is-invalid @enderror">
+                                <option value="pending">Pending</option>
+                                <option value="approved">Approved</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                            @error('expenseStatus')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea wire:model="expenseDescription"
+                                class="form-control @error('expenseDescription') is-invalid @enderror"
+                                rows="3"
+                                placeholder="Enter expense description or notes..."></textarea>
+                            @error('expenseDescription')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-secondary shadow-sm" wire:click="closeExpenseModal" wire:loading.attr="disabled">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-warning text-white shadow-sm" wire:loading.attr="disabled">
+                            <span wire:loading.remove>
+                                <i class="bi bi-check-circle"></i>
+                                @if($isEditExpense)
+                                Update Expense
+                                @else
+                                Save Expense
+                                @endif
+                            </span>
+                            <span wire:loading>
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                Processing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Expense Category Modal --}}
+    @if($showCategoryModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:key="category-modal">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-info text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-plus-circle"></i> Add Expense Category/Type
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeCategoryModal"></button>
+                </div>
+
+                <form wire:submit.prevent="saveCategoryType">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Expense Category <span class="text-danger">*</span></label>
+                            <select wire:model="newExpenseCategory"
+                                class="form-select @error('newExpenseCategory') is-invalid @enderror">
+                                <option value="">Select Existing Category</option>
+                                <option value="Monthly Expenses">Monthly Expenses</option>
+                                <option value="Daily Expenses">Daily Expenses</option>
+                                <option value="__new__">+ Create New Category</option>
+                            </select>
+                            @error('newExpenseCategory')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        @if($newExpenseCategory === '__new__')
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">New Category Name <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="customExpenseCategory"
+                                class="form-control @error('customExpenseCategory') is-invalid @enderror"
+                                placeholder="e.g., Annual Expenses, Weekly Expenses">
+                            @error('customExpenseCategory')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Expense Type <span class="text-danger">*</span></label>
+                            <input type="text" wire:model="newExpenseType"
+                                class="form-control @error('newExpenseType') is-invalid @enderror"
+                                placeholder="e.g., Snacks, Electricity Bill, Rent">
+                            @error('newExpenseType')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted">Enter the type of expense for the selected category</small>
+                        </div>
+
+                        <div class="alert alert-warning border-0 shadow-sm">
+                            <i class="bi bi-lightbulb me-2"></i>
+                            <strong>Tip:</strong> Category groups types together (e.g., "Monthly Expenses" can have types like "Rent", "Electricity Bill").
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-secondary shadow-sm" wire:click="closeCategoryModal" wire:loading.attr="disabled">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        <button type="submit" class="btn btn-info text-white shadow-sm" wire:loading.attr="disabled">
+                            <span wire:loading.remove>
+                                <i class="bi bi-check-circle"></i> Save Category/Type
+                            </span>
+                            <span wire:loading>
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                Saving...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 
 @push('styles')
@@ -374,7 +642,7 @@
 @push('scripts')
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // SweetAlert for delete confirmation
+    // SweetAlert for delete confirmation (System Configurations)
     window.addEventListener('swal:confirm-delete', event => {
         Swal.fire({
             title: 'Are you sure?',
@@ -389,6 +657,48 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 Livewire.dispatch('deleteConfirmed', {
+                    id: event.detail.id
+                });
+            }
+        });
+    });
+
+    // SweetAlert for delete confirmation (Expenses)
+    window.addEventListener('swal:confirm-delete-expense', event => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This expense will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('deleteExpenseConfirmed', {
+                    id: event.detail.id
+                });
+            }
+        });
+    });
+
+    // SweetAlert for delete confirmation (Expense Category/Type)
+    window.addEventListener('swal:confirm-delete-category-type', event => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This expense category/type will be permanently deleted!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Livewire.dispatch('deleteCategoryTypeConfirmed', {
                     id: event.detail.id
                 });
             }

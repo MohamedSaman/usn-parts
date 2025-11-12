@@ -214,11 +214,9 @@
                             <label class="form-label fw-semibold">Category</label>
                             <select class="form-select" wire:model="category" required>
                                 <option value="">Select Category</option>
-                                <option value="Snacks">Snacks</option>
-                                <option value="Stationery">Stationery</option>
-                                <option value="Transport">Transport</option>
-                                <option value="Meals">Meals</option>
-                                <option value="Other">Other</option>
+                                @foreach($dailyCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
                             </select>
                             @error('category') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
@@ -268,11 +266,9 @@
                             <label class="form-label fw-semibold">Category</label>
                             <select class="form-select" wire:model="category" required>
                                 <option value="">Select Category</option>
-                                <option value="Electricity Bill">Electricity Bill</option>
-                                <option value="Internet Bill">Internet Bill</option>
-                                <option value="Office Rent">Office Rent</option>
-                                <option value="Software Subscription">Software Subscription</option>
-                                <option value="Other">Other</option>
+                                @foreach($monthlyCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
                             </select>
                             @error('category') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
@@ -322,11 +318,9 @@
                             <label class="form-label fw-semibold">Category</label>
                             <select class="form-select" wire:model="edit_category" required>
                                 <option value="">Select Category</option>
-                                <option value="Snacks">Snacks</option>
-                                <option value="Stationery">Stationery</option>
-                                <option value="Transport">Transport</option>
-                                <option value="Meals">Meals</option>
-                                <option value="Other">Other</option>
+                                @foreach($dailyCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
                             </select>
                             @error('edit_category') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>
@@ -382,11 +376,9 @@
                             <label class="form-label fw-semibold">Category</label>
                             <select class="form-select" wire:model="edit_category" required>
                                 <option value="">Select Category</option>
-                                <option value="Electricity Bill">Electricity Bill</option>
-                                <option value="Internet Bill">Internet Bill</option>
-                                <option value="Office Rent">Office Rent</option>
-                                <option value="Software Subscription">Software Subscription</option>
-                                <option value="Other">Other</option>
+                                @foreach($monthlyCategories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
                             </select>
                             @error('edit_category') <span class="text-danger small">{{ $message }}</span> @enderror
                         </div>

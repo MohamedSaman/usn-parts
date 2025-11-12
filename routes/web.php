@@ -15,7 +15,6 @@ use App\Livewire\Staff\DuePayments;
 use App\Livewire\Admin\SupplierList;
 use App\Livewire\Admin\ViewPayments;
 use Illuminate\Support\Facades\Auth;
-use App\Livewire\Admin\AddProductColor;
 use Illuminate\Support\Facades\Route;
 use App\Livewire\Admin\AdminDashboard;
 use App\Livewire\Admin\ManageCustomer;

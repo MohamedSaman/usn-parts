@@ -6,6 +6,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Livewire\Concerns\WithDynamicLayout;
@@ -18,6 +19,8 @@ class Expenses extends Component
     // Data variables
     public $dailyExpenses = [];
     public $monthlyExpenses = [];
+    public $dailyCategories = [];
+    public $monthlyCategories = [];
 
     // Totals
     public $todayTotal = 0;
@@ -44,6 +47,20 @@ class Expenses extends Component
     public function mount()
     {
         $this->loadExpenses();
+        $this->loadCategories();
+    }
+
+    public function loadCategories()
+    {
+        // Load Daily Expenses categories
+        $this->dailyCategories = ExpenseCategory::where('expense_category', 'Daily Expenses')
+            ->pluck('type')
+            ->toArray();
+        
+        // Load Monthly Expenses categories
+        $this->monthlyCategories = ExpenseCategory::where('expense_category', 'Monthly Expenses')
+            ->pluck('type')
+            ->toArray();
     }
 
     public function loadExpenses()
