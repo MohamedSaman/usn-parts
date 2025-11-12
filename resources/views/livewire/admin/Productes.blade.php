@@ -644,8 +644,8 @@
 
                                                         <!-- History Button -->
                                                         <li>
-                                                            <a class="dropdown-item" 
-                                                                href="{{ route('test.product-history', $product->id) }}" 
+                                                            <a class="dropdown-item"
+                                                                href="{{ route('test.product-history', $product->id) }}"
                                                                 target="_blank">
                                                                 <i class="bi bi-clock-history text-info me-2"></i>
                                                                 View History
@@ -1571,41 +1571,64 @@
                             <div class="card-body">
                                 <div class="alert alert-info border-0 mb-3">
                                     <i class="bi bi-info-circle me-2"></i>
-                                    <strong>Note:</strong> When you increase damage quantity, available stock will
-                                    automatically decrease.
+                                    <strong>Note:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        <li><strong>Add Damage:</strong> Increases damage stock and decreases available stock from batches (FIFO)</li>
+                                        <li><strong>Adjust Available:</strong> Increases available stock and adds to oldest batch</li>
+                                    </ul>
                                 </div>
 
                                 <div class="row">
-
+                                    {{-- Damage Stock Input --}}
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="damageQuantity" class="form-label fw-semibold">
-                                                <i class="bi bi-exclamation-triangle text-danger me-1"></i> Damage
-                                                Quantity:
+                                                <i class="bi bi-exclamation-triangle text-danger me-1"></i> Damage Quantity:
                                             </label>
                                             <input type="number" class="form-control" id="damageQuantity"
-                                                wire:model.live="adjustmentQuantity" min="0"
+                                                wire:model="damageQuantity" min="1"
                                                 placeholder="Enter damage quantity">
-                                            @error('adjustmentQuantity')
+                                            @error('damageQuantity')
                                             <span class="text-danger small">* {{ $message }}</span>
                                             @enderror
-                                            <small class="text-muted">Current: {{ $adjustmentDamageStock }}</small>
                                         </div>
+                                        <button type="button" class="btn btn-danger w-100" wire:click="addDamageStock">
+                                            <span wire:loading.remove wire:target="addDamageStock">
+                                                <i class="bi bi-exclamation-triangle me-2"></i>Add Damage Stock
+                                            </span>
+                                            <span wire:loading wire:target="addDamageStock">
+                                                <i class="spinner-border spinner-border-sm me-2"></i>Processing...
+                                            </span>
+                                        </button>
+                                        <small class="text-muted d-block mt-2">
+                                            Deducts from available stock using FIFO and updates prices
+                                        </small>
                                     </div>
 
+                                    {{-- Available Stock Input --}}
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="availableQuantity" class="form-label fw-semibold">
                                                 <i class="bi bi-box-seam text-success me-1"></i> Available Quantity:
                                             </label>
                                             <input type="number" class="form-control" id="availableQuantity"
-                                                wire:model.live="adjustmentAvailableStock" min="0"
-                                                placeholder="Enter available quantity">
-                                            @error('adjustmentAvailableStock')
+                                                wire:model="availableQuantity" min="1"
+                                                placeholder="Enter quantity to add">
+                                            @error('availableQuantity')
                                             <span class="text-danger small">* {{ $message }}</span>
                                             @enderror
-                                            <small class="text-muted">Auto-adjusts when damage changes</small>
                                         </div>
+                                        <button type="button" class="btn btn-success w-100" wire:click="adjustAvailableStock">
+                                            <span wire:loading.remove wire:target="adjustAvailableStock">
+                                                <i class="bi bi-plus-circle me-2"></i>Adjust Available Stock
+                                            </span>
+                                            <span wire:loading wire:target="adjustAvailableStock">
+                                                <i class="spinner-border spinner-border-sm me-2"></i>Processing...
+                                            </span>
+                                        </button>
+                                        <small class="text-muted d-block mt-2">
+                                            Increases available stock and adds to batch
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -1613,21 +1636,13 @@
                         @endif
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-warning" wire:click="adjustStock">
-                            <span wire:loading wire:target="adjustStock">
-                                <i class="spinner-border spinner-border-sm"></i> Processing...
-                            </span>
-                            <span wire:loading.remove wire:target="adjustStock">
-                                <i class="bi bi-check-lg"></i> Apply Adjustment
-                            </span>
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
         </div>
 
-       <!-- ✅ Product History Modal (single copy only) -->
+        <!-- ✅ Product History Modal (single copy only) -->
         <div wire:ignore.self class="modal fade" id="productHistoryModal" tabindex="-1"
             aria-labelledby="productHistoryModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -1680,13 +1695,13 @@
                         <!-- Tab Content -->
                         <div class="tab-content p-4" wire:key="tab-{{ $historyTab }}" style="max-height: 500px; overflow-y: auto;">
                             @if($historyTab === 'sales')
-                                @include('livewire.admin.partials.sales-history')
+                            @include('livewire.admin.partials.sales-history')
                             @elseif($historyTab === 'purchases')
-                                @include('livewire.admin.partials.purchases-history')
+                            @include('livewire.admin.partials.purchases-history')
                             @elseif($historyTab === 'returns')
-                                @include('livewire.admin.partials.returns-history')
+                            @include('livewire.admin.partials.returns-history')
                             @elseif($historyTab === 'quotations')
-                                @include('livewire.admin.partials.quotations-history')
+                            @include('livewire.admin.partials.quotations-history')
                             @endif
                         </div>
 
@@ -1755,7 +1770,7 @@
             // Handle history tab switching - with console logging
             Livewire.on('historyTabSwitched', (data) => {
                 console.log('✅ Tab switched to:', data);
-                
+
                 // Log the current state
                 const modal = document.getElementById('productHistoryModal');
                 if (modal) {
@@ -1764,7 +1779,7 @@
                     activeTabs.forEach(tab => {
                         console.log('  - Tab ID:', tab.id);
                     });
-                    
+
                     const allTabs = modal.querySelectorAll('.tab-pane');
                     console.log('📋 Total tab panes:', allTabs.length);
                 }
@@ -1802,11 +1817,11 @@
             // Log when modal is actually shown
             const historyModal = document.getElementById('productHistoryModal');
             if (historyModal) {
-                historyModal.addEventListener('shown.bs.modal', function () {
+                historyModal.addEventListener('shown.bs.modal', function() {
                     console.log('📊 Product History Modal is now visible');
                 });
-                
-                historyModal.addEventListener('hidden.bs.modal', function () {
+
+                historyModal.addEventListener('hidden.bs.modal', function() {
                     console.log('🔒 Product History Modal closed');
                 });
             }

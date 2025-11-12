@@ -53,7 +53,7 @@ class Products extends Component
 
     // Stock Adjustment fields
     public $adjustmentProductId, $adjustmentProductName, $adjustmentAvailableStock, $adjustmentDamageStock,
-        $adjustmentQuantity;
+        $damageQuantity, $availableQuantity;
 
     // View Product
     public $viewProduct;
@@ -565,7 +565,8 @@ class Products extends Component
         $this->adjustmentProductName = $product->name;
         $this->adjustmentAvailableStock = $product->stock->available_stock ?? 0;
         $this->adjustmentDamageStock = $product->stock->damage_stock ?? 0;
-        $this->adjustmentQuantity = $product->stock->damage_stock ?? 0; // Set current damage as default
+        $this->damageQuantity = null; // Clear damage input
+        $this->availableQuantity = null; // Clear available input
 
         $this->resetValidation();
         $this->js("$('#stockAdjustmentModal').modal('show')");
@@ -575,17 +576,133 @@ class Products extends Component
     protected function adjustmentRules()
     {
         return [
-            'adjustmentQuantity' => 'nullable|integer|min:0',
-            'adjustmentAvailableStock' => 'nullable|integer|min:0',
+            'adjustmentQuantity' => 'required|integer|min:1',
         ];
     }
 
-    // 🔹 Adjust Stock (Smart Logic for Available and Damage with Batch Management)
-    public function adjustStock()
+
+    // 🔹 Add Damage Stock (Deduct from Available Stock and Batches using FIFO)
+    public function addDamageStock()
     {
         $this->validate([
-            'adjustmentQuantity' => 'nullable|integer|min:0',
-            'adjustmentAvailableStock' => 'nullable|integer|min:0',
+            'damageQuantity' => 'required|integer|min:1',
+        ], [
+            'damageQuantity.required' => 'Please enter damage quantity.',
+            'damageQuantity.min' => 'Damage quantity must be at least 1.',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $product = ProductDetail::with(['stock', 'price'])->findOrFail($this->adjustmentProductId);
+            $stock = $product->stock;
+
+            if (!$stock) {
+                $stock = ProductStock::create([
+                    'product_id' => $product->id,
+                    'available_stock' => 0,
+                    'damage_stock' => 0,
+                    'total_stock' => 0,
+                    'sold_count' => 0,
+                ]);
+            }
+
+            $damageQty = (int)$this->damageQuantity;
+            $currentAvailable = $stock->available_stock;
+            $currentDamage = $stock->damage_stock;
+
+            // 🔹 Deduct from batches using FIFO (First In, First Out)
+            $remainingDamage = $damageQty;
+
+            $batches = ProductBatch::where('product_id', $product->id)
+                ->where('status', 'active')
+                ->where('remaining_quantity', '>', 0)
+                ->orderBy('received_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($batches->isEmpty()) {
+                DB::rollBack();
+                $this->js("Swal.fire('Error!', 'No active batches found for this product.', 'error')");
+                return;
+            }
+
+            foreach ($batches as $batch) {
+                if ($remainingDamage <= 0) break;
+
+                $deductQty = min($remainingDamage, $batch->remaining_quantity);
+                $batch->remaining_quantity -= $deductQty;
+
+                if ($batch->remaining_quantity == 0) {
+                    $batch->status = 'depleted';
+                }
+
+                $batch->save();
+                $remainingDamage -= $deductQty;
+
+                Log::info("Damage added: Deducted {$deductQty} from batch {$batch->batch_number}");
+            }
+
+            // Check if we have enough stock in batches
+            if ($remainingDamage > 0) {
+                DB::rollBack();
+                $availableInBatches = $batches->sum('remaining_quantity');
+                $this->js("Swal.fire('Error!', 'Not enough stock in batches! Available: {$availableInBatches}, Required: {$damageQty}', 'error')");
+                return;
+            }
+
+            // Update stock table
+            $newAvailableStock = max(0, $currentAvailable - $damageQty);
+            $newDamageStock = $currentDamage + $damageQty;
+
+            $stock->available_stock = $newAvailableStock;
+            $stock->damage_stock = $newDamageStock;
+            $stock->total_stock = $newAvailableStock + $newDamageStock;
+            $stock->save();
+
+            // 🔹 Update product prices based on the oldest active batch with stock
+            $oldestActiveBatch = ProductBatch::where('product_id', $product->id)
+                ->where('status', 'active')
+                ->where('remaining_quantity', '>', 0)
+                ->orderBy('received_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->first();
+
+            if ($oldestActiveBatch && $product->price) {
+                // Update the product_prices table with the batch prices
+                $product->price->supplier_price = $oldestActiveBatch->supplier_price;
+                $product->price->selling_price = $oldestActiveBatch->selling_price;
+                $product->price->save();
+
+                Log::info("Prices updated: Supplier={$oldestActiveBatch->supplier_price}, Selling={$oldestActiveBatch->selling_price} from batch {$oldestActiveBatch->batch_number}");
+            }
+
+            DB::commit();
+
+            // Clear cache for client-side refresh
+            ProductApiController::clearCache();
+
+            // Reset and refresh
+            $this->damageQuantity = null;
+            $this->adjustmentAvailableStock = $newAvailableStock;
+            $this->adjustmentDamageStock = $newDamageStock;
+
+            $this->js("Swal.fire('Success!', 'Damage stock added successfully! {$damageQty} units marked as damaged.', 'success')");
+            $this->dispatch('refreshPage');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Add damage stock failed: " . $e->getMessage());
+            $this->js("Swal.fire('Error!', 'Failed to add damage stock: " . addslashes($e->getMessage()) . "', 'error')");
+        }
+    }
+
+    // 🔹 Adjust Available Stock (Increase Stock and Add to Oldest Batch)
+    public function adjustAvailableStock()
+    {
+        $this->validate([
+            'availableQuantity' => 'required|integer|min:1',
+        ], [
+            'availableQuantity.required' => 'Please enter quantity to add.',
+            'availableQuantity.min' => 'Quantity must be at least 1.',
         ]);
 
         DB::beginTransaction();
@@ -603,114 +720,47 @@ class Products extends Component
                 ]);
             }
 
-            $originalAvailable = $stock->available_stock;
-            $originalDamage = $stock->damage_stock;
+            $addQty = (int)$this->availableQuantity;
+            $currentAvailable = $stock->available_stock;
 
-            // Convert to int, treat empty/null as 0
-            $newDamageStock = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== ''
-                ? (int)$this->adjustmentQuantity
-                : 0;
-            $newAvailableStock = $this->adjustmentAvailableStock !== null && $this->adjustmentAvailableStock !== ''
-                ? (int)$this->adjustmentAvailableStock
-                : 0;
+            // 🔹 Add to oldest active batch OR create new batch
+            $oldestBatch = ProductBatch::where('product_id', $product->id)
+                ->where('status', 'active')
+                ->orderBy('received_date', 'asc')
+                ->orderBy('id', 'asc')
+                ->first();
 
-            // Check what changed
-            $damageChanged = $newDamageStock != $originalDamage;
-            $availableChanged = $newAvailableStock != $originalAvailable;
+            if ($oldestBatch) {
+                // Add to existing oldest batch
+                $oldestBatch->remaining_quantity += $addQty;
+                $oldestBatch->quantity += $addQty;
+                $oldestBatch->save();
 
-            // If damage changed but available didn't change manually, auto-adjust available
-            if ($damageChanged && !$availableChanged) {
-                $damageDifference = $newDamageStock - $originalDamage;
-                $newAvailableStock = $originalAvailable - $damageDifference;
+                Log::info("Available stock increased: Added {$addQty} to batch {$oldestBatch->batch_number}");
+            } else {
+                // No batch exists, create a manual adjustment batch
+                $productPrice = ProductPrice::where('product_id', $product->id)->first();
 
-                // Prevent negative available stock
-                if ($newAvailableStock < 0) {
-                    $this->js("Swal.fire('Error!', 'Not enough available stock. Available: {$originalAvailable}, Trying to damage: {$damageDifference}', 'error')");
-                    return;
-                }
+                ProductBatch::create([
+                    'product_id' => $product->id,
+                    'batch_number' => ProductBatch::generateBatchNumber($product->id),
+                    'purchase_order_id' => null,
+                    'supplier_price' => $productPrice->supplier_price ?? 0,
+                    'selling_price' => $productPrice->selling_price ?? 0,
+                    'quantity' => $addQty,
+                    'remaining_quantity' => $addQty,
+                    'received_date' => now(),
+                    'status' => 'active',
+                ]);
+
+                Log::info("Available stock increased: Created new batch for {$addQty} units");
             }
 
-            // 🔹 Handle Available Stock Increase - Add to Oldest Batch
-            if ($availableChanged && $newAvailableStock > $originalAvailable) {
-                $stockIncrease = $newAvailableStock - $originalAvailable;
+            // Update stock table - only increase available stock
+            $newAvailableStock = $currentAvailable + $addQty;
 
-                // Get the oldest active batch
-                $oldestBatch = ProductBatch::where('product_id', $product->id)
-                    ->where('status', 'active')
-                    ->orderBy('received_date', 'asc')
-                    ->orderBy('id', 'asc')
-                    ->first();
-
-                if ($oldestBatch) {
-                    // Add to oldest batch
-                    $oldestBatch->remaining_quantity += $stockIncrease;
-                    $oldestBatch->quantity += $stockIncrease;
-                    $oldestBatch->save();
-
-                    Log::info("Stock adjustment: Added {$stockIncrease} to batch {$oldestBatch->batch_number}");
-                } else {
-                    // No batch exists, create a manual adjustment batch
-                    $productPrice = ProductPrice::where('product_id', $product->id)->first();
-
-                    ProductBatch::create([
-                        'product_id' => $product->id,
-                        'batch_number' => ProductBatch::generateBatchNumber($product->id),
-                        'purchase_order_id' => null,
-                        'supplier_price' => $productPrice->supplier_price ?? 0,
-                        'selling_price' => $productPrice->selling_price ?? 0,
-                        'quantity' => $stockIncrease,
-                        'remaining_quantity' => $stockIncrease,
-                        'received_date' => now(),
-                        'status' => 'active',
-                    ]);
-
-                    Log::info("Stock adjustment: Created new batch for {$stockIncrease} units (no existing batches)");
-                }
-            }
-
-            // 🔹 Handle Damage Stock Change
-            if ($damageChanged) {
-                $damageIncrease = $newDamageStock - $originalDamage;
-
-                if ($damageIncrease > 0) {
-                    // Damage increased - deduct from oldest batches using FIFO
-                    $remainingDamage = $damageIncrease;
-
-                    $batches = ProductBatch::where('product_id', $product->id)
-                        ->where('status', 'active')
-                        ->where('remaining_quantity', '>', 0)
-                        ->orderBy('received_date', 'asc')
-                        ->orderBy('id', 'asc')
-                        ->get();
-
-                    foreach ($batches as $batch) {
-                        if ($remainingDamage <= 0) break;
-
-                        $deductQty = min($remainingDamage, $batch->remaining_quantity);
-                        $batch->remaining_quantity -= $deductQty;
-
-                        if ($batch->remaining_quantity == 0) {
-                            $batch->status = 'depleted';
-                        }
-
-                        $batch->save();
-                        $remainingDamage -= $deductQty;
-
-                        Log::info("Damage adjustment: Deducted {$deductQty} from batch {$batch->batch_number}");
-                    }
-
-                    if ($remainingDamage > 0) {
-                        DB::rollBack();
-                        $this->js("Swal.fire('Error!', 'Not enough stock in batches to mark as damage', 'error')");
-                        return;
-                    }
-                }
-            }
-
-            // Update stock values
             $stock->available_stock = $newAvailableStock;
-            $stock->damage_stock = $newDamageStock;
-            $stock->total_stock = $newAvailableStock + $newDamageStock;
+            $stock->total_stock = $newAvailableStock + $stock->damage_stock;
             $stock->save();
 
             DB::commit();
@@ -718,17 +768,16 @@ class Products extends Component
             // Clear cache for client-side refresh
             ProductApiController::clearCache();
 
-            // Reset adjustment fields
-            $this->adjustmentQuantity = null;
-            $this->adjustmentAvailableStock = null;
+            // Reset and refresh
+            $this->availableQuantity = null;
+            $this->adjustmentAvailableStock = $newAvailableStock;
 
-            $this->js("$('#stockAdjustmentModal').modal('hide')");
-            $this->js("Swal.fire('Success!', 'Stock adjusted successfully!', 'success')");
+            $this->js("Swal.fire('Success!', 'Available stock increased successfully! Added {$addQty} units.', 'success')");
             $this->dispatch('refreshPage');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Stock adjustment failed: " . $e->getMessage());
-            $this->js("Swal.fire('Error!', 'Failed to adjust stock: " . addslashes($e->getMessage()) . "', 'error')");
+            Log::error("Adjust available stock failed: " . $e->getMessage());
+            $this->js("Swal.fire('Error!', 'Failed to adjust available stock: " . addslashes($e->getMessage()) . "', 'error')");
         }
     }
 
@@ -1000,35 +1049,10 @@ class Products extends Component
             'editCategory',
             'editSupplierPrice',
             'editSellingPrice',
-            'adjustmentQuantity',
-            'adjustmentAvailableStock'
+            'damageQuantity',
+            'availableQuantity'
         ])) {
             $this->validateOnly($propertyName);
-        }
-
-        // Auto-adjust available stock when damage quantity changes
-        if ($propertyName === 'adjustmentQuantity' && $this->adjustmentProductId) {
-            $product = ProductDetail::with(['stock'])->find($this->adjustmentProductId);
-            if ($product && $product->stock) {
-                $originalAvailable = $product->stock->available_stock;
-                $originalDamage = $product->stock->damage_stock;
-
-                // Convert to int, treat empty/null as 0
-                $newDamage = $this->adjustmentQuantity !== null && $this->adjustmentQuantity !== ''
-                    ? (int)$this->adjustmentQuantity
-                    : 0;
-
-                $damageDifference = $newDamage - $originalDamage;
-
-                // Auto-reduce available stock
-                $this->adjustmentAvailableStock = $originalAvailable - $damageDifference;
-
-                // Prevent negative values
-                if ($this->adjustmentAvailableStock < 0) {
-                    $this->adjustmentAvailableStock = 0;
-                    $this->addError('adjustmentQuantity', "Not enough available stock! Available: {$originalAvailable}");
-                }
-            }
         }
     }
 }
