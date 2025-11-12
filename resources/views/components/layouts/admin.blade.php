@@ -1662,37 +1662,13 @@
 
         // Handle Reopen POS confirmation
         function reopenPOSSession() {
-            fetch("{{ route('admin.reopen-pos-session') }}", {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Hide modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('reopenPOSModal'));
-                        if (modal) modal.hide();
-                        // Show success and reload UI
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'POS Reopened!',
-                            text: data.message || 'POS session reopened successfully.',
-                            confirmButtonColor: '#3b5b0c'
-                        }).then(() => {
-                            checkPOSSessionStatus();
-                        });
-                    } else {
-                        Swal.fire('Error!', data.message || 'Failed to reopen POS session.', 'error');
-                    }
-                })
-                .catch(() => {
-                    Swal.fire('Error!', 'Failed to reopen POS session.', 'error');
-                });
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('reopenPOSModal'));
+            if (modal) modal.hide();
+
+            // Redirect to store billing page
+            // The mount() method will detect closed session and show opening cash modal
+            window.location.href = "{{ route('admin.store-billing') }}";
         }
 
         // Update the form submission to redirect to POS after updating cash

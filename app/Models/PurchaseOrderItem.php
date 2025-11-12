@@ -13,6 +13,7 @@ class PurchaseOrderItem extends Model
         'order_id',
         'product_id',
         'quantity',
+        'received_quantity',
         'unit_price',
         'discount',
         'discount_type',
@@ -28,9 +29,8 @@ class PurchaseOrderItem extends Model
     {
         return $this->belongsTo(ProductDetail::class, 'product_id');
     }
-   public function detail()
-{
-    return $this->hasOne(ProductDetail::class, 'code');
-}
-
+    public function detail()
+    {
+        return $this->hasOne(ProductDetail::class, 'code');
+    }
 }

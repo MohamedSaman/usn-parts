@@ -21,7 +21,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Awaiting Receipt</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                             </div>
                             <div class="flex-grow-1">
                                 <p class="text-muted mb-1">Fully Received</p>
-                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['received'] }}</h4>
+                                <h4 class="fw-bold mb-0">{{ $this->getOrderCounts()['complete'] }}</h4>
                             </div>
                         </div>
                     </div>
@@ -87,9 +87,9 @@
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->supplier->name }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">{{ $po->order_date }}</td>
                                 <td wire:click="viewGRN({{ $po->id }})">
-                                    @if($po->status == 'received')
+                                    @if($po->status == 'complete')
                                         <span class="badge bg-success">Fully Received</span>
-                                    @elseif($po->status == 'pending')
+                                    @elseif($po->status == 'received')
                                         <span class="badge bg-warning">Awaiting Receipt</span>
                                     @else
                                         <span class="badge bg-info">{{ ucfirst($po->status) }}</span>

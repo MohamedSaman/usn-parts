@@ -69,8 +69,8 @@
                                 <th>Supplier</th>
                                 <th>Status</th>
                                 <th>GRN Status</th>
-                                <th>Quantity</th>
-
+                                <th>Order Quantity</th>
+                                <th>Received Quantity</th>
                                 <th>Total Amount</th>
                                 <th class="text-end pe-4">Actions</th>
                             </tr>
@@ -80,8 +80,9 @@
                             @php
                             // Calculate totals for this order
                             $totalQuantity = $order->items->sum('quantity');
+                            $totalReceivedQty = $order->items->sum('received_quantity');
                             $totalAmount = $order->items->sum(function($item) {
-                            return floatval($item->quantity) * floatval($item->unit_price);
+                            return floatval($item->received_quantity) * floatval($item->unit_price);
                             });
 
                             // Calculate GRN status
@@ -127,7 +128,8 @@
                                         @endif
                                     </span>
                                 </td>
-                                <td>{{ $totalQuantity }}</td>
+                                <td class="text-center">{{ $totalQuantity }}</td>
+                                <td class="text-center">{{ $totalReceivedQty }}</td>
 
                                 <td>{{ number_format($totalAmount, 2) }}</td>
                                 <td class="text-end pe-4">
@@ -293,7 +295,8 @@
                                 <th style="width: 50px;">No</th>
                                 <th style="width: 120px;">Code</th>
                                 <th>Product Name</th>
-                                <th style="width: 120px;">Quantity</th>
+                                <th style="width: 120px;">Order Quantity</th>
+                                
                                 <th style="width: 150px;">Supplier Price</th>
                                 <th style="width: 150px;">Total Price</th>
                                 <th style="width: 80px;">Action</th>
@@ -488,7 +491,7 @@
                                 <td>
                                     <input type="number"
                                         class="form-control text-center"
-                                        wire:model.live="grnItems.{{ $index }}.received_qty"
+                                        wire:model.live="grnItems.{{ $index }}.received_quantity"
                                         min="0"
                                         wire:change="calculateGRNTotal({{ $index }})">
                                 </td>
@@ -541,19 +544,20 @@
                                 </td>
                                 <td>
                                     <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <!-- <span class="badge {{ $statusBadge }} mb-2">
-                                                {{ $statusText }}
-                                            </span> -->
+                                        @if(strtolower($item['status'] ?? '') !== 'received')
+                                        <!-- Show complete button only for pending/not received items -->
+                                        <button class="btn btn-sm btn-outline-success"
+                                            wire:click="correctGRNItem({{ $index }})"
+                                            title="Mark as Received">
+                                            <i class="bi bi-check-circle"></i>
+                                        </button>
+                                        @endif
+                                        <!-- Delete button always available -->
                                         <button class="btn btn-sm btn-outline-danger"
                                             wire:click="deleteGRNItem({{ $index }})"
                                             title="Remove Item">
                                             <i class="bi bi-trash"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-success"
-                                            wire:click="correctGRNItem({{ $index }})"
-                                        title="Mark as Received">
-                                        <i class="bi bi-check-circle"></i>
-                                        </button> 
                                     </div>
                                 </td>
                             </tr>
@@ -615,9 +619,10 @@
                             <th>Code</th>
                             <th>Product</th>
                             <th>Status</th>
-                            <th>Qty</th>
+                            <th>Order Qty</th>
+                            <th>Received Qty</th>
                             <th>Price</th>
-                            <th>totalPrice</th>
+                            <th>Total Price</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -637,8 +642,15 @@
                                 @endif
                             </td>
                             <td>{{ $item->quantity }}</td>
+                            <td>
+                                @if($item->status == 'received')
+                                <span class="text-success fw-bold">{{ $item->received_quantity }}</span>
+                                @else
+                                <span class="text-muted">-</span>
+                                @endif
+                            </td>
                             <td>{{ $item->unit_price }}</td>
-                            <td>{{ number_format(floatval($item->unit_price) * floatval($item->quantity), 2) }}</td>
+                            <td>{{ number_format(floatval($item->unit_price) * floatval($item->received_quantity), 2) }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -815,7 +827,7 @@
                 const input = e.target;
                 const value = input.value;
                 const index = input.dataset.index;
-                
+
                 // Check if value contains %
                 if (value.includes('%')) {
                     // Set discount type to percent
@@ -823,14 +835,14 @@
                     // Remove % and update the value
                     const numericValue = value.replace(/[^0-9.]/g, '');
                     @this.set(`grnItems.${index}.discount`, numericValue);
-                    
+
                     console.log(`Discount ${index}: Detected % - Value: ${numericValue}`);
                 } else {
                     // Set discount type to rs
                     @this.set(`grnItems.${index}.discount_type`, 'rs');
                     const numericValue = value.replace(/[^0-9.]/g, '');
                     @this.set(`grnItems.${index}.discount`, numericValue);
-                    
+
                     console.log(`Discount ${index}: Detected Rs - Value: ${numericValue}`);
                 }
             }
