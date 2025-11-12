@@ -714,52 +714,53 @@
                             <hr class="my-3">
                         </div>
 
-                        {{-- Customer & Sale Details --}}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="card border shadow-sm">
-                                    <div class="card-header">Customer</div>
-                                    <div class="card-body">
-                                        <p class="mb-0"><strong>{{ $createdSale->customer->name }}</strong></p>
-                                        <p class="mb-0">{{ $createdSale->customer->address }}</p>
-                                        <p class="mb-0">Tel: {{ $createdSale->customer->phone }}</p>
-                                        @if($createdSale->customer->email)
-                                        <p class="mb-0">Email: {{ $createdSale->customer->email }}</p>
-                                        @endif
-                                    </div>
-                                </div>
+                        {{-- Customer & Sale Details Side by Side --}}
+                        <div class="row mb-3 invoice-info-row">
+                            <div class="col-6">
+                                <p class="mb-1"><strong>Customer :</strong></p>
+                                <p class="mb-0">{{ $createdSale->customer->name }}</p>
+                                <p class="mb-0">{{ $createdSale->customer->address }}</p>
+                                <p class="mb-0"><strong>Tel:</strong> {{ $createdSale->customer->phone }}</p>
                             </div>
-
-                            <div class="col-md-6">
-                                <div class="card border shadow-sm">
-                                    <div class="card-header">Sale Details</div>
-                                    <div class="card-body">
-                                        <p class="mb-0"><strong>Invoice #:</strong> {{ $createdSale->invoice_number }}</p>
-                                        <p class="mb-0"><strong>Sale ID:</strong> {{ $createdSale->sale_id }}</p>
-                                        <p class="mb-0"><strong>Date:</strong> {{ $createdSale->created_at->format('d/m/Y') }}</p>
-                                        <p class="mb-0"><strong>Time:</strong> {{ $createdSale->created_at->format('H:i') }}</p>
-                                    </div>
-                                </div>
+                            <div class="col-6 text-end">
+                                <table class="table-borderless ms-auto" style="width: auto; display: inline-table;">
+                                    <tr>
+                                        <td class="pe-3"><strong>Invoice #</strong></td>
+                                        <td>{{ $createdSale->invoice_number }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pe-3"><strong>Sale ID</strong></td>
+                                        <td>{{ $createdSale->sale_id }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pe-3"><strong>Date</strong></td>
+                                        <td>{{ $createdSale->created_at->format('d/m/Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="pe-3"><strong>Time</strong></td>
+                                        <td>{{ $createdSale->created_at->format('H:i') }}</td>
+                                    </tr>
+                                </table>
                             </div>
                         </div>
 
                         {{-- Items Table --}}
                         <div class="table-responsive mb-3">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered invoice-table">
                                 <thead>
                                     <tr>
-                                        <th width="30">#</th>
+                                        <th width="40" class="text-center">#</th>
                                         <th>ITEM CODE</th>
                                         <th>DESCRIPTION</th>
-                                        <th width="60">QTY</th>
-                                        <th width="100">UNIT PRICE</th>
-                                        <th width="100">SUBTOTAL</th>
+                                        <th width="80" class="text-center">QTY</th>
+                                        <th width="120" class="text-end">UNIT PRICE</th>
+                                        <th width="120" class="text-end">SUBTOTAL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($createdSale->items as $index => $item)
                                     <tr>
-                                        <td>{{ $index + 1 }}</td>
+                                        <td class="text-center">{{ $index + 1 }}</td>
                                         <td>{{ $item->product_code }}</td>
                                         <td>{{ $item->product_name }}</td>
                                         <td class="text-center">{{ $item->quantity }}</td>
@@ -769,28 +770,28 @@
                                     @endforeach
                                 </tbody>
                                 <tfoot>
-                                    <tr>
+                                    <tr class="totals-row">
                                         <td colspan="5" class="text-end"><strong>Subtotal</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->subtotal, 2) }}</strong></td>
                                     </tr>
                                     @if($createdSale->discount_amount > 0)
-                                    <tr>
+                                    <tr class="totals-row">
                                         <td colspan="5" class="text-end"><strong>Discount</strong></td>
                                         <td class="text-end"><strong>-Rs.{{ number_format($createdSale->discount_amount, 2) }}</strong></td>
                                     </tr>
                                     @endif
-                                    <tr>
+                                    <tr class="totals-row grand-total">
                                         <td colspan="5" class="text-end"><strong>Grand Total</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->total_amount, 2) }}</strong></td>
                                     </tr>
                                     @if($createdSale->payments->count() > 0)
-                                    <tr>
+                                    <tr class="totals-row">
                                         <td colspan="5" class="text-end"><strong>Paid Amount</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->payments->sum('amount'), 2) }}</strong></td>
                                     </tr>
                                     @endif
                                     @if($createdSale->due_amount > 0)
-                                    <tr>
+                                    <tr class="totals-row">
                                         <td colspan="5" class="text-end"><strong>Due Amount</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->due_amount, 2) }}</strong></td>
                                     </tr>
@@ -799,23 +800,25 @@
                             </table>
                         </div>
 
-                        {{-- Print Footer (hidden on screen) --}}
-                        <div class="print-footer">
-                            <p class="text-center"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
-                            <p class="text-center">Thank you for your business!</p>
+                        {{-- Footer Note --}}
+                        <div class="invoice-footer mt-4">
+                            <p class="text-center mb-1"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                            <p class="text-center mt-3" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" wire:click="createNewSale">
-                        <i class="bi bi-x-circle me-1"></i>Close
+                {{-- Footer Buttons --}}
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewSale">
+                        <i class="bi bi-x-circle me-2"></i>Close
                     </button>
-                    <button type="button" class="btn btn-info" wire:click="downloadInvoice">
-                        <i class="bi bi-download me-1"></i>Download
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="window.printSaleReceipt()">
+                        <i class="bi bi-printer me-2"></i>Print
                     </button>
-                    <button type="button" class="btn btn-success" onclick="printSaleReceipt()">
-                        <i class="bi bi-printer me-1"></i>Print
+                    <button type="button" class="btn btn-success" wire:click="downloadInvoice">
+                        <i class="bi bi-download me-2"></i>Download Invoice
                     </button>
                 </div>
             </div>
@@ -1036,221 +1039,138 @@
         border-bottom: none !important;
     }
 
+    /* Hide print-only elements on screen */
+    @media screen {
+        .print-only-header {
+            display: none !important;
+        }
+    }
+
     /* ============================================
        PRINT STYLES FOR SALE RECEIPT
        ============================================ */
     @media print {
-
-        /* Hide everything first */
-        body * {
+        /* Print only the receipt content */
+        body.printing-sale-receipt * {
             visibility: hidden !important;
         }
 
-        /* Show only the sale receipt content */
-        #saleReceiptPrintContent,
-        #saleReceiptPrintContent * {
+        body.printing-sale-receipt #saleReceiptPrintContent,
+        body.printing-sale-receipt #saleReceiptPrintContent * {
             visibility: visible !important;
         }
 
-        /* Position at top of page */
-        #saleReceiptPrintContent {
+        body.printing-sale-receipt #saleReceiptPrintContent {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 15mm !important;
+            width: 210mm !important;
+            padding: 10mm 15mm !important;
             background: white !important;
+            color: #000 !important;
         }
 
-        /* Hide screen-only elements */
-        .screen-only-header,
-        .modal-header,
-        .modal-footer,
-        .no-print,
-        .btn,
-        .badge {
+        /* Hide screen elements */
+        body.printing-sale-receipt .screen-only-header,
+        body.printing-sale-receipt .modal-header,
+        body.printing-sale-receipt .modal-footer,
+        body.printing-sale-receipt .btn,
+        body.printing-sale-receipt .badge,
+        body.printing-sale-receipt .card {
             display: none !important;
             visibility: hidden !important;
         }
 
-        /* Print Header - Company Info */
-        .print-only-header {
+        /* Show print header */
+        body.printing-sale-receipt .print-only-header {
             display: block !important;
-            text-align: center !important;
-            margin-bottom: 15px !important;
-            padding-bottom: 10px !important;
-            border-bottom: 2px solid #000 !important;
+            visibility: visible !important;
         }
 
-        .print-only-header img {
-            display: block !important;
-            height: 50px !important;
-            width: auto !important;
-            margin: 0 auto 10px !important;
-            object-fit: contain !important;
-        }
-
-        .print-only-header p {
-            margin: 2px 0 !important;
-            font-size: 10px !important;
-            line-height: 1.3 !important;
-        }
-
-        .print-only-header p strong {
-            font-size: 14px !important;
-            font-weight: bold !important;
-        }
-
-        /* Customer & Sale Info Cards - Side by Side */
-        #saleReceiptPrintContent .row {
+        /* Invoice info layout */
+        body.printing-sale-receipt .invoice-info-row {
             display: flex !important;
-            flex-wrap: wrap !important;
-            margin: 0 -5px !important;
-            page-break-inside: avoid !important;
+            margin-bottom: 15px !important;
+            font-size: 11px !important;
         }
 
-        #saleReceiptPrintContent .col-md-6 {
+        body.printing-sale-receipt .invoice-info-row .col-6 {
             flex: 0 0 50% !important;
             max-width: 50% !important;
-            padding: 0 5px !important;
         }
 
-        #saleReceiptPrintContent .card {
-            border: 1px solid #000 !important;
-            margin-bottom: 10px !important;
-            page-break-inside: avoid !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
+        body.printing-sale-receipt .invoice-info-row p {
+            margin: 2px 0 !important;
+            line-height: 1.4 !important;
         }
 
-        #saleReceiptPrintContent .card-header {
-            background-color: #f0f0f0 !important;
-            border-bottom: 1px solid #000 !important;
-            padding: 4px 8px !important;
-            font-weight: bold !important;
-            font-size: 10px !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
+        body.printing-sale-receipt .invoice-info-row table {
+            font-size: 11px !important;
         }
 
-        #saleReceiptPrintContent .card-body {
-            padding: 6px 8px !important;
-            font-size: 9px !important;
+        body.printing-sale-receipt .invoice-info-row td {
+            padding: 2px 0 !important;
         }
 
-        #saleReceiptPrintContent .card-body p {
-            margin: 1px 0 !important;
-            font-size: 9px !important;
-            line-height: 1.3 !important;
-        }
-
-        /* Items Table */
-        #saleReceiptPrintContent .table-responsive {
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
-        }
-
-        #saleReceiptPrintContent table {
+        /* Table styles */
+        body.printing-sale-receipt .invoice-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            margin: 0 !important;
-            font-size: 9px !important;
+            margin: 10px 0 !important;
+            font-size: 10px !important;
         }
 
-        #saleReceiptPrintContent table th {
+        body.printing-sale-receipt .invoice-table th {
             background-color: #f0f0f0 !important;
-            color: #000 !important;
             border: 1px solid #000 !important;
-            padding: 4px 6px !important;
-            font-size: 9px !important;
+            padding: 6px 8px !important;
             font-weight: bold !important;
-            text-align: left !important;
+            text-transform: uppercase !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
         }
 
-        #saleReceiptPrintContent table td {
+        body.printing-sale-receipt .invoice-table td {
             border: 1px solid #000 !important;
-            padding: 3px 6px !important;
-            font-size: 9px !important;
-            text-align: left !important;
-            line-height: 1.2 !important;
+            padding: 5px 8px !important;
         }
 
-        #saleReceiptPrintContent table thead th {
-            text-transform: uppercase !important;
+        body.printing-sale-receipt .invoice-table tbody tr {
+            page-break-inside: avoid !important;
         }
 
-        /* Table column widths */
-        #saleReceiptPrintContent table th[width="30"],
-        #saleReceiptPrintContent table td:first-child {
-            width: 30px !important;
-            text-align: center !important;
-        }
-
-        #saleReceiptPrintContent table th[width="60"] {
-            width: 60px !important;
-            text-align: center !important;
-        }
-
-        #saleReceiptPrintContent table th[width="100"] {
-            width: 100px !important;
-        }
-
-        /* Table footer totals */
-        #saleReceiptPrintContent table tfoot tr {
-            background-color: #fff !important;
-        }
-
-        #saleReceiptPrintContent table tfoot td {
-            font-weight: bold !important;
-            font-size: 9px !important;
-            padding: 3px 6px !important;
-        }
-
-        #saleReceiptPrintContent table tfoot tr:last-child td {
-            border-top: 2px solid #000 !important;
-        }
-
-        /* Text alignment */
-        #saleReceiptPrintContent .text-end {
-            text-align: right !important;
-        }
-
-        #saleReceiptPrintContent .text-center {
-            text-align: center !important;
-        }
-
-        /* Footer note */
-        .print-footer {
-            display: block !important;
-            text-align: center !important;
-            margin-top: 15px !important;
-            padding-top: 10px !important;
+        body.printing-sale-receipt .invoice-table tfoot .totals-row td {
             border-top: 1px solid #000 !important;
+            padding: 5px 8px !important;
         }
 
-        .print-footer p {
-            margin: 3px 0 !important;
-            font-size: 9px !important;
-            line-height: 1.3 !important;
+        body.printing-sale-receipt .invoice-table tfoot .grand-total td {
+            border-top: 2px solid #000 !important;
+            font-size: 11px !important;
+            padding: 7px 8px !important;
         }
 
-        .print-footer p strong {
-            font-weight: bold !important;
+        /* Footer */
+        body.printing-sale-receipt .invoice-footer {
+            margin-top: 20px !important;
+            border-top: 1px solid #000 !important;
+            padding-top: 10px !important;
+            font-size: 10px !important;
         }
 
-        /* A4 Page setup */
+        body.printing-sale-receipt .invoice-footer p {
+            margin: 2px 0 !important;
+        }
+
+        /* Page setup */
         @page {
             size: A4 portrait !important;
-            margin: 10mm !important;
+            margin: 0 !important;
         }
 
-        body {
+        body.printing-sale-receipt {
             margin: 0 !important;
             padding: 0 !important;
-            background: white !important;
         }
     }
 
@@ -1435,9 +1355,13 @@
 @push('scripts')
 <script>
     // Print Sale Receipt Function
-    function printSaleReceipt() {
+    window.printSaleReceipt = function() {
         document.body.classList.remove('printing-close-register');
+        document.body.classList.add('printing-sale-receipt');
         window.print();
+        setTimeout(function() {
+            document.body.classList.remove('printing-sale-receipt');
+        }, 1000);
     }
 
     // Auto-close alerts after 5 seconds
