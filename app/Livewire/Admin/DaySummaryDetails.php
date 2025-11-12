@@ -60,9 +60,9 @@ class DaySummaryDetails extends Component
             ->pluck('id');
 
         $this->lateCashPayments = Payment::where(function ($query) use ($posSalesToday) {
-                $query->whereNotIn('sale_id', $posSalesToday)
-                      ->orWhereNull('sale_id');
-            })
+            $query->whereNotIn('sale_id', $posSalesToday)
+                ->orWhereNull('sale_id');
+        })
             ->whereDate('payment_date', $sessionDate)
             ->where('payment_method', 'cash')
             ->where('is_completed', true)
