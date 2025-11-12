@@ -975,7 +975,7 @@
         <div class="collapse" id="banksSubmenu">
             <ul class="nav flex-column ms-3">
                 <li class="nav-item">
-                    <a class="nav-link py-2" href="{{ route('admin.income') }}">
+                    <a class="nav-link py-2" href="{{ route('admin.day-summary') }}">
                         <i class="bi bi-cash-stack"></i> <span>Deposit By Cash</span>
                     </a>
                 </li>
@@ -1078,7 +1078,7 @@
     </a>
     </li>--}}
     <li>
-        <a class="nav-link" href="{{ route('admin.day-summary') }}">
+        <a class="nav-link" href="{{ route('admin.income') }}">
             <i class="bi bi-file-earmark-bar-graph"></i> <span>Day Summary</span>
         </a>
     </li>

@@ -1000,9 +1000,9 @@ class StoreBilling extends Component
     }
 
     /**
-     * Open Close Register Modal - Auto close session and show summary
+     * View Close Register Report - Show summary WITHOUT closing the session
      */
-    public function openCloseRegisterModal()
+    public function viewCloseRegisterReport()
     {
         // Refresh session data
         $this->currentSession = POSSession::getTodaySession(Auth::id());
@@ -1064,30 +1064,57 @@ class StoreBilling extends Component
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // 4. Late Payments (Admin Sales) - Get from payment table where sale_type = 'admin'
-        // 4.1 Admin Cash Payments
+        // 4. Late Payments - Include both Admin Sales and payments with null sale_id
+        // 4.1 Admin Cash Payments (from admin sales)
         $adminCashPayments = Payment::whereIn('sale_id', $adminSalesToday)
             ->where('payment_method', 'cash')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // 4.2 Admin Cheque Payments
+        // 4.1.1 Late Cash Payments (sale_id is null)
+        $lateCashPayments = Payment::whereNull('sale_id')
+            ->where('payment_method', 'cash')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Total Cash Payments from Admin and Late Payments
+        $totalAdminCashPayments = $adminCashPayments + $lateCashPayments;
+
+        // 4.2 Admin Cheque Payments (from admin sales)
         $adminChequePayments = Payment::whereIn('sale_id', $adminSalesToday)
             ->where('payment_method', 'cheque')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // 4.3 Admin Bank Transfer Payments
+        // 4.2.1 Late Cheque Payments (sale_id is null)
+        $lateChequePayments = Payment::whereNull('sale_id')
+            ->where('payment_method', 'cheque')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Total Cheque Payments from Admin and Late Payments
+        $totalAdminChequePayments = $adminChequePayments + $lateChequePayments;
+
+        // 4.3 Admin Bank Transfer Payments (from admin sales)
         $adminBankTransfers = Payment::whereIn('sale_id', $adminSalesToday)
             ->where('payment_method', 'bank_transfer')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // Calculate total late payments (admin)
-        $totalAdminPayments = $adminCashPayments + $adminChequePayments + $adminBankTransfers;
+        // 4.3.1 Late Bank Transfer Payments (sale_id is null)
+        $lateBankTransfers = Payment::whereNull('sale_id')
+            ->where('payment_method', 'bank_transfer')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
 
-        // 5. Total Cash Amount (POS Cash + Admin Cash)
-        $totalCashFromSales = $posCashPayments + $adminCashPayments;
+        // Total Bank Transfer Payments from Admin and Late Payments
+        $totalAdminBankTransfers = $adminBankTransfers + $lateBankTransfers;
+
+        // Calculate total late payments (admin + null sale_id)
+        $totalAdminPayments = $totalAdminCashPayments + $totalAdminChequePayments + $totalAdminBankTransfers;
+
+        // 5. Total Cash Amount (POS Cash + Admin Cash + Late Cash)
+        $totalCashFromSales = $posCashPayments + $totalAdminCashPayments;
 
         // 6. Total POS Sales - Get from sales table where sale_type = 'pos'
         $totalPosSales = Sale::whereDate('created_at', $today)
@@ -1149,6 +1176,16 @@ class StoreBilling extends Component
             'admin_cash_payment' => $adminCashPayments,
             'admin_cheque_payment' => $adminChequePayments,
             'admin_bank_transfer' => $adminBankTransfers,
+
+            // Late Payments (sale_id is null)
+            'late_cash_payment' => $lateCashPayments,
+            'late_cheque_payment' => $lateChequePayments,
+            'late_bank_transfer' => $lateBankTransfers,
+
+            // Combined Late Payments
+            'total_admin_cash_payment' => $totalAdminCashPayments,
+            'total_admin_cheque_payment' => $totalAdminChequePayments,
+            'total_admin_bank_transfer' => $totalAdminBankTransfers,
             'total_admin_payment' => $totalAdminPayments,
             'total_admin_sales' => $totalAdminSales,
 
@@ -1167,72 +1204,105 @@ class StoreBilling extends Component
 
         $this->closeRegisterCash = $this->sessionSummary['expected_cash'];
 
-        // Auto-close the session with expected cash
-        try {
-            DB::beginTransaction();
+        // Just show the modal, don't close the session yet
+        $this->showCloseRegisterModal = true;
 
-            // Close the session with the expected closing cash amount
-            $this->currentSession->closeSession($this->closeRegisterCash, 'Auto-closed when close register clicked');
-
-            // Update both 'cash in hand' and 'cash_amount' keys in cash_in_hands table
-            // for next day's opening balance
-            $keysToUpdate = ['cash in hand', 'cash_amount'];
-
-            foreach ($keysToUpdate as $key) {
-                $cashInHandRecord = DB::table('cash_in_hands')->where('key', $key)->first();
-
-                if ($cashInHandRecord) {
-                    DB::table('cash_in_hands')
-                        ->where('key', $key)
-                        ->update([
-                            'value' => $this->closeRegisterCash,
-                            'updated_at' => now()
-                        ]);
-                } else {
-                    DB::table('cash_in_hands')->insert([
-                        'key' => $key,
-                        'value' => $this->closeRegisterCash,
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            $this->showCloseRegisterModal = true;
-
-            // Use multiple methods to ensure modal opens
-            $this->dispatch('showModal', 'closeRegisterModal');
-            $this->js("
-                setTimeout(() => {
-                    const modalEl = document.getElementById('closeRegisterModal');
-                    if (modalEl) {
-                        const modal = new bootstrap.Modal(modalEl, {backdrop: 'static', keyboard: false});
-                        modal.show();
-                        
-                        // Redirect to dashboard when modal is closed
-                        modalEl.addEventListener('hidden.bs.modal', function () {
-                            window.location.href = '" . route('admin.dashboard') . "';
-                        });
-                    }
-                }, 100);
-            ");
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Auto close register failed: ' . $e->getMessage());
-            $this->js("Swal.fire('Error!', 'Failed to close register: " . addslashes($e->getMessage()) . "', 'error')");
-        }
+        $this->dispatch('showModal', 'closeRegisterModal');
     }
 
     /**
-     * Cancel Close Register - Redirect to dashboard
+     * Cancel Close Register - Just close modal without doing anything
      */
     public function cancelCloseRegister()
     {
+        $this->showCloseRegisterModal = false;
+    }
+
+    /**
+     * Close Register and Redirect to Dashboard
+     * This actually closes the POS session when user clicks "Close & Go to Dashboard"
+     */
+   public function closeRegisterAndRedirect()
+{
+    try {
+        DB::beginTransaction();
+
+        // Refresh session data
+        $this->currentSession = POSSession::where('user_id', Auth::id())
+            ->whereDate('session_date', now()->toDateString())
+            ->where('status', 'open')
+            ->first();
+
+        if (!$this->currentSession) {
+            DB::rollBack();
+            
+            session()->flash('error', 'No active POS session found.');
+            
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Get the expected closing cash from sessionSummary
+        $expectedClosingCash = $this->sessionSummary['expected_cash'] ?? $this->closeRegisterCash;
+
+        // Close the session
+        $this->currentSession->update([
+            'closing_cash' => $expectedClosingCash,
+            'total_sales' => $this->sessionSummary['total_pos_sales'] ?? 0,
+            'cash_sales' => $this->sessionSummary['pos_cash_sales'] ?? 0,
+            'late_payment_bulk' => $this->sessionSummary['total_admin_payment'] ?? 0,
+            'cheque_payment' => $this->sessionSummary['pos_cheque_payment'] ?? 0,
+            'bank_transfer' => $this->sessionSummary['pos_bank_transfer'] ?? 0,
+            'refunds' => $this->sessionSummary['refunds'] ?? 0,
+            'expenses' => $this->sessionSummary['expenses'] ?? 0,
+            'cash_deposit_bank' => $this->sessionSummary['cash_deposit_bank'] ?? 0,
+            'status' => 'closed',
+            'closed_at' => now(),
+            'notes' => $this->closeRegisterNotes ?? 'Closed from close register modal',
+        ]);
+
+        // Update both 'cash in hand' and 'cash_amount' keys in cash_in_hands table
+        $keysToUpdate = ['cash in hand', 'cash_amount'];
+
+        foreach ($keysToUpdate as $key) {
+            $cashInHandRecord = DB::table('cash_in_hands')->where('key', $key)->first();
+
+            if ($cashInHandRecord) {
+                DB::table('cash_in_hands')
+                    ->where('key', $key)
+                    ->update([
+                        'value' => $expectedClosingCash,
+                        'updated_at' => now()
+                    ]);
+            } else {
+                DB::table('cash_in_hands')->insert([
+                    'key' => $key,
+                    'value' => $expectedClosingCash,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+        }
+
+        DB::commit();
+
+        // Close modal
+        $this->showCloseRegisterModal = false;
+
+        // Flash success message
+        session()->flash('success', 'POS register closed successfully! Closing cash: Rs. ' . number_format($expectedClosingCash, 2));
+
         // Redirect to dashboard
         return redirect()->route('admin.dashboard');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Failed to close POS session: ' . $e->getMessage());
+
+        session()->flash('error', 'Failed to close register: ' . $e->getMessage());
+        
+        return redirect()->route('admin.dashboard');
     }
+}
 
     /**
      * Reopen today's closed POS session (for admin)
