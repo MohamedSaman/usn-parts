@@ -40,6 +40,8 @@ class Income extends Component
     // New properties
     public $openingCash = 0; // POS opening cash for today
     public $todayReturns = 0; // Today's return amount (cash refunded)
+    public $todayExpenses = 0; // Today's expenses
+    public $cashLatePayments = 0; // Cash late payments (sale_id is null)
 
     public function mount()
     {
@@ -50,6 +52,7 @@ class Income extends Component
 
         // Breakdown by payment method
         $this->cashIncome = Payment::whereDate('payment_date', $today)
+            ->whereNotNull('sale_id')
             ->where('payment_method', 'cash')
             ->sum('amount');
 
@@ -81,6 +84,18 @@ class Income extends Component
         $this->todayReturns = DB::table('returns_products')
             ->whereDate('created_at', $today)
             ->sum('total_amount');
+
+        // Get today's expenses
+        $this->todayExpenses = DB::table('expenses')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+
+        // Get cash late payments (where sale_id is null and payment_method is cash)
+        $this->cashLatePayments = Payment::whereNull('sale_id')
+            ->whereDate('payment_date', $today)
+            ->where('payment_method', 'cash')
+            ->where('is_completed', true)
+            ->sum('amount');
 
         // Calculate deposits
         $this->calculateDeposits();

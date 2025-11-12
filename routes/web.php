@@ -173,7 +173,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/quotation', Quotation::class)->name('quotation');
         Route::get('/goods-receive-note', GRN::class)->name('grn');
         Route::get('/expenses', Expenses::class)->name('expenses');
-        Route::get('/income', Income::class)->name('income');
+        Route::get('/day-summary', Income::class)->name('income');
 
         Route::get('/systemsetting', Settings::class)->name('systemsetting');
         Route::get('/reports', Reports::class)->name('reports');
@@ -193,8 +193,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/list-supplier-receipt', ListSupplierReceipt::class)->name('list-supplier-receipt');
         Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
-        Route::get('/day-summary', DaySummary::class)->name('day-summary');
-        Route::get('/day-summary-details/{sessionId}', DaySummaryDetails::class)->name('day-summary-details');
+        Route::get('/cash-deposit', DaySummary::class)->name('day-summary');
+        Route::get('/register-report/{sessionId}', DaySummaryDetails::class)->name('day-summary-details');
         // Route to reopen today's closed POS session (AJAX)
         Route::post('/reopen-pos-session', [StoreBilling::class, 'reopenPOSSession'])->name('reopen-pos-session');
     });

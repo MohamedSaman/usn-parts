@@ -79,12 +79,12 @@
             <div class="d-flex align-items-center">
                 <div class="badge d-flex align-items-center px-3 py-2 rounded-2 shadow-sm"
                     style="background: linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%); color:white; border:1px solid #3b5b0c; cursor: pointer; transition: all 0.2s ease;"
-                    wire:click="openCloseRegisterModal"
+                    wire:click="viewCloseRegisterReport"
                     role="button"
                     onmouseover="this.style.background='linear-gradient(0deg, rgba(40, 70, 5, 1) 0%, rgba(120, 160, 25, 1) 100%)';"
                     onmouseout="this.style.background='linear-gradient(0deg, rgba(59, 91, 12, 1) 0%, rgba(142, 185, 34, 1) 100%)';">
-                    <i class="bi bi-cart-plus me-2"></i>
-                    <span class="fw-semibold">Close</span>
+                    <i class="bi bi-file-earmark-text me-2"></i>
+                    <span class="fw-semibold">View Report</span>
                 </div>
             </div>
         </div>
@@ -824,14 +824,15 @@
     @endif
 
     {{-- Close Register Modal --}}
-    <div wire:ignore.self class="modal fade" id="closeRegisterModal" tabindex="-1" aria-labelledby="closeRegisterModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    @if($showCloseRegisterModal)
+    <div class="modal fade show d-block" id="closeRegisterModal" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" data-bs-backdrop="static">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(135deg, #3b5b0c 0%, #8eb922 100%); color: white;">
                     <h5 class="modal-title fw-bold" id="closeRegisterModalLabel">
                         <i class="bi bi-x-circle me-2"></i>CLOSE REGISTER ({{ date('d/m/Y H:i') }})
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="cancelCloseRegister" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body" id="closeRegisterPrintContent">
@@ -842,8 +843,7 @@
                         </div>
                         <p>103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
                         <p><strong>TEL:</strong> (076) 9085252 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
-                        <h3>CLOSE REGISTER SUMMARY</h3>
-                        <p><strong>Date:</strong> {{ date('d/m/Y') }} | <strong>Time:</strong> {{ date('H:i') }}</p>
+                        
                     </div>
 
                     <p class="text-muted mb-3 no-print">Please review the details below as <strong>paid (total)</strong></p>
@@ -868,23 +868,23 @@
                                 <td class="text-end">Rs.{{ number_format($sessionSummary['pos_bank_transfer'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-warning">
-                                <td class="fw-semibold">Late Payments (Admin) - Total:</td>
+                                <td class="fw-semibold">Admin Payments - Total:</td>
                                 <td class="text-end fw-semibold">Rs.{{ number_format($sessionSummary['total_admin_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Cash:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_cash_payment'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['total_admin_cash_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Cheque:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_cheque_payment'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['total_admin_cheque_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Bank Transfer:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_bank_transfer'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['total_admin_bank_transfer'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-info">
-                                <td class="fw-semibold">Total Cash Amount (POS + Admin Cash):</td>
+                                <td class="fw-semibold">Total Cash Amount (POS + Admin):</td>
                                 <td class="text-end fw-semibold">Rs.{{ number_format($sessionSummary['total_cash_from_sales'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-light">
@@ -942,24 +942,32 @@
 
                     {{-- Print Footer (hidden on screen) --}}
                     <div class="register-print-footer">
-                        <p> Date: {{ date('d/m/Y H:i:s') }}</p>
+                        <p><strong>Date:</strong> {{ date('d/m/Y') }} | <strong>Time:</strong> {{ date('H:i') }}</p>
                     </div>
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeAndRedirect()">
-                        <i class="bi bi-x-circle me-1"></i>Close & Go to Dashboard
+                    <button type="button" 
+                            class="btn btn-secondary" 
+                            wire:click="closeRegisterAndRedirect"
+                            wire:loading.attr="disabled"
+                            wire:loading.class="disabled">
+                        <span wire:loading.remove wire:target="closeRegisterAndRedirect">
+                            <i class="bi bi-x-circle me-1"></i>Close Register
+                        </span>
+                        <span wire:loading wire:target="closeRegisterAndRedirect">
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            Closing Register...
+                        </span>
                     </button>
                     <button type="button" class="btn btn-info" wire:click="downloadCloseRegisterReport">
                         <i class="bi bi-download me-1"></i>Download
-                    </button>
-                    <button type="button" class="btn btn-success" onclick="printCloseRegister()">
-                        <i class="bi bi-printer me-1"></i>Print
                     </button>
                 </div>
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 @push('styles')
@@ -1426,38 +1434,10 @@
 
 @push('scripts')
 <script>
-    // Print Sale Receipt Function (Global scope)
+    // Print Sale Receipt Function
     function printSaleReceipt() {
-        // Remove any existing print classes
         document.body.classList.remove('printing-close-register');
-        // Trigger print
         window.print();
-    }
-
-    // Print Close Register Function (Global scope)
-    function printCloseRegister() {
-        // Add class to body to target specific print styles
-        document.body.classList.add('printing-close-register');
-
-        // Trigger print
-        window.print();
-
-        // Remove class after print dialog closes
-        setTimeout(() => {
-            document.body.classList.remove('printing-close-register');
-        }, 1000);
-    }
-
-    // Close modal and redirect to dashboard (Global scope)
-    function closeAndRedirect() {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('closeRegisterModal'));
-        if (modal) {
-            modal.hide();
-        }
-        // Wait for modal to close, then redirect
-        setTimeout(() => {
-            window.location.href = '{{ route("admin.dashboard") }}';
-        }, 300);
     }
 
     // Auto-close alerts after 5 seconds
@@ -1469,18 +1449,38 @@
                 bsAlert.close();
             }, 5000);
         });
+
+        // Listen for modal show event
+        Livewire.on('showModal', (event) => {
+            const modalId = Array.isArray(event) ? event[0] : event;
+            console.log('Show modal event received:', modalId);
+
+            setTimeout(() => {
+                const modalElement = document.getElementById(modalId);
+                if (modalElement) {
+                    const existingModal = bootstrap.Modal.getInstance(modalElement);
+                    if (existingModal) {
+                        existingModal.dispose();
+                    }
+                    const modal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: false
+                    });
+                    modal.show();
+                }
+            }, 200);
+        });
     });
 
-
-    // Auto-hide alert after 3 seconds
+    // Auto-hide success alert after 3 seconds
     setTimeout(() => {
         const alert = document.getElementById('successAlert');
         if (alert) {
-            // Add Bootstrap fade-out effect
             alert.classList.remove('show');
-            setTimeout(() => alert.remove(), 500); // remove from DOM
+            setTimeout(() => alert.remove(), 500);
         }
     }, 3000);
+
     // Prevent form submission on enter key in search
     document.addEventListener('keydown', function(e) {
         if (e.target.type === 'text' && e.target.getAttribute('wire:model') === 'search') {
@@ -1490,78 +1490,15 @@
         }
     });
 
-    function handlePOSClick() {
-        // Handle POS button click
-        console.log('POS button clicked');
-    }
-    // Listen for modal show event (Livewire 3 syntax)
-    document.addEventListener('livewire:initialized', () => {
-        console.log('Livewire initialized');
-
-        Livewire.on('showModal', (event) => {
-            // Extract modalId from event (it could be array or string)
-            const modalId = Array.isArray(event) ? event[0] : event;
-            console.log('Show modal event received:', modalId);
-
-            const modalElement = document.getElementById(modalId);
-            if (modalElement) {
-                console.log('Modal element found, showing modal');
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            } else {
-                console.error('Modal not found:', modalId);
-            }
-        });
-
-        // Add listener for POS button click
-        Livewire.on('openCloseRegisterModal', () => {
-            console.log('openCloseRegisterModal event received');
-            setTimeout(() => {
-                const modalElement = document.getElementById('closeRegisterModal');
-                if (modalElement) {
-                    console.log('Opening close register modal');
-                    const modal = new bootstrap.Modal(modalElement);
-                    modal.show();
-                } else {
-                    console.error('Close register modal not found');
-                }
-            }, 100);
-        });
-    });
-
-    // Alternative: Watch for Livewire updates and check showCloseRegisterModal
-    document.addEventListener('livewire:init', () => {
-        console.log('Livewire init hook registered');
-
-        Livewire.hook('morph.updated', ({
-            el,
-            component
-        }) => {
-            // Check if showCloseRegisterModal property exists and is true
-            if (component.get && component.get('showCloseRegisterModal') === true) {
-                console.log('showCloseRegisterModal is true, opening modal');
-                setTimeout(() => {
-                    const modalElement = document.getElementById('closeRegisterModal');
-                    if (modalElement && !modalElement.classList.contains('show')) {
-                        const modal = new bootstrap.Modal(modalElement);
-                        modal.show();
-                    }
-                }, 100);
-            }
-        });
-    });
-
     // Handle modal cleanup when hidden
     document.addEventListener('DOMContentLoaded', function() {
         const closeRegisterModal = document.getElementById('closeRegisterModal');
         if (closeRegisterModal) {
             closeRegisterModal.addEventListener('hidden.bs.modal', function() {
-                // Remove modal backdrop if it exists
                 const backdrop = document.querySelector('.modal-backdrop');
                 if (backdrop) {
                     backdrop.remove();
                 }
-                // Remove any remaining modal-open class
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
                 document.body.style.paddingRight = '';
@@ -1570,7 +1507,6 @@
 
         // Watch for sale modal changes
         Livewire.on('saleSaved', function() {
-            // Ensure backdrop is cleaned up when sale modal is closed
             setTimeout(() => {
                 const backdrop = document.querySelector('.modal-backdrop');
                 if (backdrop) {
