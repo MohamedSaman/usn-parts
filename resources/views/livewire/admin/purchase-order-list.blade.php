@@ -301,7 +301,7 @@
                         </thead>
                         <tbody>
                             @forelse($orderItems as $index => $item)
-                            <tr>
+                            <tr wire:key="order-item-{{ $item['product_id'] }}-{{ $index }}">
                                 <td class="text-center">{{ $index + 1 }}</td>
                                 <td>
                                     <span class="badge bg-secondary">{{ $item['code'] }}</span>
@@ -312,18 +312,18 @@
                                 <td>
                                     <input type="number"
                                         class="form-control form-control-sm"
+                                        wire:model.live.debounce.300ms="orderItems.{{ $index }}.quantity"
                                         wire:change="updateOrderItemQuantity({{ $index }}, $event.target.value)"
-                                        value="{{ $item['quantity'] }}"
                                         min="1"
                                         style="width: 100%;">
                                 </td>
                                 <td>
                                     <input type="number"
                                         class="form-control form-control-sm"
+                                        wire:model.live.debounce.300ms="orderItems.{{ $index }}.supplier_price"
                                         wire:change="updateOrderItemPrice({{ $index }}, $event.target.value)"
-                                        value="{{ $item['supplier_price'] }}"
                                         min="0"
-                                        step="0"
+                                        step="0.01"
                                         style="width: 100%;">
                                 </td>
                                 <td class="text-end">
@@ -732,7 +732,7 @@
                     </thead>
                     <tbody>
                         @foreach($editOrderItems as $index => $item)
-                        <tr>
+                        <tr wire:key="edit-item-{{ $item['product_id'] }}-{{ $index }}">
                             <td class="text-center">{{ $index + 1 }}</td>
                             <td>
                                 <span class="badge bg-secondary">{{ $item['code'] ?? 'N/A' }}</span>
@@ -744,14 +744,14 @@
                                 <input type="number"
                                     class="form-control form-control-sm"
                                     min="1"
-                                    wire:model.live="editOrderItems.{{ $index }}.quantity"
+                                    wire:model.live.debounce.300ms="editOrderItems.{{ $index }}.quantity"
                                     wire:change="updateEditItemTotal({{ $index }})">
                             </td>
                             <td>
                                 <input type="number"
                                     class="form-control form-control-sm"
-                                    step="0"
-                                    wire:model.live="editOrderItems.{{ $index }}.unit_price"
+                                    step="0.01"
+                                    wire:model.live.debounce.300ms="editOrderItems.{{ $index }}.unit_price"
                                     wire:change="updateEditItemTotal({{ $index }})">
                             </td>
                             <td class="text-end">
