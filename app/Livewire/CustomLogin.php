@@ -4,7 +4,9 @@ namespace App\Livewire;
 
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.guest')]
 class CustomLogin extends Component
 {
     public $email = '';
@@ -37,6 +39,15 @@ class CustomLogin extends Component
             }
         }
 
-        return redirect()->route('login');
+        // When authentication fails, add an error to Livewire's error bag
+        $this->addError('email', 'These credentials do not match our records.');
+        // Clear the password field for security and UX
+        $this->password = '';
     }
+
+    /**
+     * Clear validation/error for a property when it is updated.
+     * This helps remove the red border / shaking animation as soon as user starts typing.
+     */
+
 }
