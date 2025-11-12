@@ -104,6 +104,39 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         return view('profile.show');
     })->name('profile.show');
 
+    // Generic dashboard route: redirect authenticated users to their role-specific dashboard
+    Route::get('/dashboard', function () {
+        $user = Auth::user();
+
+        // If for some reason there's no authenticated user, send them to the welcome page
+        if (!$user) {
+            return redirect()->route('welcome');
+        }
+
+        // If the User model uses a role helper (eg. spatie/laravel-permission)
+        // prefer calling hasRole() on the model. Otherwise fall back to
+        // checking a string `role` attribute.
+        if (method_exists($user, 'hasRole')) {
+            if ($user->hasRole('admin')) {
+                return redirect()->route('admin.dashboard');
+            }
+            if ($user->hasRole('staff')) {
+                return redirect()->route('staff.dashboard');
+            }
+        } else {
+            $role = strtolower($user->role ?? '');
+            if ($role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+            if ($role === 'staff') {
+                return redirect()->route('staff.dashboard');
+            }
+        }
+
+        // Fallback: redirect to a safe page (profile) instead of looping back to dashboard
+        return redirect()->route('profile.show');
+    })->name('dashboard');
+
     // Settings route - accessible to all authenticated users
 
     // API route for products (client-side caching)
