@@ -1074,8 +1074,8 @@
     </li>
     {{--<li>
         <a class="nav-link" href="{{ route('admin.store-billing') }}" target="_blank">
-            <i class="bi bi-cash"></i> <span>POS</span>
-        </a>
+    <i class="bi bi-cash"></i> <span>POS</span>
+    </a>
     </li>--}}
     <li>
         <a class="nav-link" href="{{ route('admin.day-summary') }}">
@@ -1125,6 +1125,15 @@
                 <i class="bi bi-plus-circle"></i>
                 <span class="fw-semibold">POS</span>
             </div>
+        </div>
+
+        <!-- Reopen POS Button (visible only if today's POS session is closed) -->
+        <div id="reopenPosBtnContainer" style="display:none;">
+            <button type="button" class=" rounded-pill shadow-sm border border-opacity-25 d-flex align-items-center gap-2 me-2"
+                style="font-size: 0.9rem; background-color:white; color:red; cursor: pointer;"
+                onclick="showReopenPOSModal()">
+                <i class="bi bi-unlock"></i>
+            </button>
         </div>
 
 
@@ -1248,6 +1257,27 @@
     <main class="main-content">
         {{ $slot }}
     </main>
+
+    <!-- Reopen POS Confirmation Modal -->
+    <div class="modal fade" id="reopenPOSModal" tabindex="-1" aria-labelledby="reopenPOSModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="reopenPOSModalLabel">
+                        <i class="bi bi-unlock me-2"></i> Reopen POS Session
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to change today's POS session status from <strong>Closed</strong> to <strong>Open</strong>?<br>This will allow new POS sales for today.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" onclick="reopenPOSSession()">Yes, Reopen POS</button>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- Bootstrap JS Bundle with Popper -->
@@ -1566,9 +1596,9 @@
             if (modal) modal.hide();
         });
 
-        // Handle POS button click - check if closed before redirecting
-        function handlePOSClick() {
-            // First check if POS session is already closed for today
+
+        // Check POS session status and update UI (show/hide Reopen POS button)
+        function checkPOSSessionStatus() {
             fetch("{{ route('admin.check-pos-session') }}", {
                     method: 'GET',
                     headers: {
@@ -1578,8 +1608,36 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.closed) {
-                        // Session is already closed, show alert and don't redirect
+                    // Show Reopen POS button if session is closed
+                    const reopenBtnContainer = document.getElementById('reopenPosBtnContainer');
+                    if (data.closed === true) {
+                        if (reopenBtnContainer) reopenBtnContainer.style.display = '';
+                    } else {
+                        if (reopenBtnContainer) reopenBtnContainer.style.display = 'none';
+                    }
+                })
+                .catch(() => {
+                    // On error, hide button
+                    const reopenBtnContainer = document.getElementById('reopenPosBtnContainer');
+                    if (reopenBtnContainer) reopenBtnContainer.style.display = 'none';
+                });
+        }
+
+        // Call on page load
+        document.addEventListener('DOMContentLoaded', checkPOSSessionStatus);
+
+        // Handle POS button click - check if closed before redirecting
+        function handlePOSClick() {
+            fetch("{{ route('admin.check-pos-session') }}", {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.closed === true) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'Register Already Closed',
@@ -1589,18 +1647,51 @@
                         });
                         return;
                     }
-
-                    // Session is not closed, redirect to store billing
                     window.open("{{ route('admin.store-billing') }}", '_blank');
                 })
-                .catch(error => {
-                    console.error('Error checking POS session:', error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to check POS session status. Please try again.',
-                        confirmButtonColor: '#3b5b0c'
-                    });
+                .catch(() => {
+                    window.open("{{ route('admin.store-billing') }}", '_blank');
+                });
+        }
+
+        // Show Reopen POS modal
+        function showReopenPOSModal() {
+            const modal = new bootstrap.Modal(document.getElementById('reopenPOSModal'));
+            modal.show();
+        }
+
+        // Handle Reopen POS confirmation
+        function reopenPOSSession() {
+            fetch("{{ route('admin.reopen-pos-session') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Hide modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('reopenPOSModal'));
+                        if (modal) modal.hide();
+                        // Show success and reload UI
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'POS Reopened!',
+                            text: data.message || 'POS session reopened successfully.',
+                            confirmButtonColor: '#3b5b0c'
+                        }).then(() => {
+                            checkPOSSessionStatus();
+                        });
+                    } else {
+                        Swal.fire('Error!', data.message || 'Failed to reopen POS session.', 'error');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Error!', 'Failed to reopen POS session.', 'error');
                 });
         }
 

@@ -857,39 +857,47 @@
                             </tr>
                             <tr>
                                 <td>Cash Sales (POS):</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['cash_sales'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['pos_cash_sales'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td>Cheque Payment (POS):</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['cheque_payment'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['pos_cheque_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td>Bank / Online Transfer (POS):</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['bank_transfer'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['pos_bank_transfer'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-warning">
-                                <td class="fw-semibold">Late Payments (BULK) - Total:</td>
-                                <td class="text-end fw-semibold">Rs.{{ number_format($sessionSummary['late_payment_bulk'] ?? 0, 2) }}</td>
+                                <td class="fw-semibold">Late Payments (Admin) - Total:</td>
+                                <td class="text-end fw-semibold">Rs.{{ number_format($sessionSummary['total_admin_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Cash:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['late_payment_cash'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_cash_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Cheque:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['late_payment_cheque'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_cheque_payment'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td class="ps-4">└ Bank Transfer:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['late_payment_bank_transfer'] ?? 0, 2) }}</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['admin_bank_transfer'] ?? 0, 2) }}</td>
                             </tr>
-                            <tr>
-                                <td>Credit Card Payment:</td>
-                                <td class="text-end">Rs.{{ number_format($sessionSummary['credit_card_payment'] ?? 0, 2) }}</td>
+                            <tr class="table-info">
+                                <td class="fw-semibold">Total Cash Amount (POS + Admin Cash):</td>
+                                <td class="text-end fw-semibold">Rs.{{ number_format($sessionSummary['total_cash_from_sales'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-light">
-                                <td class="fw-semibold">Total Sales:</td>
-                                <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['total_sales'] ?? 0, 2) }}</td>
+                                <td class="fw-semibold">Total POS Sales:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['total_pos_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-semibold">Total Admin Sales:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['total_admin_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td class="fw-semibold">Total Cash Payment Today:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['total_cash_payment_today'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
                                 <td>Expenses:</td>
@@ -904,7 +912,7 @@
                                 <td class="text-end">Rs.{{ number_format($sessionSummary['cash_deposit_bank'] ?? 0, 2) }}</td>
                             </tr>
                             <tr class="table-success">
-                                <td class="fw-bold">Total Cash:</td>
+                                <td class="fw-bold">Total Cash in Hand:</td>
                                 <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['expected_cash'] ?? 0, 2) }}</td>
                             </tr>
                         </tbody>
@@ -928,7 +936,7 @@
                         <strong>Cash Difference:</strong> Rs.{{ number_format(abs($difference), 2) }} ({{ $difference > 0 ? 'Excess' : 'Short' }})
                     </div>
                     @else
-                    
+
                     @endif
                     @endif
 

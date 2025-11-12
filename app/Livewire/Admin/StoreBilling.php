@@ -94,6 +94,70 @@ class StoreBilling extends Component
 
     public function mount()
     {
+        // Check for yesterday's open session - auto-close it
+        $yesterdaySession = POSSession::where('user_id', Auth::id())
+            ->whereDate('session_date', now()->subDay()->toDateString())
+            ->where('status', 'open')
+            ->first();
+
+        if ($yesterdaySession) {
+            // Auto-close yesterday's session
+            try {
+                DB::beginTransaction();
+
+                // Calculate yesterday's summary
+                $yesterday = now()->subDay()->toDateString();
+
+                // Get yesterday's POS sales
+                $yesterdaySales = Sale::whereDate('created_at', $yesterday)
+                    ->where('sale_type', 'pos')
+                    ->pluck('id');
+
+                $cashPayments = Payment::whereIn('sale_id', $yesterdaySales)
+                    ->where('payment_method', 'cash')
+                    ->sum('amount');
+
+                $totalSales = Sale::whereDate('created_at', $yesterday)
+                    ->where('sale_type', 'pos')
+                    ->sum('total_amount');
+
+                $expenses = DB::table('expenses')
+                    ->whereDate('date', $yesterday)
+                    ->sum('amount');
+
+                $refunds = DB::table('returns_products')
+                    ->whereDate('created_at', $yesterday)
+                    ->sum('total_amount');
+
+                $deposits = DB::table('deposits')
+                    ->whereDate('date', $yesterday)
+                    ->sum('amount');
+
+                // Calculate expected closing cash
+                $expectedClosingCash = $yesterdaySession->opening_cash + $cashPayments - $expenses - $refunds - $deposits;
+
+                // Close the session
+                $yesterdaySession->update([
+                    'closing_cash' => $expectedClosingCash,
+                    'total_sales' => $totalSales,
+                    'cash_sales' => $cashPayments,
+                    'expenses' => $expenses,
+                    'refunds' => $refunds,
+                    'cash_deposit_bank' => $deposits,
+                    'status' => 'closed',
+                    'closed_at' => now(),
+                    'notes' => 'Auto-closed at midnight',
+                ]);
+
+                DB::commit();
+
+                Log::info("Auto-closed yesterday's POS session for user: " . Auth::id());
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error("Failed to auto-close yesterday's session: " . $e->getMessage());
+            }
+        }
+
         // Check for today's closed session - if exists, redirect to dashboard
         $todayClosedSession = POSSession::where('user_id', Auth::id())
             ->whereDate('session_date', now()->toDateString())
@@ -112,7 +176,11 @@ class StoreBilling extends Component
         // If no session exists, show opening cash modal
         if (!$this->currentSession || $this->currentSession->isClosed()) {
             // Get cash in hand from cash_in_hands table as default
-            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+            // Check both 'cash in hand' and 'cash_amount' keys
+            $cashInHandRecord = DB::table('cash_in_hands')
+                ->whereIn('key', ['cash in hand', 'cash_amount'])
+                ->orderBy('updated_at', 'desc')
+                ->first();
             $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->value : 0;
 
             // Show opening cash modal
@@ -629,6 +697,13 @@ class StoreBilling extends Component
                 $this->js("Swal.fire('error', 'Please add at least one cheque.', 'error')");
                 return;
             }
+
+            // Validate that total cheque amount does not exceed grand total
+            $totalChequeAmount = collect($this->cheques)->sum('amount');
+            if ($totalChequeAmount > $this->grandTotal) {
+                $this->js("Swal.fire('error', 'Total cheque amount (Rs. " . number_format($totalChequeAmount, 2) . ") cannot be greater than the grand total (Rs. " . number_format($this->grandTotal, 2) . ").', 'error')");
+                return;
+            }
         } elseif ($this->paymentMethod === 'bank_transfer') {
             if ($this->bankTransferAmount <= 0) {
                 $this->js("Swal.fire('error', 'Please enter bank transfer amount.', 'error')");
@@ -932,8 +1007,20 @@ class StoreBilling extends Component
         // Refresh session data
         $this->currentSession = POSSession::getTodaySession(Auth::id());
 
-        // If no session exists or session is closed, show alert
-        if (!$this->currentSession || $this->currentSession->isClosed()) {
+        // If no session exists, show info message
+        if (!$this->currentSession) {
+            $this->js("Swal.fire({
+                icon: 'info',
+                title: 'No Active Session',
+                text: 'Please open a POS session first by accessing the POS page.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3b5b0c'
+            })");
+            return;
+        }
+
+        // If session is already closed, show alert
+        if ($this->currentSession->isClosed()) {
             $this->js("Swal.fire({
                 icon: 'warning',
                 title: 'Register Already Closed',
@@ -946,66 +1033,78 @@ class StoreBilling extends Component
 
         $today = now()->toDateString();
 
-        // Get cash in hand from cash_in_hands table
-        $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
-        $cashInHand = $cashInHandRecord ? $cashInHandRecord->value : 0;
+        // 1. Cash in Hand - Get Opening Amount from session
+        $sessionOpeningCash = $this->currentSession->opening_cash;
 
-        // Get today's POS sales (sale_type = 'pos')
+        // Get today's POS sales IDs (sale_type = 'pos')
         $posSalesToday = Sale::whereDate('created_at', $today)
             ->where('sale_type', 'pos')
             ->pluck('id');
 
-        // Get cash payments from POS sales today
-        $cashPayments = Payment::whereIn('sale_id', $posSalesToday)
-            ->where('payment_method', 'cash')
-            ->whereDate('payment_date', $today)
-            ->sum('amount');
-
-        // Get late payments (bulk) - payments made today for old sales (due payments)
-        // Get all late payment IDs first
-        $latePaymentIds = Payment::whereNotIn('sale_id', $posSalesToday)
-            ->whereDate('payment_date', $today)
-            ->where('is_completed', true)
+        // Get today's Admin sales IDs (sale_type = 'admin')
+        $adminSalesToday = Sale::whereDate('created_at', $today)
+            ->where('sale_type', 'admin')
             ->pluck('id');
 
-        // Get late payment breakdown by payment method
-        $latePaymentCash = Payment::whereIn('id', $latePaymentIds)
+        // 2. POS Cash Sale - Get from payment table where sale_type = 'pos' and method = 'cash'
+        $posCashPayments = Payment::whereIn('sale_id', $posSalesToday)
             ->where('payment_method', 'cash')
+            ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        $latePaymentCheque = Payment::whereIn('id', $latePaymentIds)
-            ->where('payment_method', 'cheque')
-            ->sum('amount');
-
-        $latePaymentBankTransfer = Payment::whereIn('id', $latePaymentIds)
-            ->where('payment_method', 'bank_transfer')
-            ->sum('amount');
-
-        $latePaymentsBulk = $latePaymentCash + $latePaymentCheque + $latePaymentBankTransfer;
-
-        // Get cheque payments from POS sales today
-        $chequePayments = Payment::whereIn('sale_id', $posSalesToday)
+        // 3. POS Cheque Payment - Get from payment table where sale_type = 'pos' and method = 'cheque'
+        $posChequePayments = Payment::whereIn('sale_id', $posSalesToday)
             ->where('payment_method', 'cheque')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // Get credit card payments from POS sales today
-        $cardPayments = Payment::whereIn('sale_id', $posSalesToday)
-            ->where('payment_method', 'card')
-            ->whereDate('payment_date', $today)
-            ->sum('amount');
-
-        // Get bank transfer payments from POS sales today
-        $bankTransfers = Payment::whereIn('sale_id', $posSalesToday)
+        // POS Bank Transfer Payment - Get from payment table where sale_type = 'pos' and method = 'bank_transfer'
+        $posBankTransfers = Payment::whereIn('sale_id', $posSalesToday)
             ->where('payment_method', 'bank_transfer')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        // Get total sales today
-        $totalSalesToday = Sale::whereDate('created_at', $today)
+        // 4. Late Payments (Admin Sales) - Get from payment table where sale_type = 'admin'
+        // 4.1 Admin Cash Payments
+        $adminCashPayments = Payment::whereIn('sale_id', $adminSalesToday)
+            ->where('payment_method', 'cash')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // 4.2 Admin Cheque Payments
+        $adminChequePayments = Payment::whereIn('sale_id', $adminSalesToday)
+            ->where('payment_method', 'cheque')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // 4.3 Admin Bank Transfer Payments
+        $adminBankTransfers = Payment::whereIn('sale_id', $adminSalesToday)
+            ->where('payment_method', 'bank_transfer')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        // Calculate total late payments (admin)
+        $totalAdminPayments = $adminCashPayments + $adminChequePayments + $adminBankTransfers;
+
+        // 5. Total Cash Amount (POS Cash + Admin Cash)
+        $totalCashFromSales = $posCashPayments + $adminCashPayments;
+
+        // 6. Total POS Sales - Get from sales table where sale_type = 'pos'
+        $totalPosSales = Sale::whereDate('created_at', $today)
             ->where('sale_type', 'pos')
             ->sum('total_amount');
 
+        // 7. Total Admin Sales - Get from sales table where sale_type = 'admin'
+        $totalAdminSales = Sale::whereDate('created_at', $today)
+            ->where('sale_type', 'admin')
+            ->sum('total_amount');
+
+        // 8. Total Cash from Payment Table (All cash payments for the day)
+        $totalCashPaymentsToday = Payment::whereDate('payment_date', $today)
+            ->where('payment_method', 'cash')
+            ->sum('amount');
+
+        // 9. Expenses, Refunds, and Cash Deposit Bank
         // Get refunds today (returns)
         $refundsToday = DB::table('returns_products')
             ->whereDate('created_at', $today)
@@ -1016,44 +1115,54 @@ class StoreBilling extends Component
             ->whereDate('date', $today)
             ->sum('amount');
 
-        // Cash deposit to bank (if any)
-        $cashDepositBank = 0; // You can add this feature later
+        // Get cash deposits to bank from deposit table
+        $cashDepositBank = DB::table('deposits')
+            ->whereDate('date', $today)
+            ->sum('amount');
 
-        // Calculate total cash (include late cash payments in cash in hand)
-        $totalCash = $cashInHand + $cashPayments + $latePaymentCash - $refundsToday - $expensesToday - $cashDepositBank;
+        // Calculate Total Cash in Hand
+        $totalCashInHand = $sessionOpeningCash + $totalCashPaymentsToday - $refundsToday - $expensesToday - $cashDepositBank;
 
-        // Update session data (don't update opening_cash, it should remain the same as when session was opened)
+        // Update session data
         $this->currentSession->update([
-            'total_sales' => $totalSalesToday,
-            'cash_sales' => $cashPayments,
-            'late_payment_bulk' => $latePaymentsBulk,
-            'cheque_payment' => $chequePayments,
-            'credit_card_payment' => $cardPayments,
-            'bank_transfer' => $bankTransfers,
+            'total_sales' => $totalPosSales,
+            'cash_sales' => $posCashPayments,
+            'late_payment_bulk' => $totalAdminPayments,
+            'cheque_payment' => $posChequePayments,
+            'bank_transfer' => $posBankTransfers,
             'refunds' => $refundsToday,
             'expenses' => $expensesToday,
             'cash_deposit_bank' => $cashDepositBank,
         ]);
 
-        // Get the original opening cash from session (set when session was created)
-        $sessionOpeningCash = $this->currentSession->opening_cash;
-
-        // Prepare summary data with late payment breakdown
+        // Prepare summary data
         $this->sessionSummary = [
             'opening_cash' => $sessionOpeningCash,
-            'cash_sales' => $cashPayments,
-            'late_payment_bulk' => $latePaymentsBulk,
-            'late_payment_cash' => $latePaymentCash,
-            'late_payment_cheque' => $latePaymentCheque,
-            'late_payment_bank_transfer' => $latePaymentBankTransfer,
-            'total_sales' => $totalSalesToday,
-            'cheque_payment' => $chequePayments,
-            'credit_card_payment' => $cardPayments,
-            'bank_transfer' => $bankTransfers,
+
+            // POS Sales Breakdown
+            'pos_cash_sales' => $posCashPayments,
+            'pos_cheque_payment' => $posChequePayments,
+            'pos_bank_transfer' => $posBankTransfers,
+            'total_pos_sales' => $totalPosSales,
+
+            // Admin Sales (Late Payments) Breakdown
+            'admin_cash_payment' => $adminCashPayments,
+            'admin_cheque_payment' => $adminChequePayments,
+            'admin_bank_transfer' => $adminBankTransfers,
+            'total_admin_payment' => $totalAdminPayments,
+            'total_admin_sales' => $totalAdminSales,
+
+            // Combined Totals
+            'total_cash_from_sales' => $totalCashFromSales, // POS Cash + Admin Cash
+            'total_cash_payment_today' => $totalCashPaymentsToday, // All cash payments
+
+            // Deductions
             'refunds' => $refundsToday,
             'expenses' => $expensesToday,
             'cash_deposit_bank' => $cashDepositBank,
-            'expected_cash' => $sessionOpeningCash + $cashPayments + $latePaymentCash - $refundsToday - $expensesToday - $cashDepositBank,
+
+            // Final Cash in Hand
+            'expected_cash' => $totalCashInHand,
         ];
 
         $this->closeRegisterCash = $this->sessionSummary['expected_cash'];
@@ -1063,25 +1172,30 @@ class StoreBilling extends Component
             DB::beginTransaction();
 
             // Close the session with the expected closing cash amount
-            $this->currentSession->closeSession($this->closeRegisterCash, 'Auto-closed when POS button clicked');
+            $this->currentSession->closeSession($this->closeRegisterCash, 'Auto-closed when close register clicked');
 
-            // Update cash_in_hands table with closing cash for next day's opening
-            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
+            // Update both 'cash in hand' and 'cash_amount' keys in cash_in_hands table
+            // for next day's opening balance
+            $keysToUpdate = ['cash in hand', 'cash_amount'];
 
-            if ($cashInHandRecord) {
-                DB::table('cash_in_hands')
-                    ->where('key', 'cash_amount')
-                    ->update([
+            foreach ($keysToUpdate as $key) {
+                $cashInHandRecord = DB::table('cash_in_hands')->where('key', $key)->first();
+
+                if ($cashInHandRecord) {
+                    DB::table('cash_in_hands')
+                        ->where('key', $key)
+                        ->update([
+                            'value' => $this->closeRegisterCash,
+                            'updated_at' => now()
+                        ]);
+                } else {
+                    DB::table('cash_in_hands')->insert([
+                        'key' => $key,
                         'value' => $this->closeRegisterCash,
+                        'created_at' => now(),
                         'updated_at' => now()
                     ]);
-            } else {
-                DB::table('cash_in_hands')->insert([
-                    'key' => 'cash_amount',
-                    'value' => $this->closeRegisterCash,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                }
             }
 
             DB::commit();
@@ -1118,6 +1232,41 @@ class StoreBilling extends Component
     {
         // Redirect to dashboard
         return redirect()->route('admin.dashboard');
+    }
+
+    /**
+     * Reopen today's closed POS session (for admin)
+     * Called via AJAX from header modal
+     */
+    public function reopenPOSSession()
+    {
+        $today = now()->toDateString();
+        $userId = Auth::id();
+        $session = POSSession::where('user_id', $userId)
+            ->whereDate('session_date', $today)
+            ->where('status', 'closed')
+            ->first();
+
+        if (!$session) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No closed POS session found for today.'
+            ], 404);
+        }
+
+        try {
+            $session->status = 'open';
+            $session->save();
+            return response()->json([
+                'success' => true,
+                'message' => 'POS session reopened successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to reopen POS session: ' . $e->getMessage()
+            ], 500);
+        }
     }
     public function render()
     {

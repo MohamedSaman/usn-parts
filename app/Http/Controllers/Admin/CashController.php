@@ -55,9 +55,11 @@ class CashController extends Controller
         // Check if there's an open session for today
         $openSession = POSSession::getTodaySession(Auth::id());
 
+        // Only return closed = true if there's actually a closed session
+        // If no session exists at all, return closed = false to allow access
         return response()->json([
             'closed' => $todayClosedSession ? true : false,
-            'hasSession' => $openSession ? true : false,
+            'hasSession' => ($openSession || $todayClosedSession) ? true : false,
             'message' => $todayClosedSession ? 'POS register is already closed for today' : 'POS register is available'
         ]);
     }
