@@ -158,22 +158,11 @@ class StoreBilling extends Component
             }
         }
 
-        // Check for today's closed session - if exists, redirect to dashboard
-        $todayClosedSession = POSSession::where('user_id', Auth::id())
-            ->whereDate('session_date', now()->toDateString())
-            ->where('status', 'closed')
-            ->first();
-
-        if ($todayClosedSession) {
-            // Session is already closed today, redirect to dashboard
-            return redirect()->route('admin.dashboard')
-                ->with('error', 'POS register is already closed for today. Cannot access store billing.');
-        }
-
         // Check for open session
-        $this->currentSession = POSSession::getTodaySession(Auth::id());
-
-        // If no session exists, show opening cash modal
+        $this->currentSession = POSSession::getTodaySession(Auth::id());        // If no session exists OR session is closed, show opening cash modal
+        // This ensures modal shows on:
+        // 1. First time opening POS each day (no session exists)
+        // 2. After closing and reopening POS (session exists but is closed)
         if (!$this->currentSession || $this->currentSession->isClosed()) {
             // Get cash in hand from cash_in_hands table as default
             // Check both 'cash in hand' and 'cash_amount' keys
@@ -947,7 +936,7 @@ class StoreBilling extends Component
     }
 
     /**
-     * Submit Opening Cash and Create POS Session
+     * Submit Opening Cash and Create/Reopen POS Session
      */
     public function submitOpeningCash()
     {
@@ -958,8 +947,27 @@ class StoreBilling extends Component
         try {
             DB::beginTransaction();
 
-            // Create new POS session with opening cash
-            $this->currentSession = POSSession::openSession(Auth::id(), $this->openingCashAmount);
+            // Check if a closed session exists for today
+            $existingSession = POSSession::where('user_id', Auth::id())
+                ->whereDate('session_date', now()->toDateString())
+                ->where('status', 'closed')
+                ->first();
+
+            if ($existingSession) {
+                // Reopen existing closed session with new opening cash
+                $existingSession->update([
+                    'status' => 'open',
+                    'opening_cash' => $this->openingCashAmount,
+                    'closed_at' => null,
+                    'notes' => ($existingSession->notes ? $existingSession->notes . ' | ' : '') . 'Reopened with opening cash: Rs. ' . number_format($this->openingCashAmount, 2)
+                ]);
+                $this->currentSession = $existingSession;
+                $message = 'POS Session Reopened!';
+            } else {
+                // Create new POS session with opening cash
+                $this->currentSession = POSSession::openSession(Auth::id(), $this->openingCashAmount);
+                $message = 'POS Session Started!';
+            }
 
             // Update cash_in_hands table with opening cash
             $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
@@ -987,14 +995,14 @@ class StoreBilling extends Component
 
             $this->js("Swal.fire({
                 icon: 'success',
-                title: 'POS Session Started!',
+                title: '$message',
                 text: 'Opening cash: Rs. " . number_format($this->openingCashAmount, 2) . "',
                 timer: 2000,
                 showConfirmButton: false
             })");
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Failed to open POS session: ' . $e->getMessage());
+            Log::error('Failed to open/reopen POS session: ' . $e->getMessage());
             $this->js("Swal.fire('Error!', 'Failed to start POS session: " . addslashes($e->getMessage()) . "', 'error')");
         }
     }
@@ -1222,87 +1230,86 @@ class StoreBilling extends Component
      * Close Register and Redirect to Dashboard
      * This actually closes the POS session when user clicks "Close & Go to Dashboard"
      */
-   public function closeRegisterAndRedirect()
-{
-    try {
-        DB::beginTransaction();
+    public function closeRegisterAndRedirect()
+    {
+        try {
+            DB::beginTransaction();
 
-        // Refresh session data
-        $this->currentSession = POSSession::where('user_id', Auth::id())
-            ->whereDate('session_date', now()->toDateString())
-            ->where('status', 'open')
-            ->first();
+            // Refresh session data
+            $this->currentSession = POSSession::where('user_id', Auth::id())
+                ->whereDate('session_date', now()->toDateString())
+                ->where('status', 'open')
+                ->first();
 
-        if (!$this->currentSession) {
-            DB::rollBack();
-            
-            session()->flash('error', 'No active POS session found.');
-            
-            return redirect()->route('admin.dashboard');
-        }
+            if (!$this->currentSession) {
+                DB::rollBack();
 
-        // Get the expected closing cash from sessionSummary
-        $expectedClosingCash = $this->sessionSummary['expected_cash'] ?? $this->closeRegisterCash;
+                session()->flash('error', 'No active POS session found.');
 
-        // Close the session
-        $this->currentSession->update([
-            'closing_cash' => $expectedClosingCash,
-            'total_sales' => $this->sessionSummary['total_pos_sales'] ?? 0,
-            'cash_sales' => $this->sessionSummary['pos_cash_sales'] ?? 0,
-            'late_payment_bulk' => $this->sessionSummary['total_admin_payment'] ?? 0,
-            'cheque_payment' => $this->sessionSummary['pos_cheque_payment'] ?? 0,
-            'bank_transfer' => $this->sessionSummary['pos_bank_transfer'] ?? 0,
-            'refunds' => $this->sessionSummary['refunds'] ?? 0,
-            'expenses' => $this->sessionSummary['expenses'] ?? 0,
-            'cash_deposit_bank' => $this->sessionSummary['cash_deposit_bank'] ?? 0,
-            'status' => 'closed',
-            'closed_at' => now(),
-            'notes' => $this->closeRegisterNotes ?? 'Closed from close register modal',
-        ]);
+                return redirect()->route('admin.dashboard');
+            }
 
-        // Update both 'cash in hand' and 'cash_amount' keys in cash_in_hands table
-        $keysToUpdate = ['cash in hand', 'cash_amount'];
+            // Get the expected closing cash from sessionSummary
+            $expectedClosingCash = $this->sessionSummary['expected_cash'] ?? $this->closeRegisterCash;
 
-        foreach ($keysToUpdate as $key) {
-            $cashInHandRecord = DB::table('cash_in_hands')->where('key', $key)->first();
+            // Close the session
+            $this->currentSession->update([
+                'closing_cash' => $expectedClosingCash,
+                'total_sales' => $this->sessionSummary['total_pos_sales'] ?? 0,
+                'cash_sales' => $this->sessionSummary['pos_cash_sales'] ?? 0,
+                'late_payment_bulk' => $this->sessionSummary['total_admin_payment'] ?? 0,
+                'cheque_payment' => $this->sessionSummary['pos_cheque_payment'] ?? 0,
+                'bank_transfer' => $this->sessionSummary['pos_bank_transfer'] ?? 0,
+                'refunds' => $this->sessionSummary['refunds'] ?? 0,
+                'expenses' => $this->sessionSummary['expenses'] ?? 0,
+                'cash_deposit_bank' => $this->sessionSummary['cash_deposit_bank'] ?? 0,
+                'status' => 'closed',
+                'closed_at' => now(),
+                'notes' => $this->closeRegisterNotes ?? 'Closed from close register modal',
+            ]);
 
-            if ($cashInHandRecord) {
-                DB::table('cash_in_hands')
-                    ->where('key', $key)
-                    ->update([
+            // Update both 'cash in hand' and 'cash_amount' keys in cash_in_hands table
+            $keysToUpdate = ['cash in hand', 'cash_amount'];
+
+            foreach ($keysToUpdate as $key) {
+                $cashInHandRecord = DB::table('cash_in_hands')->where('key', $key)->first();
+
+                if ($cashInHandRecord) {
+                    DB::table('cash_in_hands')
+                        ->where('key', $key)
+                        ->update([
+                            'value' => $expectedClosingCash,
+                            'updated_at' => now()
+                        ]);
+                } else {
+                    DB::table('cash_in_hands')->insert([
+                        'key' => $key,
                         'value' => $expectedClosingCash,
+                        'created_at' => now(),
                         'updated_at' => now()
                     ]);
-            } else {
-                DB::table('cash_in_hands')->insert([
-                    'key' => $key,
-                    'value' => $expectedClosingCash,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                }
             }
+
+            DB::commit();
+
+            // Close modal
+            $this->showCloseRegisterModal = false;
+
+            // Flash success message
+            session()->flash('success', 'POS register closed successfully! Closing cash: Rs. ' . number_format($expectedClosingCash, 2));
+
+            // Redirect to dashboard
+            return redirect()->route('admin.dashboard');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to close POS session: ' . $e->getMessage());
+
+            session()->flash('error', 'Failed to close register: ' . $e->getMessage());
+
+            return redirect()->route('admin.dashboard');
         }
-
-        DB::commit();
-
-        // Close modal
-        $this->showCloseRegisterModal = false;
-
-        // Flash success message
-        session()->flash('success', 'POS register closed successfully! Closing cash: Rs. ' . number_format($expectedClosingCash, 2));
-
-        // Redirect to dashboard
-        return redirect()->route('admin.dashboard');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Failed to close POS session: ' . $e->getMessage());
-
-        session()->flash('error', 'Failed to close register: ' . $e->getMessage());
-        
-        return redirect()->route('admin.dashboard');
     }
-}
 
     /**
      * Reopen today's closed POS session (for admin)
