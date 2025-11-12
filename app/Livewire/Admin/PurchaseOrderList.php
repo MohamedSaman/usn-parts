@@ -750,7 +750,7 @@ class PurchaseOrderList extends Component
 
             foreach ($this->grnItems as $item) {
                 $productId = $item['product_id'];
-                $receivedQty = $item['received_qty'] ?? 0;
+                $receivedQty = $item['received_quantity'] ?? 0;
                 $status = strtolower($item['status'] ?? '');
                 $isNewProduct = $item['is_new'] ?? false;
 
@@ -842,7 +842,8 @@ class PurchaseOrderList extends Component
                     // Update existing order item
                     $orderItem = PurchaseOrderItem::find($item['id']);
                     if ($orderItem) {
-                        $orderItem->quantity = $receivedQty;
+                        // Keep original ordered quantity, update received quantity
+                        $orderItem->received_quantity = $receivedQty;
                         $orderItem->unit_price = $item['unit_price'];
                         $orderItem->discount = $item['discount'];
                         $orderItem->discount_type = $item['discount_type'] ?? 'rs';
@@ -858,7 +859,8 @@ class PurchaseOrderList extends Component
                     $newOrderItem = PurchaseOrderItem::create([
                         'order_id' => $this->selectedPO->id,
                         'product_id' => $productId,
-                        'quantity' => $receivedQty,
+                        'quantity' => $item['ordered_qty'] ?? $receivedQty, // Store ordered quantity
+                        'received_quantity' => $receivedQty, // Store received quantity
                         'unit_price' => $item['unit_price'] ?? 0,
                         'discount' => $item['discount'] ?? 0,
                         'discount_type' => $item['discount_type'] ?? 'rs',
@@ -933,7 +935,7 @@ class PurchaseOrderList extends Component
         if (isset($this->grnItems[$index])) {
             // Mark as not received instead of deleting
             $this->grnItems[$index]['status'] = 'notreceived';
-            $this->grnItems[$index]['received_qty'] = 0;
+            $this->grnItems[$index]['received_quantity'] = 0;
 
             // Remove the item completely from GRN items array
             unset($this->grnItems[$index]);
@@ -944,7 +946,7 @@ class PurchaseOrderList extends Component
     {
         $item = $this->grnItems[$index];
         $productId = $item['product_id'];
-        $receivedQty = $item['received_qty'] ?? 0;
+        $receivedQty = $item['received_quantity'] ?? 0;
 
         // Mark the item as received in the UI
         $this->grnItems[$index]['status'] = 'received';
@@ -956,8 +958,8 @@ class PurchaseOrderList extends Component
         if (isset($this->grnItems[$index])) {
             $this->grnItems[$index]['status'] = 'received';
             // Reset to ordered quantity if needed
-            if ($this->grnItems[$index]['received_qty'] == 0) {
-                $this->grnItems[$index]['received_qty'] = $this->grnItems[$index]['ordered_qty'];
+            if ($this->grnItems[$index]['received_quantity'] == 0) {
+                $this->grnItems[$index]['received_quantity'] = $this->grnItems[$index]['ordered_qty'];
             }
         }
     }
@@ -986,7 +988,7 @@ class PurchaseOrderList extends Component
         $item = $this->grnItems[$index];
 
         // Convert to numbers and ensure they are valid
-        $receivedQty = floatval($item['received_qty'] ?? 0);
+        $receivedQty = floatval($item['received_quantity'] ?? 0);
         $unitPrice = floatval($item['unit_price'] ?? 0);
         $discount = floatval($item['discount'] ?? 0);
 
@@ -1032,7 +1034,7 @@ class PurchaseOrderList extends Component
             }
 
             // Auto-calculate when numeric fields change
-            if (in_array($field, ['received_qty', 'unit_price', 'discount'])) {
+            if (in_array($field, ['received_quantity', 'unit_price', 'discount'])) {
                 $this->calculateGRNTotal($itemIndex);
             }
         }
@@ -1075,7 +1077,7 @@ class PurchaseOrderList extends Component
             'code' => '',
             'name' => '',
             'ordered_qty' => 0,
-            'received_qty' => 0,
+            'received_quantity' => 0,
             'unit_price' => 0,
             'discount' => 0,
             'discount_type' => 'rs',
@@ -1109,7 +1111,7 @@ class PurchaseOrderList extends Component
                 'code' => $item->product->code ?? 'N/A',
                 'name' => $item->product->name ?? 'N/A',
                 'ordered_qty' => $item->quantity,
-                'received_qty' => $item->quantity, // Default to ordered quantity
+                'received_quantity' => $item->quantity, // Default to ordered quantity
                 'unit_price' => $item->unit_price,
                 'discount' => $item->discount ?? 0, // Include discount
                 'discount_type' => $item->discount_type ?? 'rs', // Get discount type from order
@@ -1148,12 +1150,12 @@ class PurchaseOrderList extends Component
                     'code' => $item->product->code ?? 'N/A',
                     'name' => $item->product->name ?? 'N/A',
                     'ordered_qty' => $item->quantity,
-                    'received_qty' => $item->quantity, // Default to ordered quantity
+                    'received_quantity' => $item->quantity, // Default to ordered quantity
                     'unit_price' => $item->unit_price,
                     'discount' => $item->discount ?? 0,
                     'discount_type' => $item->discount_type ?? 'rs',
                     'selling_price' => $currentSellingPrice, // Add selling price
-                    'status' => 'pending'
+                    'status' => 'received'
                 ];
             }
         }
@@ -1208,7 +1210,7 @@ class PurchaseOrderList extends Component
         }
 
         $item = $this->grnItems[$index];
-        $receivedQty = floatval($item['received_qty'] ?? 0);
+        $receivedQty = floatval($item['received_quantity'] ?? 0);
         $unitPrice = floatval($item['unit_price'] ?? 0);
         $discount = floatval($item['discount'] ?? 0);
         $discountType = $item['discount_type'] ?? 'rs';
