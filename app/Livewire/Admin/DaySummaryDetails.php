@@ -54,12 +54,15 @@ class DaySummaryDetails extends Component
         // Cash Sales (POS)
         $this->cashSales = $this->session->cash_sales;
 
-        // Late Cash Payments (payments made today for old sales)
+        // Late Cash Payments (payments made today for old sales or without sale_id)
         $posSalesToday = Sale::whereDate('created_at', $sessionDate)
             ->where('sale_type', 'pos')
             ->pluck('id');
 
-        $this->lateCashPayments = Payment::whereNotIn('sale_id', $posSalesToday)
+        $this->lateCashPayments = Payment::where(function ($query) use ($posSalesToday) {
+                $query->whereNotIn('sale_id', $posSalesToday)
+                      ->orWhereNull('sale_id');
+            })
             ->whereDate('payment_date', $sessionDate)
             ->where('payment_method', 'cash')
             ->where('is_completed', true)
