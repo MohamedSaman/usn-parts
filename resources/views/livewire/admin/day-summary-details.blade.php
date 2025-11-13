@@ -108,7 +108,7 @@
                         <i class="bi bi-cash-coin me-2" style="color:#8eb922;"></i>💰 CASH SALES
                     </h5>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 overflow-auto">
                     @if($cashPayments->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -150,7 +150,7 @@
                                 <tr>
                                     <th colspan="5" class="text-end">TOTAL:</th>
                                     <th class="text-end">
-                                        <strong class="text-success fs-5">Rs.{{ number_format($cashPayments->sum('amount'), 2) }}</strong>
+                                        <strong class="text-white fs-5">Rs.{{ number_format($cashPayments->sum('amount'), 2) }}</strong>
                                     </th>
                                 </tr>
                             </tfoot>

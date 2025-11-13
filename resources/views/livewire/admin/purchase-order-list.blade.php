@@ -60,7 +60,7 @@
                     <p class="text-muted small mb-0">View and manage all purchase orders</p>
                 </div>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0 overflow-auto">
                 <div class="table-responsive" style="overflow:visible !important;">
                     <table class="table table-hover mb-0" style="overflow:visible;">
                         <thead class="table-light">
@@ -288,8 +288,8 @@
                     <i class="bi bi-cart3 me-2"></i>Order Items
                     <span class="badge bg-primary">{{ count($orderItems) }}</span>
                 </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover">
+                <div class="table-responsive ">
+                    <table class="table table-bordered table-hover overflow-auto">
                         <thead class="table-light">
                             <tr>
                                 <th style="width: 50px;">No</th>
@@ -407,8 +407,8 @@
                     Received Items
                     @endif
                 </h5>
-                <div class="table-responsive">
-                    <table class="table table-bordered">
+                <div class="table-responsive ">
+                    <table class="table table-bordered overflow-auto">
                         <thead>
                             <tr>
                                 <th style="width: 100px;">Code</th>
@@ -613,7 +613,7 @@
                 <p><strong>Received Date:</strong> {{ $selectedOrder->received_date ?? '-' }}</p>
 
                 <h6>Items</h6>
-                <table class="table table-sm">
+                <table class="table table-sm overflow-auto">
                     <thead>
                         <tr>
                             <th>Code</th>
@@ -650,7 +650,13 @@
                                 @endif
                             </td>
                             <td>{{ $item->unit_price }}</td>
-                            <td>{{ number_format(floatval($item->unit_price) * floatval($item->received_quantity), 2) }}</td>
+                            @if($item->received_quantity == 0){
+                                <td>{{ number_format(floatval($item->unit_price) * floatval($item->quantity), 2) }}</td>
+                            }
+                            @else{
+                                <td>{{ number_format(floatval($item->unit_price) * floatval($item->received_quantity), 2) }}</td>
+                            }
+                            @endif
                         </tr>
                         @endforeach
                     </tbody>
@@ -729,7 +735,7 @@
                 <span class="badge bg-primary">{{ count($editOrderItems) }}</span>
             </h6>
 
-            <div class="table-responsive">
+            <div class="table-responsive overflow-auto">
                 <table class="table table-bordered">
                     <thead class="table-light">
                         <tr>

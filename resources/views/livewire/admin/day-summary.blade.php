@@ -68,7 +68,7 @@
                         <i class="bi bi-list-ul me-2" style="color:#8eb922;"></i>POS Sessions ({{ $sessions->total() }})
                     </h5>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-0 overflow-auto">
                     @if($sessions->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
