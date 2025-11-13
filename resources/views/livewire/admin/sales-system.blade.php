@@ -155,7 +155,10 @@
                                         </div>
                                     </td>
                                     <td class="fw-bold">
-                                        Rs.{{ number_format($item['price'], 2) }}
+                                        <input type="number" class="form-control-sm text-primary" style="min-width:90px;"
+                                            wire:change="updatePrice({{ $index }}, $event.target.value)"
+                                            value="{{ $item['price'] }}" min="0" step="0.01"
+                                            placeholder="0.00">
                                     </td>
                                     <td>
                                         <div class="input-group input-group-sm">

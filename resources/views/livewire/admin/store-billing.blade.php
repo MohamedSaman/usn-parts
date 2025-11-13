@@ -229,7 +229,10 @@
                                     </div>
                                 </td>
                                 <td class="fw-bold">
-                                    Rs.{{ number_format($item['price'], 2) }}
+                                    <input type="number" class="form-control-sm text-primary rounded-0" style="min-width:90px;"
+                                        wire:change="updatePrice({{ $index }}, $event.target.value)"
+                                        value="{{ $item['price'] }}" min="0" step="0.01"
+                                        placeholder="0.00">
                                 </td>
                                 <td>
                                     <div class="input-group input-group-sm">
@@ -846,7 +849,7 @@
                         </div>
                         <p>103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
                         <p><strong>TEL:</strong> (076) 9085252 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
-                        
+
                     </div>
 
                     <p class="text-muted mb-3 no-print">Please review the details below as <strong>paid (total)</strong></p>
@@ -950,11 +953,11 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" 
-                            class="btn btn-secondary" 
-                            wire:click="closeRegisterAndRedirect"
-                            wire:loading.attr="disabled"
-                            wire:loading.class="disabled">
+                    <button type="button"
+                        class="btn btn-secondary"
+                        wire:click="closeRegisterAndRedirect"
+                        wire:loading.attr="disabled"
+                        wire:loading.class="disabled">
                         <span wire:loading.remove wire:target="closeRegisterAndRedirect">
                             <i class="bi bi-x-circle me-1"></i>Close Register
                         </span>
@@ -1050,6 +1053,7 @@
        PRINT STYLES FOR SALE RECEIPT
        ============================================ */
     @media print {
+
         /* Print only the receipt content */
         body.printing-sale-receipt * {
             visibility: hidden !important;

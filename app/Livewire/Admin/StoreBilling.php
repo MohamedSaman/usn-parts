@@ -584,6 +584,15 @@ class StoreBilling extends Component
         }
     }
 
+    // Update Price
+    public function updatePrice($index, $price)
+    {
+        if ($price < 0) $price = 0;
+
+        $this->cart[$index]['price'] = $price;
+        $this->cart[$index]['total'] = ($price - $this->cart[$index]['discount']) * $this->cart[$index]['quantity'];
+    }
+
     // Update Discount
     public function updateDiscount($index, $discount)
     {
