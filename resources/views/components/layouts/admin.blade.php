@@ -99,7 +99,7 @@
             will-change: transform;
             left: auto !important;
             right: 0 !important;
-            top: 100% !important;
+            top: 30% !important;
             margin-top: 0.2rem;
             min-width: 160px;
             z-index: 9999 !important;
