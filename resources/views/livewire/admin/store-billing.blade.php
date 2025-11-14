@@ -708,13 +708,26 @@
                 <div class="modal-body p-0">
                     <div class="sale-preview p-4" id="saleReceiptPrintContent">
                         {{-- Screen Only Header (visible on screen, hidden on print) --}}
-                        <div class="screen-only-header text-center mb-4">
-                            <div class="w-100 d-flex justify-content-center">
-                                <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:100px;">
+                        <div class="screen-only-header mb-4">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                {{-- Left: Logo --}}
+                                <div style="flex: 0 0 150px;">
+                                    <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:80px;">
+                                </div>
+                                
+                                {{-- Center: Company Name --}}
+                                <div class="text-center" style="flex: 1;">
+                                    <h2 class="mb-0 fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">USN AUTO PARTS</h2>
+                                    <p class="mb-0 text-muted small">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                                </div>
+                                
+                                {{-- Right: Motor Parts & Invoice --}}
+                                <div class="text-end" style="flex: 0 0 150px;">
+                                    <h5 class="mb-0 fw-bold">MOTOR PARTS</h5>
+                                    <h6 class="mb-0 text-muted">INVOICE</h6>
+                                </div>
                             </div>
-                            <p class="mb-0">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="mb-0">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
-                            <hr class="my-3">
+                            <hr class="my-2" style="border-top: 2px solid #000;">
                         </div>
 
                         {{-- Customer & Sale Details Side by Side --}}
@@ -806,7 +819,7 @@
                         {{-- Footer Note --}}
                         <div class="invoice-footer mt-4">
                             <p class="text-center mb-1"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
                             <p class="text-center mt-3" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
                         </div>
                     </div>
@@ -848,7 +861,7 @@
                             <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:100px;">
                         </div>
                         <p>103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                        <p><strong>TEL:</strong> (076) 9085252 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
+                        <p><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
 
                     </div>
 

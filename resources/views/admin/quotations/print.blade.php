@@ -203,7 +203,7 @@
         <div class="header">
             <h2>USN AUTO PARTS</h2>
             <p>103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-            <p>Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+            <p>Phone: (076) 9085352 | Email: autopartsusn@gmail.com</p>
             <div class="quotation-title">QUOTATION</div>
         </div>
 

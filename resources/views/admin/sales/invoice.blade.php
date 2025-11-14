@@ -302,7 +302,7 @@
         {{-- Footer --}}
         <div class="footer">
             <p><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-            <p><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+            <p><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
             <p style="margin-top: 5px;">Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</p>
         </div>
     </div>

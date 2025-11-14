@@ -376,7 +376,7 @@
                             </div>
                             <div style="border-bottom: 3px solid #3b5b0c; padding-bottom: 10px; margin-bottom: 15px;">
                                 <p class="text-center mb-0" style="font-size: 11px;">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                                <p class="text-center mb-0" style="font-size: 11px;"><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                                <p class="text-center mb-0" style="font-size: 11px;"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
                             </div>
                         </div>
 
@@ -390,7 +390,7 @@
                                     <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:100px;">
                                 </div>
                                 <p class="mb-0">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                                <p class="mb-0">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+                                <p class="mb-0">Phone: (076) 9085352 | Email: autopartsusn@gmail.com</p>
                             </div>
                             <hr class="my-3">
                         </div>
@@ -480,7 +480,7 @@
                         {{-- Footer Note --}}
                         <div class="invoice-footer mt-4">
                             <p class="text-center mb-1"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
                             <p class="text-center mt-3" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
                         </div>
                     </div>

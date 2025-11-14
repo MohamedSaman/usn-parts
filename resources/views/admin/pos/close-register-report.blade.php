@@ -153,7 +153,7 @@
     <div class="header">
         <img src="{{ public_path('images/USN.png') }}" alt="USN AUTO PARTS Logo">
         <p>103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-        <p><strong>TEL:</strong> (076) 9085252 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
+        <p><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
         <h1>CLOSE REGISTER SUMMARY</h1>
     </div>
 

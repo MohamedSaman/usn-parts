@@ -1,4 +1,3 @@
-<!-- filepath: /home/amhar-dev/Desktop/billing-system/resources/views/receipts/download.blade.php -->
 <!DOCTYPE html>
 <html>
 
@@ -17,10 +16,15 @@
             width: 100%;
             max-width: 800px;
             margin: 0 auto;
+            padding: 20px;
         }
 
         .text-center {
             text-align: center;
+        }
+
+        .text-end {
+            text-align: right;
         }
 
         .mb-0 {
@@ -33,6 +37,10 @@
 
         .mb-2 {
             margin-bottom: 8px;
+        }
+
+        .mb-3 {
+            margin-bottom: 12px;
         }
 
         .mb-4 {
@@ -119,10 +127,18 @@
             justify-content: space-between;
         }
 
+        .align-items-center {
+            align-items: center;
+        }
+
         hr {
             margin: 12px 0;
             border: 0;
             border-top: 1px solid #ddd;
+        }
+
+        .hr-bold {
+            border-top: 2px solid #000;
         }
 
         .text-muted {
@@ -190,17 +206,82 @@
             display: table;
             clear: both;
         }
+
+        /* Header Layout */
+        .header-layout {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .header-logo {
+            flex: 0 0 150px;
+        }
+
+        .header-logo img {
+            max-height: 80px;
+            width: auto;
+        }
+
+        .header-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-center h2 {
+            margin: 0 0 4px 0;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        .header-center .tagline {
+            margin: 0;
+            font-size: 10px;
+            color: #6c757d;
+        }
+
+        .header-right {
+            flex: 0 0 150px;
+            text-align: right;
+        }
+
+        .header-right h5 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .header-right h6 {
+            margin: 4px 0 0 0;
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
     </style>
 </head>
 
 <body>
     <div class="receipt-container">
         <!-- Receipt Header -->
-        <div class="text-center mb-4">
-            <h2 class="mb-0">USN Auto Parts</h2>
-            <p class="mb-0 text-muted small">103 H,Yatiyanthota Road,Seethawaka,avissawella.</p>
-            <p class="mb-0 text-muted small">Phone: ( 076) 9085252| Email: autopartsusn@gmail.com </p>
-            <h3 class="mt-3 border-bottom pb-2">SALES RECEIPT</h3>
+        <div class="mb-4">
+            <div class="header-layout">
+                <!-- Left: Logo -->
+                <div class="header-logo">
+                    <img src="{{ public_path('images/USN.png') }}" alt="USN Auto Parts Logo">
+                </div>
+                
+                <!-- Center: Company Name -->
+                <div class="header-center">
+                    <h2 class="fw-bold">USN AUTO PARTS</h2>
+                    <p class="tagline">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                </div>
+                
+                <!-- Right: Motor Parts & Invoice -->
+                <div class="header-right">
+                    <h5 class="fw-bold">MOTOR PARTS</h5>
+                    <h6>INVOICE</h6>
+                </div>
+            </div>
+            <hr class="hr-bold">
         </div>
 
         <!-- Invoice Details -->
@@ -311,8 +392,9 @@
 
         <!-- Footer -->
         <div class="text-center mt-4 pt-3 border-top">
-            <p class="mb-0 text-muted small">Thank you for your purchase!</p>
-            <!-- <p class="mb-0 text-muted small">For questions or returns, please contact us within 7 days</p> -->
+            <p class="mb-1"><strong>ADDRESS:</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+            <p class="mb-1"><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
+            <p class="mb-0 mt-3 small"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
         </div>
     </div>
 </body>
