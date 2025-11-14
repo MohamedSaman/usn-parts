@@ -261,27 +261,25 @@
 
 <body>
     <div class="receipt-container">
-        <!-- Receipt Header -->
-        <div class="mb-4">
-            <div class="header-layout">
+        <!-- Global Header (same as print) -->
+        <div class="global-header" style="border-bottom: 3px solid #3b5b0c; padding-bottom: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
                 <!-- Left: Logo -->
-                <div class="header-logo">
-                    <img src="{{ public_path('images/USN.png') }}" alt="USN Auto Parts Logo">
+                <div style="flex: 0 0 150px;">
+                    <img src="{{ public_path('images/USN.png') }}" alt="Logo" style="max-height:80px;">
                 </div>
-                
                 <!-- Center: Company Name -->
-                <div class="header-center">
-                    <h2 class="fw-bold">USN AUTO PARTS</h2>
-                    <p class="tagline">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                <div style="flex: 1; text-align: center;">
+                    <h2 style="font-size: 2.5rem; letter-spacing: 2px; font-weight: bold; margin-bottom: 0;">USN AUTO PARTS</h2>
+                    <p style="color: #666; font-size: 0.875rem; margin-bottom: 0;">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
                 </div>
-                
                 <!-- Right: Motor Parts & Invoice -->
-                <div class="header-right">
-                    <h5 class="fw-bold">MOTOR PARTS</h5>
-                    <h6>INVOICE</h6>
+                <div style="flex: 0 0 150px; text-align: right;">
+                    <h5 style="margin-bottom: 0; font-weight: bold;">MOTOR PARTS</h5>
+                    <h6 style="margin-bottom: 0; color: #666;">INVOICE</h6>
                 </div>
             </div>
-            <hr class="hr-bold">
+            <hr style="border-top: 2px solid #000; margin: 0.5rem 0;">
         </div>
 
         <!-- Invoice Details -->
@@ -390,11 +388,30 @@
         </div>
         <div class="clearfix"></div>
 
-        <!-- Footer -->
-        <div class="text-center mt-4 pt-3 border-top">
-            <p class="mb-1"><strong>ADDRESS:</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-            <p class="mb-1"><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
-            <p class="mb-0 mt-3 small"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+        <!-- Global Footer (same as print) -->
+        <div class="global-footer" style="margin-top: 40px;">
+            <div style="display: flex; justify-content: center; text-align: center; margin-bottom: 20px;">
+                <div style="flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 10px;">
+                    <p><strong>.............................</strong></p>
+                    <p style="margin-bottom: 8px;"><strong>Checked By</strong></p>
+                    <img src="{{ public_path('images/tata.png') }}" alt="TATA" style="height: 35px; margin: auto;">
+                </div>
+                <div style="flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 10px;">
+                    <p><strong>.............................</strong></p>
+                    <p style="margin-bottom: 8px;"><strong>Authorized Officer</strong></p>
+                    <img src="{{ public_path('images/USN.png') }}" alt="USN" style="height: 35px; margin: auto;">
+                </div>
+                <div style="flex: 0 0 33.3333%; max-width: 33.3333%; padding: 0 10px;">
+                    <p><strong>.............................</strong></p>
+                    <p style="margin-bottom: 8px;"><strong>Customer Stamp</strong></p>
+                    <img src="{{ public_path('images/mahindra.png') }}" alt="Mahindra" style="height: 35px; margin: auto;">
+                </div>
+            </div>
+            <div style="border-top: 1px solid #3b5b0c; padding-top: 10px;">
+                <p style="text-align: center;"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                <p style="text-align: center;"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                <p style="text-align: center; font-size: 11px; margin-top: 8px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+            </div>
         </div>
     </div>
 </body>

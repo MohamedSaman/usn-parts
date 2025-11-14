@@ -14,13 +14,14 @@ use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Livewire\Concerns\WithDynamicLayout;
+use Livewire\WithPagination;
 
 #[Title("Goods Receive Note")]
 class GRN extends Component
 {
-    use WithDynamicLayout;
+    use WithDynamicLayout , WithPagination;
 
-    public $purchaseOrders = [];
+    
     public $selectedPO = null;
     public $grnItems = [];
     public $searchProduct = '';
@@ -31,18 +32,18 @@ class GRN extends Component
 
     public function mount()
     {
-        $this->loadPurchaseOrders();
+        
         $this->searchResults = ['unplanned' => []];
     }
 
-    public function loadPurchaseOrders()
-    {
-        // Show both complete and received orders in the table
-        $this->purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
-            ->with(['supplier', 'items.product'])
-            ->latest()
-            ->get();
-    }
+    // public function loadPurchaseOrders()
+    // {
+    //     // Show both complete and received orders in the table
+    //     $this->purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
+    //         ->with(['supplier', 'items.product'])
+    //         ->latest()
+    //         ->paginate(10);
+    // }
 
     // Add this method to get counts for both statuses
     public function getOrderCounts()
@@ -490,8 +491,13 @@ class GRN extends Component
 
     public function render()
     {
+        $purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
+            ->with(['supplier', 'items.product'])
+            ->latest()
+            ->paginate(20);
+
         return view('livewire.admin.g-r-n', [
-            'purchaseOrders' => $this->purchaseOrders,
+            'purchaseOrders' => $purchaseOrders,
         ])->layout($this->layout);
     }
 }

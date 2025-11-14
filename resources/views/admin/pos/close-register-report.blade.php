@@ -168,63 +168,71 @@
     {{-- Summary Table --}}
     <table class="summary-table">
         <tbody>
-            <tr>
-                <td>Cash in hand:</td>
-                <td>Rs.{{ number_format($summary['opening_cash'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Cash Sales (POS):</td>
-                <td>Rs.{{ number_format($summary['cash_sales'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Cheque Payment (POS):</td>
-                <td>Rs.{{ number_format($summary['cheque_payment'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Bank / Online Transfer (POS):</td>
-                <td>Rs.{{ number_format($summary['bank_transfer'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="highlight">
-                <td class="fw-bold">Late Payments (BULK) - Total:</td>
-                <td class="fw-bold">Rs.{{ number_format($summary['late_payment_bulk'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="indent">
-                <td>└ Cash:</td>
-                <td>Rs.{{ number_format($summary['late_payment_cash'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="indent">
-                <td>└ Cheque:</td>
-                <td>Rs.{{ number_format($summary['late_payment_cheque'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="indent">
-                <td>└ Bank Transfer:</td>
-                <td>Rs.{{ number_format($summary['late_payment_bank_transfer'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Credit Card Payment:</td>
-                <td>Rs.{{ number_format($summary['credit_card_payment'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="subtotal">
-                <td class="fw-bold">Total Sales:</td>
-                <td class="fw-bold">Rs.{{ number_format($summary['total_sales'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Expenses:</td>
-                <td>Rs.{{ number_format($summary['expenses'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Refunds:</td>
-                <td>Rs.{{ number_format($summary['refunds'] ?? 0, 2) }}</td>
-            </tr>
-            <tr>
-                <td>Cash Deposit - Bank:</td>
-                <td>Rs.{{ number_format($summary['cash_deposit_bank'] ?? 0, 2) }}</td>
-            </tr>
-            <tr class="total">
-                <td class="fw-bold">Total Cash:</td>
-                <td class="fw-bold">Rs.{{ number_format($summary['expected_cash'] ?? 0, 2) }}</td>
-            </tr>
-        </tbody>
+                            <tr>
+                                <td>Cash in hand:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['opening_cash'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Cash Sales (POS):</td>
+                                <td class="text-end">Rs.{{ number_format($summary['pos_cash_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Cheque Payment (POS):</td>
+                                <td class="text-end">Rs.{{ number_format($summary['pos_cheque_payment'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Bank / Online Transfer (POS):</td>
+                                <td class="text-end">Rs.{{ number_format($summary['pos_bank_transfer'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td class="fw-semibold">Admin Payments - Total:</td>
+                                <td class="text-end fw-semibold">Rs.{{ number_format($summary['total_admin_payment'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">└ Cash:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['total_admin_cash_payment'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">└ Cheque:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['total_admin_cheque_payment'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4">└ Bank Transfer:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['total_admin_bank_transfer'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td class="fw-semibold">Total Cash Amount (POS + Admin):</td>
+                                <td class="text-end fw-semibold">Rs.{{ number_format($summary['total_cash_from_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-semibold">Total POS Sales:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($summary['total_pos_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-light">
+                                <td class="fw-semibold">Total Admin Sales:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($summary['total_admin_sales'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td class="fw-semibold">Total Cash Payment Today:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($summary['total_cash_payment_today'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Expenses:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['expenses'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Refunds:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['refunds'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr>
+                                <td>Cash Deposit - Bank:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['cash_deposit_bank'] ?? 0, 2) }}</td>
+                            </tr>
+                            <tr class="table-success">
+                                <td class="fw-bold">Total Cash in Hand:</td>
+                                <td class="text-end fw-bold">Rs.{{ number_format($summary['expected_cash'] ?? 0, 2) }}</td>
+                            </tr>
+                        </tbody>
     </table>
 
     {{-- Notes Section --}}

@@ -9,11 +9,13 @@ use Livewire\Attributes\Title;
 use App\Models\ProductStock;
 use App\Models\ProductDetail;
 use App\Livewire\Concerns\WithDynamicLayout;
+use Livewire\WithPagination;
 
 #[Title('Product Stock Details')]
 class ProductStockDetails extends Component
 {
-    use WithDynamicLayout;
+    use WithDynamicLayout , WithPagination;
+    public $search;
 
     public function render()
     {
@@ -27,12 +29,20 @@ class ProductStockDetails extends Component
                 'product_details.code as Product_code',
                 'product_details.image as Product_image'
             )
-            ->get();
+            ->where(function ($query) {
+                $query->where('product_details.name', 'like', '%' . $this->search . '%')
+                    ->orWhere('product_details.code', 'like', '%' . $this->search . '%');
+                    
+            })->paginate(20);
         return view('livewire.admin.Product-stock-details', [
             'ProductStocks' => $ProductStocks
         ])->layout($this->layout);
     }
 
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
     public function exportToCSV()
     {
         // Get data
@@ -58,6 +68,7 @@ class ProductStockDetails extends Component
             return;
         }
 
+        
         // Generate filename with date
         $fileName = 'Product_stock_' . date('Y-m-d_His') . '.csv';
 

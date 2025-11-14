@@ -602,7 +602,7 @@
                 @if($suppliers->hasPages())
                 <div class="card-footer">
                     <div class="d-flex justify-content-center">
-                        {{ $suppliers->links('pagination::bootstrap-5') }}
+                        {{ $suppliers->links('livewire.custom-pagination') }}
                     </div>
                 </div>
                 @endif

@@ -612,7 +612,7 @@
                 <p><strong>Order Date:</strong> {{ $selectedOrder->order_date }}</p>
                 <p><strong>Received Date:</strong> {{ $selectedOrder->received_date ?? '-' }}</p>
 
-                <h6>Items</h6>
+                <!-- <h6>Items</h6> -->
                 <table class="table table-sm overflow-auto">
                     <thead>
                         <tr>

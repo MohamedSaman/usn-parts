@@ -18,24 +18,152 @@
         }
 
         body {
-            font-family: "DejaVu Sans", sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-family: "DejaVu Sans", Arial, sans-serif;
             font-size: 10pt;
             line-height: 1.4;
+            background: white;
             color: #000;
-            background: #fff;
-            padding: 0 10mm;
         }
 
-        .header {
-            text-align: center;
+        .invoice-container {
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        /* Global Header Styles */
+        .global-header {
+            border-bottom: 3px solid #3b5b0c;
+            padding-bottom: 5px;
             margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3b5b0c;
         }
 
-        .header img {
-            height: 100px;
-            margin-bottom: 5px;
+        .global-header table {
+            width: 100%;
+            border: none;
+        }
+
+        .global-header td {
+            vertical-align: middle;
+            border: none;
+            padding: 0;
+        }
+
+        .global-header .logo-section {
+            width: 50px;
+        }
+
+        .global-header .logo-section img {
+            max-height: 35px;
+            width: auto;
+        }
+
+        .global-header .company-section {
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .global-header .company-section h2 {
+            font-size: 20pt;
+            letter-spacing: 1.5px;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            line-height: 1.1;
+        }
+
+        .global-header .company-section p {
+            font-size: 7pt;
+            color: #3b5b0c;
+            font-weight: 600;
+            margin: 2px 0 0 0;
+            padding: 0;
+            line-height: 1.1;
+        }
+
+        .global-header .invoice-section {
+            width: 85px;
+            text-align: right;
+        }
+
+        .global-header .invoice-section h3 {
+            font-size: 10pt;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+            line-height: 1.2;
+        }
+
+        .global-header .invoice-section h6 {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #666;
+            margin: 1px 0 0 0;
+            padding: 0;
+            line-height: 1.2;
+        }
+
+        /* Content Area */
+        .print-content {
+            min-height: calc(297mm - 200px);
+            margin-bottom: 20px;
+        }
+
+        /* Global Footer Styles */
+        .global-footer {
+            margin-top: 100px;
+            clear: both;
+        }
+
+        .global-footer table {
+            width: 100%;
+            border: none;
+            margin-top: 50px;
+            margin-bottom: 10px;
+        }
+
+        .global-footer td {
+            text-align: center;
+            vertical-align: bottom;
+            border: none;
+            padding: 5px;
+        }
+
+        .global-footer .signature-line {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 0;
+            padding: 0;
+        }
+
+        .global-footer .signature-label {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 3px 0;
+            padding: 0;
+        }
+
+        .global-footer img {
+            height: 28px;
+            margin: 5px auto 0;
+            display: block;
+        }
+
+        .global-footer .info-section {
+            border-top: 2px solid #3b5b0c;
+            padding-top: 8px;
+            margin-top: 8px;
+        }
+
+        .global-footer .info-section p {
+            text-align: center;
+            font-size: 8pt;
+            margin: 2px 0;
+            padding: 0;
         }
 
         .info-row {
@@ -135,21 +263,43 @@
             font-size: 11pt;
         }
 
-        .footer {
-            clear: both;
+
+
+
+        .text-end {
+            text-align: right;
+        }
+
+        .text-center {
             text-align: center;
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #ddd;
-            font-size: 8pt;
         }
 
-        .footer p {
-            margin: 3px 0;
+        .text-left {
+            text-align: left;
         }
 
-        strong {
+        .fw-bold {
             font-weight: bold;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .pt-3 {
+            padding-top: 1rem;
         }
     </style>
 </head>
@@ -157,10 +307,24 @@
 <body>
     <div class="invoice-container">
 
-        {{-- Header --}}
-        <div class="header">
-            <img src="{{ public_path('images/USN.png') }}" alt="USN AUTO PARTS">
+        <div class="global-header">
+            <table>
+                <tr>
+                    <td class="logo-section">
+                        <img src="{{ public_path('images/USN.png') }}" alt="Logo">
+                    </td>
+                    <td class="company-section">
+                        <h2>USN AUTO PARTS</h2>
+                        <p>IMPORTERS & DISTRIBUTORS OF MAHINDRA AND TATA PARTS</p>
+                    </td>
+                    <td class="invoice-section">
+                        <span style="font-size:10pt; font-weight:bold;">MOTOR PARTS</span>
+                        <span style="font-size:9pt; font-weight:bold; color:#666; margin-left:8px;">INVOICE</span>
+                    </td>
+                </tr>
+            </table>
         </div>
+
 
         {{-- Customer and Invoice Info --}}
         <div class="info-row">
@@ -299,11 +463,31 @@
         </div>
         @endif
 
-        {{-- Footer --}}
-        <div class="footer">
-            <p><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-            <p><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
-            <p style="margin-top: 5px;">Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</p>
+        <div class="global-footer">
+            <table>
+                <tr>
+                    <td>
+                        <p class="signature-line"><strong>.............................</strong></p>
+                        <p class="signature-label"><strong>Checked By</strong></p>
+                        <img src="{{ public_path('images/tata.png') }}" alt="Checked By">
+                    </td>
+                    <td>
+                        <p class="signature-line"><strong>.............................</strong></p>
+                        <p class="signature-label"><strong>Authorized Officer</strong></p>
+                        <img src="{{ public_path('images/USN.png') }}" alt="Authorized">
+                    </td>
+                    <td>
+                        <p class="signature-line"><strong>.............................</strong></p>
+                        <p class="signature-label"><strong>Customer Stamp</strong></p>
+                        <img src="{{ public_path('images/mahindra.png') }}" alt="Customer">
+                    </td>
+                </tr>
+            </table>
+            <div class="info-section">
+                <p><strong>ADDRESS:</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                <p><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
+                <p style="margin-top: 6px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+            </div>
         </div>
     </div>
 </body>

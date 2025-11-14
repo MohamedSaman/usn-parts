@@ -102,6 +102,20 @@
                 <p class="text-muted small mb-0">Detailed view of all product stock levels</p>
             </div>
         </div>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mx-2">
+
+            <div class="search-bar flex-grow-1">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" id="product-search"
+                        wire:model.live="search" placeholder="Search Products...">
+                </div>
+            </div>
+
+
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">

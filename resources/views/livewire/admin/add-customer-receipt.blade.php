@@ -150,7 +150,7 @@
             @if($customers->hasPages())
             <div class="card-footer">
                 <div class="d-flex justify-content-center">
-                    {{ $customers->links('pagination::bootstrap-5') }}
+                    {{ $customers->links('livewire.custom-pagination') }}
                 </div>
             </div>
             @endif

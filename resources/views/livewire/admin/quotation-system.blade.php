@@ -391,18 +391,6 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="createNewQuotation"></button>
                 </div>
-
-<<<<<<< HEAD
-            <div class="modal-body p-0">
-                {{-- Quotation Preview --}}
-                <div class="quotation-preview p-4">
-                    {{-- Header --}}
-                    <div class="header text-center mb-4">
-                        <h2 class="text-success mb-1">USN AUTO PARTS</h2>
-                        <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                        <p class="mb-1">Phone: (076) 9085352 | Email: autopartsusn@gmail.com</p>
-                    </div>
-=======
                 <div class="modal-body p-0">
                     {{-- Quotation Preview --}}
                     <div class="quotation-preview p-4">
@@ -410,9 +398,8 @@
                         <div class="header text-center mb-4">
                             <h2 class="text-success mb-1">USN AUTO PARTS</h2>
                             <p class="mb-1">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="mb-1">Phone: (076) 9085252 | Email: autopartsusn@gmail.com</p>
+                            <p class="mb-1">Phone: (076) 9085352 | Email: autopartsusn@gmail.com</p>
                         </div>
->>>>>>> 15314115542ffa2aa29c4aab043b9c035a403231
 
                         {{-- Customer & Quotation Details --}}
                         <div class="row mb-4">

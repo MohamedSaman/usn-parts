@@ -101,6 +101,11 @@
                         </tbody>
                     </table>
                 </div>
+               <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-center">
+                        {{ $purchaseOrders->links('livewire.custom-pagination') }}
+                    </div>
+                </div>
             </div>
         </div>
     </div>

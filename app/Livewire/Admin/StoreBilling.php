@@ -897,6 +897,34 @@ class StoreBilling extends Component
         );
     }
 
+    // Print Sale Receipt
+    public function printSaleReceipt()
+    {
+        if (!$this->createdSale) {
+            $this->js("Swal.fire('error', 'No sale found to print.', 'error')");
+            return;
+        }
+
+        $sale = Sale::with(['customer', 'items', 'payments'])->find($this->createdSale->id);
+
+        if (!$sale) {
+            $this->js("Swal.fire('error', 'Sale not found.', 'error')");
+            return;
+        }
+
+        // Store sale ID in session for print route
+        session(['print_sale_id' => $sale->id]);
+
+        // Open print page in new window
+        $this->js("
+            const printUrl = '" . route('admin.print.sale', $sale->id) . "';
+            const printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
+            if (printWindow) {
+                printWindow.focus();
+            }
+        ");
+    }
+
     // Download Close Register Report
     public function downloadCloseRegisterReport()
     {

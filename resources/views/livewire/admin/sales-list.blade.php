@@ -186,6 +186,22 @@
                                                 </span>
                                             </button>
                                         </li>
+                                        <li>
+                                            <button class="dropdown-item"
+                                                    wire:click="printInvoice({{ $sale->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="printInvoice({{ $sale->id }})">
+                                                
+                                                <span wire:loading wire:target="printInvoice({{ $sale->id }})">
+                                                    <i class="spinner-border spinner-border-sm me-2"></i>
+                                                    Loading...
+                                                </span>
+                                                <span wire:loading.remove wire:target="printInvoice({{ $sale->id }})">
+                                                    <i class="bi bi-download text-success me-2"></i>
+                                                    Print
+                                                </span>
+                                            </button>
+                                        </li>
 
                                         <!-- Delete Sale -->
                                         <li>
@@ -224,7 +240,7 @@
             @if ($sales->hasPages())
             <div class="card-footer">
                 <div class="d-flex justify-content-center">
-                    {{ $sales->links('pagination::bootstrap-5') }}
+                    {{ $sales->links('livewire.custom-pagination') }}
                 </div>
             </div>
             @endif

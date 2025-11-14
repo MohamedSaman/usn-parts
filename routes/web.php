@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CashController;
+use App\Http\Controllers\Admin\PrintController;
 use App\Http\Controllers\ProductApiController;
 use Illuminate\Http\Request;
 use App\Livewire\CustomLogin;
@@ -66,6 +67,7 @@ use App\Livewire\Admin\AddSupplierReceipt;
 use App\Livewire\Admin\ChequeList;
 use App\Livewire\Admin\DaySummary;
 use App\Livewire\Admin\DaySummaryDetails;
+use App\Livewire\Admin\Deposits;
 use App\Livewire\Admin\ListCustomerReceipt;
 use App\Livewire\Admin\ListSupplierReceipt;
 use App\Livewire\Admin\ReturnCheque;
@@ -161,6 +163,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/view-payments', ViewPayments::class)->name('view-payments');
         Route::get('/admin/staff/{staffId}/reentry', \App\Livewire\Admin\StockReentry::class)->name('staff.reentry');
         Route::get('/store-billing', StoreBilling::class)->name('store-billing');
+        Route::get('/print/sale/{id}', [PrintController::class, 'printSale'])->name('print.sale');
         Route::get('/due-payments', AdminDuePayments::class)->name('due-payments');
         Route::get('/staff-attendance', StaffAttendance::class)->name('staff-attendance');
         Route::get('/staff-salary', StaffSallary::class)->name('staff-salary');
@@ -193,6 +196,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), 'verified']
         Route::get('/return-supplier', ReturnSupplier::class)->name('return-supplier');
         Route::get('/list-supplier-return', ListSupplierReturn::class)->name('list-supplier-return');
         Route::get('/cash-deposit', DaySummary::class)->name('day-summary');
+        Route::get('/deposits', Deposits::class)->name('deposits');
         Route::get('/register-report/{sessionId}', DaySummaryDetails::class)->name('day-summary-details');
         // Route to reopen today's closed POS session (AJAX)
         Route::post('/reopen-pos-session', [StoreBilling::class, 'reopenPOSSession'])->name('reopen-pos-session');

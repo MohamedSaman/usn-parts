@@ -369,30 +369,31 @@
             <div class="modal-content">
                 <div class="modal-body p-0">
                     <div class="sale-preview p-4" id="saleReceiptPrintContent">
-                        {{-- Print Only Header (hidden on screen, shown on print) --}}
-                        <div class="print-only-header">
-                            <div class="text-center mb-3">
-                                <img src="{{ asset('images/USN.png') }}" alt="Logo" style="max-height:80px;">
-                            </div>
-                            <div style="border-bottom: 3px solid #3b5b0c; padding-bottom: 10px; margin-bottom: 15px;">
-                                <p class="text-center mb-0" style="font-size: 11px;">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                                <p class="text-center mb-0" style="font-size: 11px;"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
-                            </div>
-                        </div>
 
                         {{-- Screen Only Header --}}
-                        <div class="screen-only-header">
+                        <div class="screen-only-header mb-4">
                             <div class="text-end">
                                 <button type="button" class="btn-close" wire:click="createNewSale"></button>
                             </div>
-                            <div class="text-center mb-4">
-                                <div class="w-100 d-flex justify-content-center">
-                                    <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:100px;">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                {{-- Left: Logo --}}
+                                <div style="flex: 0 0 150px;">
+                                    <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:80px;">
                                 </div>
-                                <p class="mb-0">103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                                <p class="mb-0">Phone: (076) 9085352 | Email: autopartsusn@gmail.com</p>
+
+                                {{-- Center: Company Name --}}
+                                <div class="text-center" style="flex: 1;">
+                                    <h2 class="mb-0 fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">USN AUTO PARTS</h2>
+                                    <p class="mb-0 text-muted small">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                                </div>
+
+                                {{-- Right: Motor Parts & Invoice --}}
+                                <div class="text-end" style="flex: 0 0 150px;">
+                                    <h5 class="mb-0 fw-bold">MOTOR PARTS</h5>
+                                    <h6 class="mb-0 text-muted">INVOICE</h6>
+                                </div>
                             </div>
-                            <hr class="my-3">
+                            <hr class="my-2" style="border-top: 2px solid #000;">
                         </div>
 
                         {{-- Customer & Sale Details Side by Side --}}
@@ -478,17 +479,37 @@
                         </div>
 
                         {{-- Footer Note --}}
+                        {{-- Footer Note --}}
                         <div class="invoice-footer mt-4">
-                            <p class="text-center mb-1"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                            <p class="text-center mb-1"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
-                            <p class="text-center mt-3" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+                            <div class="row text-center mb-3">
+                                <div class="col-4">
+                                    <p class=""><strong>.............................</strong></p>
+                                    <p class="mb-2"><strong>Checked By</strong></p>
+                                    <img src="{{ asset('images/tata.png') }}" alt="TATA" style="height: 35px;margin: auto;">
+                                </div>
+                                <div class="col-4">
+                                    <p class=""><strong>.............................</strong></p>
+                                    <p class="mb-2"><strong>Authorized Officer</strong></p>
+                                    <img src="{{ asset('images/USN.png') }}" alt="USN" style="height: 35px;margin: auto;">
+                                </div>
+                                <div class="col-4">
+                                    <p class=""><strong>.............................</strong></p>
+                                    <p class="mb-2"><strong>Customer Stamp</strong></p>
+                                    <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra" style="height: 35px;margin: auto;">
+                                </div>
+                            </div>
+                            <div class="border-top pt-3">
+                                <p class="text-center"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                                <p class="text-center"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                                <p class="text-center mt-2" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Footer Buttons --}}
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-outline-primary me-2" onclick="printSaleReceipt()">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="openPrintWindow({{ $createdSale->id }})">
                         <i class="bi bi-printer me-2"></i>Print
                     </button>
                     <button type="button" class="btn btn-success" wire:click="downloadInvoice">
@@ -822,9 +843,13 @@
 
 @push('scripts')
 <script>
-    // Print function
-    function printSaleReceipt() {
-        window.print();
+    // Print function for sale system
+    function openPrintWindow(saleId) {
+        const printUrl = '/admin/print/sale/' + saleId;
+        const printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
+        if (printWindow) {
+            printWindow.focus();
+        }
     }
 
     // Auto-close alerts after 5 seconds

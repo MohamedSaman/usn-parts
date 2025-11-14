@@ -113,7 +113,7 @@
             @if ($cheques->hasPages())
             <div class="card-footer">
                 <div class="d-flex justify-content-center">
-                    {{ $cheques->links('pagination::bootstrap-5') }}
+                    {{ $cheques->links('livewire.custom-pagination') }}
                 </div>
             </div>
             @endif
