@@ -830,7 +830,7 @@
                     <button type="button" class="btn btn-outline-secondary me-2" wire:click="createNewSale">
                         <i class="bi bi-x-circle me-2"></i>Close
                     </button>
-                    <button type="button" class="btn btn-outline-primary me-2" onclick="window.printSaleReceipt()">
+                    <button type="button" class="btn btn-outline-primary me-2" onclick="printSaleReceipt()">
                         <i class="bi bi-printer me-2"></i>Print
                     </button>
                     <button type="button" class="btn btn-success" wire:click="downloadInvoice">
@@ -991,7 +991,6 @@
 
 @push('styles')
 <style>
-    /* Existing styles remain the same... */
     .container-fluid {
         background-color: #f5fdf1ff !important;
     }
@@ -1055,158 +1054,18 @@
         border-bottom: none !important;
     }
 
-    /* Hide print-only elements on screen */
-    @media screen {
-        .print-only-header {
-            display: none !important;
-        }
-    }
-
-    /* ============================================
-       PRINT STYLES FOR SALE RECEIPT
-       ============================================ */
+    /* Print styles for sale receipt */
     @media print {
-
-        /* Print only the receipt content */
-        body.printing-sale-receipt * {
-            visibility: hidden !important;
+        body * {
+            visibility: hidden;
         }
-
-        body.printing-sale-receipt #saleReceiptPrintContent,
-        body.printing-sale-receipt #saleReceiptPrintContent * {
+        
+        #saleReceiptPrintContent,
+        #saleReceiptPrintContent * {
             visibility: visible !important;
         }
-
-        body.printing-sale-receipt #saleReceiptPrintContent {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            padding: 10mm 15mm !important;
-            background: white !important;
-            color: #000 !important;
-        }
-
-        /* Hide screen elements */
-        body.printing-sale-receipt .screen-only-header,
-        body.printing-sale-receipt .modal-header,
-        body.printing-sale-receipt .modal-footer,
-        body.printing-sale-receipt .btn,
-        body.printing-sale-receipt .badge,
-        body.printing-sale-receipt .card {
-            display: none !important;
-            visibility: hidden !important;
-        }
-
-        /* Show print header */
-        body.printing-sale-receipt .print-only-header {
-            display: block !important;
-            visibility: visible !important;
-        }
-
-        /* Invoice info layout */
-        body.printing-sale-receipt .invoice-info-row {
-            display: flex !important;
-            margin-bottom: 15px !important;
-            font-size: 11px !important;
-        }
-
-        body.printing-sale-receipt .invoice-info-row .col-6 {
-            flex: 0 0 50% !important;
-            max-width: 50% !important;
-        }
-
-        body.printing-sale-receipt .invoice-info-row p {
-            margin: 2px 0 !important;
-            line-height: 1.4 !important;
-        }
-
-        body.printing-sale-receipt .invoice-info-row table {
-            font-size: 11px !important;
-        }
-
-        body.printing-sale-receipt .invoice-info-row td {
-            padding: 2px 0 !important;
-        }
-
-        /* Table styles */
-        body.printing-sale-receipt .invoice-table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin: 10px 0 !important;
-            font-size: 10px !important;
-        }
-
-        body.printing-sale-receipt .invoice-table th {
-            background-color: #f0f0f0 !important;
-            border: 1px solid #000 !important;
-            padding: 6px 8px !important;
-            font-weight: bold !important;
-            text-transform: uppercase !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        body.printing-sale-receipt .invoice-table td {
-            border: 1px solid #000 !important;
-            padding: 5px 8px !important;
-        }
-
-        body.printing-sale-receipt .invoice-table tbody tr {
-            page-break-inside: avoid !important;
-        }
-
-        body.printing-sale-receipt .invoice-table tfoot .totals-row td {
-            border-top: 1px solid #000 !important;
-            padding: 5px 8px !important;
-        }
-
-        body.printing-sale-receipt .invoice-table tfoot .grand-total td {
-            border-top: 2px solid #000 !important;
-            font-size: 11px !important;
-            padding: 7px 8px !important;
-        }
-
-        /* Footer */
-        body.printing-sale-receipt .invoice-footer {
-            margin-top: 20px !important;
-            border-top: 1px solid #000 !important;
-            padding-top: 10px !important;
-            font-size: 10px !important;
-        }
-
-        body.printing-sale-receipt .invoice-footer p {
-            margin: 2px 0 !important;
-        }
-
-        /* Page setup */
-        @page {
-            size: A4 portrait !important;
-            margin: 0 !important;
-        }
-
-        body.printing-sale-receipt {
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-    }
-
-    /* ============================================
-       PRINT STYLES FOR CLOSE REGISTER MODAL
-       ============================================ */
-    @media print {
-
-        /* When closeRegisterPrintContent is being printed */
-        body.printing-close-register * {
-            visibility: hidden !important;
-        }
-
-        body.printing-close-register #closeRegisterPrintContent,
-        body.printing-close-register #closeRegisterPrintContent * {
-            visibility: visible !important;
-        }
-
-        body.printing-close-register #closeRegisterPrintContent {
+        
+        #saleReceiptPrintContent {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
@@ -1214,155 +1073,77 @@
             margin: 0 !important;
             padding: 15mm !important;
             background: white !important;
+            color: black !important;
         }
 
-        /* Print Header for Close Register */
-        body.printing-close-register .print-header {
-            display: block !important;
-            text-align: center !important;
-            margin-bottom: 15px !important;
-            padding-bottom: 10px !important;
-            border-bottom: 2px solid #000 !important;
-        }
-
-        body.printing-close-register .print-header img {
-            display: block !important;
-            height: 50px !important;
-            width: auto !important;
-            margin: 0 auto 10px !important;
-            object-fit: contain !important;
-        }
-
-        body.printing-close-register .print-header p {
-            margin: 2px 0 !important;
-            font-size: 10px !important;
-            line-height: 1.3 !important;
-        }
-
-        body.printing-close-register .print-header h3 {
-            margin: 12px 0 8px !important;
-            font-size: 16px !important;
-            font-weight: bold !important;
-            text-transform: uppercase !important;
-            letter-spacing: 1px !important;
-        }
-
-        /* Hide screen-only elements */
-        body.printing-close-register .modal-header,
-        body.printing-close-register .modal-footer,
-        body.printing-close-register .no-print,
-        body.printing-close-register .btn,
-        body.printing-close-register .badge {
+        /* Hide screen elements */
+        .modal-header,
+        .modal-footer,
+        .btn,
+        .badge,
+        .screen-only-header {
             display: none !important;
             visibility: hidden !important;
         }
 
-        /* Summary Table */
-        body.printing-close-register .print-table {
+        /* Show print header */
+        .print-only-header {
+            display: block !important;
+            visibility: visible !important;
+            text-align: center !important;
+            margin-bottom: 20px !important;
+            border-bottom: 2px solid #000 !important;
+            padding-bottom: 10px !important;
+        }
+
+        /* Invoice table styles */
+        .invoice-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            margin: 10px 0 !important;
+            margin: 15px 0 !important;
+            font-size: 12px !important;
         }
 
-        body.printing-close-register .print-table td {
+        .invoice-table th {
+            background-color: #f8f9fa !important;
+            border: 1px solid #000 !important;
+            padding: 8px !important;
+            font-weight: bold !important;
+            text-align: center !important;
+        }
+
+        .invoice-table td {
             border: 1px solid #000 !important;
             padding: 6px 8px !important;
-            font-size: 10px !important;
         }
 
-        body.printing-close-register .print-table .fw-semibold,
-        body.printing-close-register .print-table .fw-bold {
-            font-weight: bold !important;
-        }
-
-        body.printing-close-register .print-table .table-warning td {
-            background-color: #fff3cd !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        body.printing-close-register .print-table .table-light td {
-            background-color: #f8f9fa !important;
-            border-top: 2px solid #000 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        body.printing-close-register .print-table .table-success td {
-            background-color: #d1e7dd !important;
+        .invoice-table .totals-row td {
             border-top: 2px solid #000 !important;
             font-weight: bold !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-        }
-
-        body.printing-close-register .print-table .ps-4 {
-            padding-left: 25px !important;
-        }
-
-        body.printing-close-register .print-table .text-end {
-            text-align: right !important;
-        }
-
-        /* Notes section */
-        body.printing-close-register #closeRegisterPrintContent .mb-3 label {
-            font-size: 10px !important;
-            font-weight: bold !important;
-            display: block !important;
-            margin-bottom: 5px !important;
-        }
-
-        body.printing-close-register #closeRegisterPrintContent textarea {
-            border: 1px solid #000 !important;
             padding: 8px !important;
-            font-size: 10px !important;
-            width: 100% !important;
-            min-height: 50px !important;
-            background: white !important;
         }
 
-        /* Alert boxes */
-        body.printing-close-register #closeRegisterPrintContent .alert {
-            border: 1px solid #000 !important;
-            padding: 8px !important;
-            margin-top: 10px !important;
-            border-radius: 0 !important;
-            background: #fff !important;
-            color: #000 !important;
-            font-size: 10px !important;
+        .invoice-table .grand-total td {
+            border-top: 3px double #000 !important;
+            font-size: 14px !important;
+            background-color: #f0f0f0 !important;
         }
 
-        body.printing-close-register #closeRegisterPrintContent .alert i {
-            display: none !important;
-        }
-
-        /* HR separator */
-        body.printing-close-register #closeRegisterPrintContent hr {
-            border-top: 1px solid #000 !important;
-            margin: 10px 0 !important;
-        }
-
-        /* Footer for close register */
-        body.printing-close-register .register-print-footer {
-            display: block !important;
-            text-align: center !important;
-            margin-top: 20px !important;
-            padding-top: 10px !important;
-            border-top: 1px solid #000 !important;
-            font-size: 9px !important;
-        }
-
-        /* A4 Page setup for close register */
+        /* Page setup */
         @page {
-            size: A4 portrait !important;
-            margin: 10mm !important;
+            size: A4 portrait;
+            margin: 15mm;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
         }
     }
 
     @media screen {
-
-        .print-header,
-        .print-footer {
+        .print-only-header {
             display: none !important;
         }
     }
@@ -1371,14 +1152,9 @@
 
 @push('scripts')
 <script>
-    // Print Sale Receipt Function
-    window.printSaleReceipt = function() {
-        document.body.classList.remove('printing-close-register');
-        document.body.classList.add('printing-sale-receipt');
+    // Print Sale Receipt Function - FIXED VERSION
+   function printSaleReceipt() {
         window.print();
-        setTimeout(function() {
-            document.body.classList.remove('printing-sale-receipt');
-        }, 1000);
     }
 
     // Auto-close alerts after 5 seconds

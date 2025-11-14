@@ -180,7 +180,7 @@
 
                     {{-- Allocation Breakdown --}}
                     <h6 class="text-muted mt-4 mb-3">PAYMENT ALLOCATION BREAKDOWN</h6>
-                    <div class="table-responsive">
+                    <div class="table-responsive overflow-auto">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
@@ -300,7 +300,7 @@
 
                     {{-- Order Items --}}
                     <h6 class="text-muted mb-3">ORDER ITEMS</h6>
-                    <div class="table-responsive">
+                    <div class="table-responsive overflow-auto">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
@@ -547,7 +547,7 @@
                 </h5>
                 <span class="badge bg-primary">{{ $suppliers->total() }} suppliers</span>
             </div>
-            <div class="card-body p-0">
+            <div class="card-body p-0 overflow-auto">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
@@ -631,7 +631,7 @@
                             </button>
                         </div>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="card-body p-0 overflow-auto">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">

@@ -101,7 +101,7 @@
                         <i class="bi bi-arrow-clockwise me-1"></i> Refresh
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     @if($selectedSupplier && count($supplierPurchaseOrders) > 0)
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
@@ -174,7 +174,7 @@
                         <i class="bi bi-exclamation-triangle me-2"></i> Previous Returns for PO #{{ $selectedPurchaseOrder->order_code }}
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle mb-0">
                             <thead class="table-light">
@@ -234,7 +234,7 @@
                         @endif
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle mb-0">
                             <thead class="table-light">
@@ -314,7 +314,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 bg-light p-3 rounded">
+                    <div class="d-flex justify-content-between align-items-center mt-3 bg-light p-3 rounded overflow-auto">
                         <div>
                             <button class="btn btn-outline-danger" wire:click="clearReturnCart">
                                 <i class="bi bi-trash me-1"></i> Clear All
@@ -356,7 +356,7 @@
                     </div>
 
                     <h6 class="fw-bold mb-3">Return Items Summary</h6>
-                    <div class="table-responsive">
+                    <div class="table-responsive overflow-auto">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>
@@ -437,7 +437,7 @@
                     </div>
 
                     <h6 class="fw-bold mb-3">Purchase Order Items</h6>
-                    <div class="table-responsive">
+                    <div class="table-responsive overflow-auto">
                         <table class="table table-bordered">
                             <thead class="table-light">
                                 <tr>

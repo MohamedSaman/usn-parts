@@ -162,7 +162,7 @@
                         <i class="bi bi-exclamation-triangle me-2"></i> Previous Returns for Invoice #{{ $selectedInvoice->invoice_number }}
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle mb-0">
                             <thead class="table-light">
@@ -221,7 +221,7 @@
                         @endif
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body overflow-auto">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle mb-0">
                             <thead class="table-light">

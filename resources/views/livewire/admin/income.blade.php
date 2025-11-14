@@ -130,7 +130,7 @@
                                                                 <i class="bi bi-cash-coin me-2"></i>💰 CASH SALES - TODAY
                                                             </h5>
                                                         </div>
-                                                        <div class="card-body p-0">
+                                                        <div class="card-body p-0 overflow-auto">
                                                             <div class="table-responsive">
                                                                 <table class="table table-hover mb-0">
                                                                     <thead style="background: #f8f9fa;">
