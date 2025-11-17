@@ -9,7 +9,11 @@
         /* Global Print Layout Styles */
         @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 15mm;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
@@ -25,140 +29,141 @@
         .print-container {
             width: 210mm;
             min-height: 297mm;
-            padding: 10mm;
+            padding: 0;
             margin: 0 auto;
             background: white;
             position: relative;
-            box-sizing: border-box;
         }
 
         /* Global Header Styles */
         .global-header {
             border-bottom: 3px solid #3b5b0c;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
             margin-bottom: 20px;
-        }
-
-        @media print {
-            .global-header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                z-index: 1000;
-                background: white;
-                margin-bottom: 0;
-                padding-top: 0;
-            }
-
-            .global-footer {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                z-index: 1000;
-                background: white;
-                margin-top: 0;
-                padding-bottom: 0;
-            }
-
-            .print-content {
-                margin-top: 140px;
-                /* Height of header */
-                margin-bottom: 180px;
-                /* Height of footer */
-            }
-
-            body,
-            html {
-                margin: 0;
-                padding: 0;
-            }
         }
 
         .global-header .d-flex {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            width: 100%;
         }
 
-        .global-header img {
-            max-height: 50px;
+        .global-header .header-left {
+            flex: 0 0 100px;
+            max-width: 100px;
         }
 
-        .global-header h2 {
-            font-size: 2.5rem;
-            letter-spacing: 2px;
+        .global-header .header-left img {
+            max-height: 60px;
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            display: block;
+        }
+
+        .global-header .header-center {
+            flex: 1;
+            text-align: center;
+            padding: 0 10px;
+            min-width: 0;
+        }
+
+        .global-header .header-center h2 {
+            font-size: 1.5rem;
+            letter-spacing: 1.5px;
             font-weight: bold;
-            margin-bottom: 0;
+            margin: 0 0 3px 0;
+            line-height: 1.2;
+            white-space: nowrap;
         }
 
-        .global-header .text-muted {
+        .global-header .header-center p {
             color: #666;
-            font-size: 0.875rem;
+            font-size: 0.65rem;
+            margin: 0;
+            line-height: 1.3;
         }
 
-        .global-header h5,
-        .global-header h6 {
-            margin-bottom: 0;
+        .global-header .header-right {
+            flex: 0 0 100px;
+            max-width: 100px;
+            text-align: right;
+        }
+
+        .global-header .header-right h3 {
+            margin: 0 0 3px 0;
             font-weight: bold;
+            font-size: 0.85rem;
+            line-height: 1.2;
         }
 
-        .global-header h6 {
+        .global-header .header-right h6 {
+            margin: 0;
             color: #666;
-            margin-top: 10px;
+            font-size: 0.75rem;
+            line-height: 1.2;
         }
 
         .global-header hr {
+            border: 0;
             border-top: 2px solid #000;
-            margin: 0.25rem 0;
+            margin: 8px 0 0 0;
         }
 
         /* Content Area */
         .print-content {
-            min-height: calc(297mm - 200px);
+            min-height: 500px;
             margin-bottom: 20px;
         }
 
         /* Global Footer Styles */
         .global-footer {
-            position: absolute;
-            bottom: 15mm;
-            left: 10mm;
-            right: 10mm;
-            margin-top: 20px;
+            margin-top: 30px;
+            page-break-inside: avoid;
         }
 
         .global-footer .row {
             display: flex;
-            margin-left: 0;
-            margin-right: 0;
+            justify-content: space-between;
+            margin: 0 0 15px 0;
+            text-align: center;
         }
 
         .global-footer .col-4 {
-            flex: 0 0 30%;
-            max-width: 30%;
-            text-align: center;
-            padding: 0 10px;
+            flex: 0 0 32%;
+            max-width: 32%;
+            padding: 0 5px;
         }
 
-        .global-footer img {
-            height: 35px;
-            margin: auto;
+        .global-footer .col-4 p {
+            margin: 0 0 6px 0;
+            font-size: 11px;
+        }
+
+        .global-footer .col-4 img {
+            height: 30px;
+            margin: 0 auto;
+            display: block;
         }
 
         .global-footer .border-top {
             border-top: 1px solid #3b5b0c;
             padding-top: 10px;
+            margin-top: 0;
         }
 
-        .global-footer .text-center {
+        .global-footer .footer-info p {
             text-align: center;
             font-size: 10px;
-            color: #666;
-            margin: 2px 0;
+            color: #333;
+            margin: 4px 0;
+            line-height: 1.4;
+        }
+
+        .global-footer .footer-info .terms {
+            font-weight: bold;
+            margin-top: 8px;
         }
 
         /* Sale Receipt Specific Styles */
@@ -171,15 +176,25 @@
         .invoice-info-row .col-6 {
             flex: 0 0 50%;
             max-width: 50%;
+            padding: 0 10px;
+        }
+
+        .invoice-info-row .col-6:first-child {
+            padding-left: 0;
+        }
+
+        .invoice-info-row .col-6:last-child {
+            padding-right: 0;
         }
 
         .invoice-info-row p {
             margin: 2px 0;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         .invoice-info-row table {
             font-size: 11px;
+            width: 100%;
         }
 
         .invoice-info-row td {
@@ -218,12 +233,14 @@
         }
 
         .invoice-table tfoot .grand-total td {
-            border-top: 1px solid #000;
+            border-top: 2px solid #000;
             font-size: 11px;
             padding: 7px 8px;
             background-color: #f8f9fa;
+            font-weight: bold;
         }
 
+        /* Utility Classes */
         .text-end {
             text-align: right;
         }
@@ -234,6 +251,10 @@
 
         .text-left {
             text-align: left;
+        }
+
+        .text-muted {
+            color: #666;
         }
 
         .fw-bold {
@@ -260,7 +281,19 @@
             padding-top: 1rem;
         }
 
-        /* Hide on screen, show on print */
+        .d-flex {
+            display: flex;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+
+        .justify-content-between {
+            justify-content: space-between;
+        }
+
+        /* Screen View */
         @media screen {
             body {
                 background: #f5f5f5;
@@ -269,6 +302,56 @@
 
             .print-container {
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                padding: 15mm;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 210mm;
+                height: 297mm;
+            }
+
+            .print-container {
+                width: 210mm;
+                height: 297mm;
+                padding: 0;
+                margin: 0;
+                box-shadow: none;
+            }
+
+            .global-header {
+                margin-bottom: 15px;
+            }
+
+            .global-footer {
+                page-break-inside: avoid;
+            }
+
+            /* Prevent content from being cut off */
+            .print-content {
+                page-break-inside: auto;
+            }
+
+            table {
+                page-break-inside: auto;
+            }
+
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+
+            thead {
+                display: table-header-group;
+            }
+
+            tfoot {
+                display: table-footer-group;
             }
         }
     </style>
@@ -278,22 +361,23 @@
     <div class="print-container">
         <!-- Global Header -->
         <div class="global-header">
-            <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center justify-content-between">
                 {{-- Left: Logo --}}
-                <div style="flex: 0 0 150px;">
-                    <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:50px;">
+                <div class="header-left">
+                    <img src="{{ asset('images/USN.png') }}" alt="Logo">
                 </div>
                 {{-- Center: Company Name --}}
-                <div class="text-center" style="flex: 1;">
-                    <h2 class="mb-0 fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">USN AUTO PARTS</h2>
-                    <p class="mb-0 text-muted small">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                <div class="header-center">
+                    <h2 class="mb-0 fw-bold">USN AUTO PARTS</h2>
+                    <p class="mb-0 text-muted">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
                 </div>
                 {{-- Right: Motor Parts & Invoice --}}
-                <div class="text-end" style="flex: 0 0 150px;">
+                <div class="header-right">
                     <h3 class="mb-0 fw-bold">MOTOR PARTS</h3>
                     <h6 class="mb-0 text-muted">{{ $documentType ?? 'INVOICE' }}</h6>
                 </div>
             </div>
+            <hr>
         </div>
 
         <!-- Dynamic Content Area -->
@@ -303,27 +387,29 @@
 
         <!-- Global Footer -->
         <div class="global-footer">
-            <div class="row text-center mb-3">
+            <div class="row text-center">
                 <div class="col-4">
-                    <p class=""><strong>.............................</strong></p>
-                    <p class="mb-2"><strong>Checked By</strong></p>
-                    <img src="{{ asset('images/tata.png') }}" alt="TATA" style="height: 35px;margin: auto;">
+                    <p><strong>.............................</strong></p>
+                    <p><strong>Checked By</strong></p>
+                    <img src="{{ asset('images/tata.png') }}" alt="TATA">
                 </div>
                 <div class="col-4">
-                    <p class=""><strong>.............................</strong></p>
-                    <p class="mb-2"><strong>Authorized Officer</strong></p>
-                    <img src="{{ asset('images/USN.png') }}" alt="USN" style="height: 35px;margin: auto;">
+                    <p><strong>.............................</strong></p>
+                    <p><strong>Authorized Officer</strong></p>
+                    <img src="{{ asset('images/USN.png') }}" alt="USN">
                 </div>
                 <div class="col-4">
-                    <p class=""><strong>.............................</strong></p>
-                    <p class="mb-2"><strong>Customer Stamp</strong></p>
-                    <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra" style="height: 35px;margin: auto;">
+                    <p><strong>.............................</strong></p>
+                    <p><strong>Customer Stamp</strong></p>
+                    <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra">
                 </div>
             </div>
-            <div class="border-top pt-3">
-                <p class="text-center"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
-                <p class="text-center"><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
-                <p class="text-center mt-2" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+            <div class="border-top">
+                <div class="footer-info">
+                    <p><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                    <p><strong>TEL :</strong> (076) 9085252, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                    <p class="terms">Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</p>
+                </div>
             </div>
         </div>
     </div>
