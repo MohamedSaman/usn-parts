@@ -905,7 +905,9 @@ class StoreBilling extends Component
             return;
         }
 
-        $sale = Sale::with(['customer', 'items', 'payments'])->find($this->createdSale->id);
+        $sale = Sale::with(['customer', 'items', 'payments', 'returns' => function ($q) {
+            $q->with('product');
+        }])->find($this->createdSale->id);
 
         if (!$sale) {
             $this->js("Swal.fire('error', 'Sale not found.', 'error')");
@@ -1191,9 +1193,12 @@ class StoreBilling extends Component
         $cashDepositBank = DB::table('deposits')
             ->whereDate('date', $today)
             ->sum('amount');
+        $supplierPaymentToday = DB::table('purchase_payments')
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
 
         // Calculate Total Cash in Hand
-        $totalCashInHand = $sessionOpeningCash + $totalCashPaymentsToday - $refundsToday - $expensesToday - $cashDepositBank;
+        $totalCashInHand = ($sessionOpeningCash + $totalCashPaymentsToday )- ($refundsToday + $expensesToday + $cashDepositBank + $supplierPaymentToday);
 
         // Update session data
         $this->currentSession->update([
@@ -1205,6 +1210,7 @@ class StoreBilling extends Component
             'refunds' => $refundsToday,
             'expenses' => $expensesToday,
             'cash_deposit_bank' => $cashDepositBank,
+            'spupplier_payment' => $supplierPaymentToday,
         ]);
 
         // Prepare summary data
@@ -1242,6 +1248,7 @@ class StoreBilling extends Component
             'refunds' => $refundsToday,
             'expenses' => $expensesToday,
             'cash_deposit_bank' => $cashDepositBank,
+            'supplier_payment' => $supplierPaymentToday,
 
             // Final Cash in Hand
             'expected_cash' => $totalCashInHand,

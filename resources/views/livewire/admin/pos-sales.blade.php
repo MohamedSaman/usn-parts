@@ -215,10 +215,10 @@ use App\Models\Sale;
                                         <!-- Print Invoice -->
                                         <li>
                                             <button class="dropdown-item"
-                                                    wire:click="printInvoice({{ $sale->id }})"
-                                                    wire:loading.attr="disabled"
-                                                    wire:target="printInvoice({{ $sale->id }})">
-                                                
+                                                wire:click="printInvoice({{ $sale->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="printInvoice({{ $sale->id }})">
+
                                                 <span wire:loading wire:target="printInvoice({{ $sale->id }})">
                                                     <i class="spinner-border spinner-border-sm me-2"></i>
                                                     Loading...
@@ -274,202 +274,231 @@ use App\Models\Sale;
         </div>
     </div>
 
-   {{-- View Sale Modal --}}
-<div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content" id="printableInvoice">
-            {{-- ==================== HEADER ==================== --}}
-            <div class="modal-header text-center border-0" style="background: linear-gradient(90deg, #c7f392ff, #ffffffff); color: #000000ff;">
-                <div class="w-100">
-                    <img src="{{ asset('images/USN.png') }}" alt="Logo"
-                        class="img-fluid mb-2" style="max-height:100px;">
-                </div>
-                <button type="button" class="btn-close btn-close-black closebtn"
-                    wire:click="closeModals"></button>
-            </div>
-            @if($selectedSale)
-            <div class="modal-body">
-                {{-- ==================== CUSTOMER + INVOICE INFO ==================== --}}
-                <div class="row mb-3">
-                    <div class="col-6">
-                        <strong>Customer :</strong><br>
-                        {{ $selectedSale->customer->name ?? 'Walk-in Customer' }}<br>
-                        {{ $selectedSale->customer->address ?? '' }}<br>
-                        Tel: {{ $selectedSale->customer->phone ?? '' }}
+    {{-- View Sale Modal --}}
+    <div wire:ignore.self class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" id="printableInvoice">
+                {{-- Screen Only Header (visible on screen, hidden on print) --}}
+                <div class="screen-only-header p-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        {{-- Left: Logo --}}
+                        <div style="flex: 0 0 150px;">
+                            <img src="{{ asset('images/USN.png') }}" alt="Logo" class="img-fluid" style="max-height:80px;">
+                        </div>
+
+                        {{-- Center: Company Name --}}
+                        <div class="text-center" style="flex: 1;">
+                            <h2 class="mb-0 fw-bold" style="font-size: 2.5rem; letter-spacing: 2px;">USN AUTO PARTS</h2>
+                            <p class="mb-0 text-muted small">IMPORTERS & DISTRIBUTERS OF MAHINDRA AND TATA PARTS</p>
+                        </div>
+
+                        {{-- Right: Motor Parts & Invoice --}}
+                        <div class="text-end" style="flex: 0 0 150px;">
+                            <h5 class="mb-0 fw-bold">MOTOR PARTS</h5>
+                            <h6 class="mb-0 text-muted">INVOICE</h6>
+                        </div>
                     </div>
-                    <div class="col-6 text-end">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td><strong>Invoice #</strong></td>
-                                <td>{{ $selectedSale->invoice_number }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Sale ID</strong></td>
-                                <td>{{ $selectedSale->sale_id }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Date</strong></td>
-                                <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Sale Type</strong></td>
-                                <td><span class="badge bg-primary">{{ strtoupper($selectedSale->sale_type) }}</span></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Created By</strong></td>
-                                <td>{{ $selectedSale->user->name ?? 'System' }}</td>
-                            </tr>
-                        </table>
-                    </div>
+                    <hr class="my-2" style="border-top: 2px solid #000;">
                 </div>
 
-                {{-- ==================== ITEMS TABLE ==================== --}}
-                <div class="table-responsive mb-3">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th class="text-center">Code</th>
-                                <th class="text-center">Quantity</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Discount</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($selectedSale->items as $i => $item)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ $item->product_name }}</td>
-                                <td class="text-center">{{ $item->product_code }}</td>
-                                <td class="text-center">{{ $item->quantity }}</td>
-                                <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                                <td class="text-end">Rs.{{ number_format($item->discount_per_unit * $item->quantity, 2) }}</td>
-                                <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
-                            </tr>
-                            @endforeach
-                            @if($selectedSale->items->count() == 0)
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">No items found.</td>
-                            </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-
-                {{-- ==================== TOTALS (right-aligned) ==================== --}}
-                <div class="row">
-                    <div class="col-7"></div>
-                    <div class="col-5">
-                        <table class="table table-sm table-borderless">
-                            <tr>
-                                <td><strong>Subtotal</strong></td>
-                                <td class="text-end">Rs.{{ number_format($selectedSale->subtotal, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Discount</strong></td>
-                                <td class="text-end">- Rs.{{ number_format($selectedSale->discount_amount, 2) }}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>Grand Total</strong></td>
-                                <td class="text-end fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
-                            </tr>
-                            @if($selectedSale->due_amount > 0)
-                            <tr>
-                                <td><strong class="text-danger">Due Amount</strong></td>
-                                <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
-                            </tr>
-                            @endif
-                        </table>
-                    </div>
-                </div>
-
-                {{-- ==================== RETURNED ITEMS TABLE ==================== --}}
-                @if(isset($selectedSale->returns) && count($selectedSale->returns) > 0)
-                <h6 class="text-muted mb-3 mt-4">RETURNED ITEMS</h6>
-                <div class="table-responsive mb-4">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Product</th>
-                                <th class="text-center">Code</th>
-                                <th class="text-center">Return Qty</th>
-                                <th class="text-end">Unit Price</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php $returnAmount = 0; @endphp
-                            @foreach($selectedSale->returns as $rIndex => $return)
-                            @php $returnAmount += $return->total_amount; @endphp
-                            <tr>
-                                <td>{{ $rIndex + 1 }}</td>
-                                <td>{{ $return->product?->name ?? '-' }}</td>
-                                <td class="text-center">{{ $return->product?->code ?? '-' }}</td>
-                                <td class="text-center">{{ $return->return_quantity }}</td>
-                                <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
-                                <td class="text-end">Rs.{{ number_format($return->total_amount, 2) }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                        <tfoot class="table-light">
-                            <tr>
-                                <td colspan="5" class="text-end"><strong>Return Amount:</strong></td>
-                                <td class="text-end">- Rs.@php echo number_format($returnAmount, 2); @endphp</td>
-                            </tr>
-                            <tr>
-                                <td colspan="5" class="text-end"><strong>Net Amount:</strong></td>
-                                <td class="text-end fw-bold">
-                                    Rs.@php echo number_format(($selectedSale->subtotal - $selectedSale->discount_amount) - $returnAmount, 2); @endphp
-                                </td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-                @endif
-
-                @if($selectedSale->notes)
-                <h6 class="text-muted mb-2">NOTES</h6>
-                <div class="card bg-light">
-                    <div class="card-body">
-                        <p class="mb-0">{{ $selectedSale->notes }}</p>
-                    </div>
-                </div>
-                @endif
-
-                {{-- Footer – address + contact details --}}
-                <div class="mt-4 text-center small">
-                    <p class="mb-0">
-                        <strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella<br>
-                        <strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com
-                    </p>
-                    <p class="mt-1 text-muted">
-                        Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.
-                    </p>
-                </div>
-            </div>
-            @endif
-            {{-- ==================== FOOTER BUTTONS ==================== --}}
-            <div class="modal-footer bg-light justify-content-between">
-                <button type="button" class="btn btn-secondary" wire:click="closeModals">
-                    <i class="bi bi-x-circle me-1"></i> Close
-                </button>
                 @if($selectedSale)
-                <div>
-                    <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
-                        <i class="bi bi-download me-1"></i> Download PDF
-                    </button>
-                    <button type="button" class="btn btn-outline-primary" onclick="printInvoice()">
-                        <i class="bi bi-printer me-1"></i> Print
-                    </button>
+                <div class="modal-body">
+                    {{-- ==================== CUSTOMER + INVOICE INFO ==================== --}}
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <strong>Customer :</strong><br>
+                            {{ $selectedSale->customer->name ?? 'Walk-in Customer' }}<br>
+                            {{ $selectedSale->customer->address ?? '' }}<br>
+                            Tel: {{ $selectedSale->customer->phone ?? '' }}
+                        </div>
+                        <div class="col-6 text-end">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Invoice #</strong></td>
+                                    <td>{{ $selectedSale->invoice_number }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sale ID</strong></td>
+                                    <td>{{ $selectedSale->sale_id }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Date</strong></td>
+                                    <td>{{ $selectedSale->created_at->format('M d, Y h:i A') }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sale Type</strong></td>
+                                    <td><span class="badge bg-primary">{{ strtoupper($selectedSale->sale_type) }}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Created By</strong></td>
+                                    <td>{{ $selectedSale->user->name ?? 'System' }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- ==================== ITEMS TABLE ==================== --}}
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Code</th>
+                                    <th class="text-center">Quantity</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Discount</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($selectedSale->items as $i => $item)
+                                <tr>
+                                    <td>{{ $i + 1 }}</td>
+                                    <td>{{ $item->product_name }}</td>
+                                    <td class="text-center">{{ $item->product_code }}</td>
+                                    <td class="text-center">{{ $item->quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->discount_per_unit * $item->quantity, 2) }}</td>
+                                    <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
+                                </tr>
+                                @endforeach
+                                @if($selectedSale->items->count() == 0)
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">No items found.</td>
+                                </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- ==================== TOTALS (right-aligned) ==================== --}}
+                    <div class="row">
+                        <div class="col-7"></div>
+                        <div class="col-5">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td><strong>Subtotal</strong></td>
+                                    <td class="text-end">Rs.{{ number_format($selectedSale->subtotal, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Discount</strong></td>
+                                    <td class="text-end">- Rs.{{ number_format($selectedSale->discount_amount, 2) }}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Grand Total</strong></td>
+                                    <td class="text-end fw-bold">Rs.{{ number_format($selectedSale->total_amount, 2) }}</td>
+                                </tr>
+                                @if($selectedSale->due_amount > 0)
+                                <tr>
+                                    <td><strong class="text-danger">Due Amount</strong></td>
+                                    <td class="text-end fw-bold text-danger">Rs.{{ number_format($selectedSale->due_amount, 2) }}</td>
+                                </tr>
+                                @endif
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- ==================== RETURNED ITEMS TABLE ==================== --}}
+                    @if(isset($selectedSale->returns) && count($selectedSale->returns) > 0)
+                    <h6 class="text-muted mb-3 mt-4">RETURNED ITEMS</h6>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th class="text-center">Code</th>
+                                    <th class="text-center">Return Qty</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $returnAmount = 0; @endphp
+                                @foreach($selectedSale->returns as $rIndex => $return)
+                                @php $returnAmount += $return->total_amount; @endphp
+                                <tr>
+                                    <td>{{ $rIndex + 1 }}</td>
+                                    <td>{{ $return->product?->name ?? '-' }}</td>
+                                    <td class="text-center">{{ $return->product?->code ?? '-' }}</td>
+                                    <td class="text-center">{{ $return->return_quantity }}</td>
+                                    <td class="text-end">Rs.{{ number_format($return->selling_price, 2) }}</td>
+                                    <td class="text-end">Rs.{{ number_format($return->total_amount, 2) }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Return Amount:</strong></td>
+                                    <td class="text-end">- Rs.@php echo number_format($returnAmount, 2); @endphp</td>
+                                </tr>
+                                <tr>
+                                    <td colspan="5" class="text-end"><strong>Net Amount:</strong></td>
+                                    <td class="text-end fw-bold">
+                                        Rs.@php echo number_format(($selectedSale->subtotal - $selectedSale->discount_amount) - $returnAmount, 2); @endphp
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    @endif
+
+                    @if($selectedSale->notes)
+                    <h6 class="text-muted mb-2">NOTES</h6>
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <p class="mb-0">{{ $selectedSale->notes }}</p>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Footer Note --}}
+                    <div class="invoice-footer mt-4">
+                        <div class="row text-center mb-3">
+                            <div class="col-4">
+                                <p class=""><strong>.............................</strong></p>
+                                <p class="mb-2"><strong>Checked By</strong></p>
+                                <img src="{{ asset('images/tata.png') }}" alt="TATA" style="height: 35px;margin: auto;">
+                            </div>
+                            <div class="col-4">
+                                <p class=""><strong>.............................</strong></p>
+                                <p class="mb-2"><strong>Authorized Officer</strong></p>
+                                <img src="{{ asset('images/USN.png') }}" alt="USN" style="height: 35px;margin: auto;">
+                            </div>
+                            <div class="col-4">
+                                <p class=""><strong>.............................</strong></p>
+                                <p class="mb-2"><strong>Customer Stamp</strong></p>
+                                <img src="{{ asset('images/mahindra.png') }}" alt="Mahindra" style="height: 35px;margin: auto;">
+                            </div>
+                        </div>
+                        <div class="border-top pt-3">
+                            <p class="text-center mb-0"><strong>ADDRESS :</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
+                            <p class="text-center mb-0"><strong>TEL :</strong> (076) 9085352, <strong>EMAIL :</strong> autopartsusn@gmail.com</p>
+                            <p class="text-center" style="font-size: 11px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
+                        </div>
+                    </div>
                 </div>
                 @endif
+                {{-- ==================== FOOTER BUTTONS ==================== --}}
+                <div class="modal-footer bg-light justify-content-between">
+                    <button type="button" class="btn btn-secondary" wire:click="closeModals">
+                        <i class="bi bi-x-circle me-1"></i> Close
+                    </button>
+                    @if($selectedSale)
+                    <div>
+                        <button type="button" class="btn btn-success me-2" wire:click="downloadInvoice({{ $selectedSale->id }})">
+                            <i class="bi bi-download me-1"></i> Download PDF
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" wire:click="printInvoice({{ $selectedSale->id }})">
+                            <i class="bi bi-printer me-1"></i> Print
+                        </button>
+                    </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
-</div>
 
 
 

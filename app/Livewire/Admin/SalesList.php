@@ -385,7 +385,9 @@ class SalesList extends Component
 
     public function printInvoice($saleId)
     {
-        $sale = \App\Models\Sale::with(['customer', 'items', 'payments'])->find($saleId);
+        $sale = \App\Models\Sale::with(['customer', 'items', 'payments', 'returns' => function ($q) {
+            $q->with('product');
+        }])->find($saleId);
         if (!$sale) {
             $this->dispatch('showToast', ['type' => 'error', 'message' => 'Sale not found.']);
             return;

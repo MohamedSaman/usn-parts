@@ -9,6 +9,7 @@ use Livewire\WithPagination;
 use App\Models\POSSession;
 use App\Models\Sale;
 use App\Models\Payment;
+use App\Models\PurchasePayment;
 use Illuminate\Support\Facades\DB;
 
 #[Title('Day Summary Details')]
@@ -30,6 +31,7 @@ class DaySummaryDetails extends Component
     public $returns = 0;
     public $cashDeposit = 0;
     public $currentCash = 0;
+    public $supplierPayment = 0;
 
     public function mount($sessionId)
     {
@@ -67,6 +69,9 @@ class DaySummaryDetails extends Component
             ->where('payment_method', 'cash')
             ->where('is_completed', true)
             ->sum('amount');
+        $this->supplierPayment = PurchasePayment::whereDate('payment_date', $sessionDate)
+            ->where('payment_method', 'cash')
+            ->sum('amount');
 
         // Expenses
         $this->expenses = $this->session->expenses;
@@ -78,7 +83,7 @@ class DaySummaryDetails extends Component
         $this->cashDeposit = $this->session->cash_deposit_bank;
 
         // Current Cash
-        $this->currentCash = $this->cashInHand + $this->cashSales + $this->lateCashPayments - $this->expenses - $this->returns - $this->cashDeposit;
+        $this->currentCash = $this->cashInHand + $this->cashSales + $this->lateCashPayments - $this->expenses - $this->returns - $this->cashDeposit - $this->supplierPayment;
     }
 
     public function goBack()

@@ -116,7 +116,7 @@
                                                                         <div class="d-flex justify-content-between align-items-start mb-2">
                                                                             <h6 class="text-white-50 mb-0" style="font-size: 0.85rem; font-weight: 500; letter-spacing: 1px;">💎 CURRENT TOTAL CASH</h6>
                                                                         </div>
-                                                                        <h2 class="fw-bold mb-0">Rs. {{ number_format(($openingCash + $cashIncome + $cashLatePayments) - ($todayReturns + $todayDeposits+$todayExpenses), 2) }}</h2>
+                                                                        <h2 class="fw-bold mb-0">Rs. {{ number_format(($openingCash + $cashIncome + $cashLatePayments) - ($todayReturns + $todayDeposits+$todayExpenses + $supplierPayment), 2) }}</h2>
 
                                                                     </div>
                                                                 </div>

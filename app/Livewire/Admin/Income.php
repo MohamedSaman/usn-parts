@@ -12,6 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Livewire\Concerns\WithDynamicLayout;
+use App\Models\PurchasePayment;
 
 #[Title("Deposit By Cash")]
 class Income extends Component
@@ -31,6 +32,7 @@ class Income extends Component
     public $depositDate;
     public $depositAmount;
     public $depositDescription;
+    public $supplierPayment;
 
     public $totalDeposits;
     public $thisMonthDeposit = 0;
@@ -95,6 +97,10 @@ class Income extends Component
             ->whereDate('payment_date', $today)
             ->where('payment_method', 'cash')
             ->where('is_completed', true)
+            ->sum('amount');
+
+        $this->supplierPayment = PurchasePayment::whereDate('payment_date', $today)
+            ->where('payment_method', 'cash')
             ->sum('amount');
 
         // Calculate deposits

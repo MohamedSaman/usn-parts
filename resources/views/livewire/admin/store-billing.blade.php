@@ -949,6 +949,10 @@
                                 <td>Cash Deposit - Bank:</td>
                                 <td class="text-end">Rs.{{ number_format($sessionSummary['cash_deposit_bank'] ?? 0, 2) }}</td>
                             </tr>
+                            <tr>
+                                <td>Supplier Payments:</td>
+                                <td class="text-end">Rs.{{ number_format($sessionSummary['supplier_payment'] ?? 0, 2) }}</td>
+                            </tr>
                             <tr class="table-success">
                                 <td class="fw-bold">Total Cash in Hand:</td>
                                 <td class="text-end fw-bold">Rs.{{ number_format($sessionSummary['expected_cash'] ?? 0, 2) }}</td>

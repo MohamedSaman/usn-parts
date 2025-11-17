@@ -13,15 +13,15 @@
         }
 
         @page {
-            margin: 15mm;
-            size: A4 portrait;
+            margin: 10mm;
+            size: A4;
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 20px;
+            padding: 20px;
             font-family: "DejaVu Sans", Arial, sans-serif;
-            font-size: 9pt;
+            font-size: 10pt;
             line-height: 1.4;
             background: white;
             color: #000;
@@ -29,23 +29,23 @@
 
         .invoice-container {
             width: 100%;
-            max-width: 180mm;
             padding: 0;
-            margin: 0 auto;
+            margin: 0;
             background: white;
+            box-sizing: border-box;
         }
 
         /* Global Header Styles */
         .global-header {
             border-bottom: 3px solid #3b5b0c;
-            padding-bottom: 8px;
-            margin-bottom: 12px;
+            padding-bottom: 5px;
+            margin-bottom: 25px;
         }
 
         .global-header table {
             width: 100%;
             border: none;
-            border-collapse: collapse;
+            margin-bottom: 25px;
         }
 
         .global-header td {
@@ -55,250 +55,224 @@
         }
 
         .global-header .logo-section {
-            width: 70px;
+            width: 100px;
         }
 
         .global-header .logo-section img {
-            max-height: 45px;
-            max-width: 70px;
+            max-height: 80px;
             width: auto;
-            height: auto;
-            display: block;
         }
 
         .global-header .company-section {
             text-align: center;
-            padding: 0 8px;
+            padding: 0 10px;
         }
 
         .global-header .company-section h2 {
-            font-size: 16pt;
-            letter-spacing: 1.2px;
+            font-size: 20pt;
+            letter-spacing: 1.5px;
             font-weight: bold;
             margin: 0;
             padding: 0;
             line-height: 1.1;
-            white-space: nowrap;
         }
 
         .global-header .company-section p {
-            font-size: 6.5pt;
+            font-size: 7pt;
             color: #3b5b0c;
             font-weight: 600;
             margin: 2px 0 0 0;
             padding: 0;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .global-header .invoice-section {
-            width: 90px;
+            width: 250px;
             text-align: right;
         }
 
-        .global-header .invoice-section span {
-            display: inline-block;
-            font-size: 8.5pt;
+        .global-header .invoice-section h3 {
+            font-size: 10pt;
             font-weight: bold;
             margin: 0;
             padding: 0;
-            line-height: 1.3;
+            line-height: 1.2;
         }
 
-        .global-header .invoice-section .subtitle {
+        .global-header .invoice-section h6 {
+            font-size: 9pt;
+            font-weight: bold;
             color: #666;
-            font-size: 8pt;
-            margin-left: 5px;
-        }
-
-        .global-header .separator {
-            border: 0;
-            border-top: 2px solid #000;
-            margin: 6px 0 0 0;
+            margin: 1px 0 0 0;
             padding: 0;
+            line-height: 1.2;
         }
 
-        /* Info Section */
-        .info-row {
-            margin-bottom: 12px;
+        /* Content Area */
+        .print-content {
+            min-height: calc(297mm - 200px);
+            margin-bottom: 20px;
         }
 
-        .info-row table {
-            width: 100%;
-            font-size: 8.5pt;
-            border: none;
-        }
-
-        .info-row td {
-            vertical-align: top;
-            padding: 3px 5px;
-            border: none;
-        }
-
-        .customer-info {
-            width: 55%;
-        }
-
-        .customer-info strong {
-            font-size: 9pt;
-        }
-
-        .invoice-info {
-            width: 45%;
-            text-align: right;
-        }
-
-        .invoice-info table {
-            float: right;
-            text-align: left;
-            width: auto;
-            border: none;
-        }
-
-        .invoice-info table td {
-            padding: 2px 5px;
-            font-size: 8.5pt;
-            border: none;
-        }
-
-        .invoice-info table td:first-child {
-            font-weight: bold;
-            padding-right: 8px;
-        }
-
-        /* Items Table */
-        .items-table {
-            margin: 10px 0;
-            font-size: 8.5pt;
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .items-table th {
-            background: #e9ecef;
-            padding: 6px 5px;
-            border: 1px solid #999;
-            font-weight: bold;
-            text-align: left;
-            font-size: 8pt;
-        }
-
-        .items-table td {
-            padding: 5px;
-            border: 1px solid #999;
-            font-size: 8.5pt;
-        }
-
-        /* Totals Section */
-        .totals-section {
-            margin: 12px 0;
-            text-align: right;
-            clear: both;
-        }
-
-        .totals-table {
-            float: right;
-            width: 45%;
-            font-size: 8.5pt;
-            border: none;
-        }
-
-        .totals-table td {
-            padding: 3px 8px;
-            border: none;
-        }
-
-        .totals-table .total-row td {
-            border-top: 2px solid #000;
-            font-weight: bold;
-            padding-top: 6px;
-            font-size: 9pt;
-        }
-
-        /* Returned Items */
-        .returned-section {
-            clear: both;
-            margin-top: 15px;
-            page-break-inside: avoid;
-        }
-
-        .returned-section h4 {
-            background: #f8f8f8;
-            padding: 4px 6px;
-            margin-bottom: 8px;
-            font-size: 9.5pt;
-            border-left: 3px solid #3b5b0c;
-        }
-
-        /* Global Footer */
+        /* Global Footer Styles */
         .global-footer {
-            margin-top: 30px;
-            page-break-inside: avoid;
+            margin-top: 100px;
             clear: both;
         }
 
         .global-footer table {
             width: 100%;
             border: none;
-            margin-bottom: 8px;
-            border-collapse: collapse;
+            margin-top: 50px;
+            margin-bottom: 10px;
         }
 
         .global-footer td {
             text-align: center;
             vertical-align: bottom;
             border: none;
-            padding: 3px;
-            width: 33.33%;
+            padding: 5px;
         }
 
         .global-footer .signature-line {
-            font-size: 8pt;
+            font-size: 9pt;
             font-weight: bold;
-            margin: 0 0 3px 0;
+            margin: 0;
             padding: 0;
         }
 
         .global-footer .signature-label {
-            font-size: 8pt;
+            font-size: 9pt;
             font-weight: bold;
             margin: 3px 0;
             padding: 0;
         }
 
         .global-footer img {
-            height: 25px;
-            max-width: 60px;
-            margin: 4px auto 0;
+            height: 40px;
+            margin: 5px auto 0;
             display: block;
         }
 
         .global-footer .info-section {
             border-top: 2px solid #3b5b0c;
-            padding-top: 6px;
-            margin-top: 6px;
+            padding-top: 8px;
+            margin-top: 8px;
         }
 
         .global-footer .info-section p {
             text-align: center;
-            font-size: 7.5pt;
+            font-size: 8pt;
             margin: 2px 0;
             padding: 0;
-            line-height: 1.4;
         }
 
-        .global-footer .info-section .terms {
+        .info-row {
+            margin-bottom: 15px;
+        }
+
+        .info-row table {
+            width: 100%;
+            font-size: 9pt;
+        }
+
+        .info-row td {
+            vertical-align: top;
+            padding: 5px;
+        }
+
+        .customer-info {
+            width: 50%;
+        }
+
+        .invoice-info {
+            width: 50%;
+            text-align: right;
+        }
+
+        .invoice-info table {
+            float: right;
+            text-align: left;
+        }
+
+        .invoice-info table td {
+            padding: 2px 5px;
+            font-size: 9pt;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table {
+            margin: 10px 0;
+            font-size: 9pt;
+        }
+
+        .items-table th {
+            background: #e9ecef;
+            padding: 8px 6px;
+            border: 1px solid #999;
             font-weight: bold;
-            margin-top: 5px;
-            font-size: 7pt;
+            text-align: left;
         }
 
-        /* Utility Classes */
+        .items-table td {
+            padding: 6px;
+            border: 1px solid #999;
+        }
+
         .text-center {
             text-align: center;
         }
 
         .text-right {
             text-align: right;
+        }
+
+        .totals-section {
+            margin: 15px 0;
+            text-align: right;
+        }
+
+        .totals-table {
+            float: right;
+            width: 45%;
+            font-size: 9pt;
+        }
+
+        .totals-table td {
+            padding: 4px 8px;
+        }
+
+        .totals-table .total-row td {
+            border-top: 1px solid #000;
+            font-weight: bold;
+            padding-top: 8px;
+        }
+
+        .returned-section {
+            clear: both;
+            margin-top: 20px;
+        }
+
+        .returned-section h4 {
+            background: #f8f8f8;
+            padding: 5px;
+            margin-bottom: 10px;
+            font-size: 11pt;
+        }
+
+
+
+
+        .text-end {
+            text-align: right;
+        }
+
+        .text-center {
+            text-align: center;
         }
 
         .text-left {
@@ -325,29 +299,8 @@
             margin-top: 0.5rem;
         }
 
-        /* Clear floats */
-        .clearfix::after {
-            content: "";
-            display: table;
-            clear: both;
-        }
-
-        /* Page Break Control */
-        table {
-            page-break-inside: auto;
-        }
-
-        tr {
-            page-break-inside: avoid;
-            page-break-after: auto;
-        }
-
-        thead {
-            display: table-header-group;
-        }
-
-        tfoot {
-            display: table-footer-group;
+        .pt-3 {
+            padding-top: 1rem;
         }
     </style>
 </head>
@@ -355,7 +308,6 @@
 <body>
     <div class="invoice-container">
 
-        <!-- Global Header -->
         <div class="global-header">
             <table>
                 <tr>
@@ -367,20 +319,20 @@
                         <p>IMPORTERS & DISTRIBUTORS OF MAHINDRA AND TATA PARTS</p>
                     </td>
                     <td class="invoice-section">
-                        <span>MOTOR PARTS</span>
-                        <span class="subtitle">INVOICE</span>
+                        <span style="font-size:10pt; font-weight:bold;">MOTOR PARTS</span>
+                        <span style="font-size:9pt; font-weight:bold; color:#666; margin-left:8px;">INVOICE</span>
                     </td>
                 </tr>
             </table>
-            <hr class="separator">
         </div>
 
-        <!-- Customer and Invoice Info -->
+
+        {{-- Customer and Invoice Info --}}
         <div class="info-row">
             <table>
                 <tr>
                     <td class="customer-info">
-                        <strong>Customer:</strong><br>
+                        <strong>Customer :</strong><br>
                         {{ $sale->customer->name ?? 'Walk-in Customer' }}<br>
                         @if(isset($sale->customer->address) && $sale->customer->address)
                         {{ $sale->customer->address }}<br>
@@ -390,23 +342,23 @@
                     <td class="invoice-info">
                         <table>
                             <tr>
-                                <td>Invoice #</td>
+                                <td><strong>Invoice #</strong></td>
                                 <td>{{ $sale->invoice_number }}</td>
                             </tr>
                             <tr>
-                                <td>Sale ID</td>
+                                <td><strong>Sale ID</strong></td>
                                 <td>{{ $sale->sale_id }}</td>
                             </tr>
                             <tr>
-                                <td>Date</td>
+                                <td><strong>Date</strong></td>
                                 <td>{{ $sale->created_at->format('d/m/Y') }}</td>
                             </tr>
                             <tr>
-                                <td>Time</td>
+                                <td><strong>Time</strong></td>
                                 <td>{{ $sale->created_at->format('H:i') }}</td>
                             </tr>
                             <tr>
-                                <td>Payment</td>
+                                <td><strong>Payment</strong></td>
                                 <td>{{ ucfirst($sale->payment_status) }}</td>
                             </tr>
                         </table>
@@ -415,7 +367,7 @@
             </table>
         </div>
 
-        <!-- Items Table -->
+        {{-- Items Table --}}
         <table class="items-table">
             <thead>
                 <tr>
@@ -441,7 +393,7 @@
             </tbody>
         </table>
 
-        <!-- Totals -->
+        {{-- Totals --}}
         <div class="totals-section">
             <table class="totals-table">
                 <tr>
@@ -470,9 +422,8 @@
                 @endif
             </table>
         </div>
-        <div class="clearfix"></div>
 
-        <!-- Returned Items -->
+        {{-- Returned Items --}}
         @if(isset($sale->returns) && count($sale->returns) > 0)
         @php $returnAmount = 0; @endphp
         <div class="returned-section">
@@ -501,19 +452,18 @@
                     </tr>
                     @endforeach
                     <tr style="background: #f8f8f8; font-weight: bold;">
-                        <td colspan="5" class="text-right" style="padding: 6px;">Return Amount:</td>
-                        <td class="text-right" style="padding: 6px;">- Rs.{{ number_format($returnAmount, 2) }}</td>
+                        <td colspan="5" class="text-right" style="padding: 8px;">Return Amount:</td>
+                        <td class="text-right" style="padding: 8px;">- Rs.{{ number_format($returnAmount, 2) }}</td>
                     </tr>
                     <tr style="background: #e9ecef; font-weight: bold;">
-                        <td colspan="5" class="text-right" style="padding: 6px;">Net Amount:</td>
-                        <td class="text-right" style="padding: 6px;">Rs.{{ number_format((($sale->subtotal ?? $sale->total_amount) - ($sale->discount_amount ?? 0) - $returnAmount), 2) }}</td>
+                        <td colspan="5" class="text-right" style="padding: 8px;">Net Amount:</td>
+                        <td class="text-right" style="padding: 8px;">Rs.{{ number_format((($sale->subtotal ?? $sale->total_amount) - ($sale->discount_amount ?? 0) - $returnAmount), 2) }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
         @endif
 
-        <!-- Global Footer -->
         <div class="global-footer">
             <table>
                 <tr>
@@ -537,10 +487,10 @@
             <div class="info-section">
                 <p><strong>ADDRESS:</strong> 103 H, Yatiyanthota Road, Seethawaka, Avissawella</p>
                 <p><strong>TEL:</strong> (076) 9085352 | <strong>EMAIL:</strong> autopartsusn@gmail.com</p>
-                <p class="terms">Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</p>
+                <p style="margin-top: 6px;"><strong>Goods return will be accepted within 10 days only. Electrical and body parts non-returnable.</strong></p>
             </div>
         </div>
     </div>
 </body>
 
-</html
+</html>

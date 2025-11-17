@@ -8,6 +8,7 @@ use App\Models\ProductSupplier;
 use App\Models\PurchaseOrder;
 use App\Models\PurchasePayment;
 use App\Models\PurchasePaymentAllocation;
+use App\Models\POSSession;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -425,6 +426,18 @@ class AddSupplierReceipt extends Component
 
                         $order->save();
                     }
+                }
+            }
+
+            // If payment method is cash, update POS session credit_payment
+            if ($this->paymentData['payment_method'] === 'cash') {
+                $activeSession = POSSession::where('user_id', auth()->id())
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+
+                if ($activeSession) {
+                    $activeSession->supplier_payment += $this->totalPaymentAmount;
+                    $activeSession->save();
                 }
             }
 
