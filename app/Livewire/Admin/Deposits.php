@@ -109,6 +109,11 @@ class Deposits extends Component
             'description' => $this->depositDescription,
         ]);
 
+        // After adding deposit, update cash_deposit_bank in today's POS sessions
+        $totalDepositsToday = Deposit::whereDate('date', $this->depositDate)->sum('amount');
+        POSSession::where('session_date', $this->depositDate)
+            ->update(['cash_deposit_bank' => $totalDepositsToday]);
+
         $this->closeAddModal();
         $this->loadCashSummary();
         $this->js("Swal.fire('Success!', 'Deposit added successfully!', 'success')");
