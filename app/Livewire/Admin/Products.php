@@ -64,6 +64,7 @@ class Products extends Component
 
     // Default IDs for brand, category, and supplier
     public $defaultBrandId, $defaultCategoryId, $defaultSupplierId;
+    public $perPage = 10;
 
     public function mount()
     {
@@ -184,7 +185,7 @@ class Products extends Component
                     ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%');
             })
             ->orderBy('product_details.created_at', 'desc')
-            ->paginate(20);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.Productes', [
             'products' => $products,
@@ -192,6 +193,10 @@ class Products extends Component
             'categories' => $categories,
             'suppliers' => $suppliers,
         ])->layout($this->layout);
+    }
+    public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 
     // 🔹 Validation Rules for Create

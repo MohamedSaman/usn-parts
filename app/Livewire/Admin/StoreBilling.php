@@ -166,11 +166,12 @@ class StoreBilling extends Component
         if (!$this->currentSession || $this->currentSession->isClosed()) {
             // Get cash in hand from cash_in_hands table as default
             // Check both 'cash in hand' and 'cash_amount' keys
-            $cashInHandRecord = DB::table('cash_in_hands')
-                ->whereIn('key', ['cash in hand', 'cash_amount'])
-                ->orderBy('updated_at', 'desc')
+            $cashInHandRecord = DB::table('pos_sessions')
+                ->whereDate('session_date', now()->toDateString())
+                ->where('user_id', Auth::id())
+                ->select('opening_cash')
                 ->first();
-            $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->value : 0;
+            $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->opening_cash : 0;
 
             // Show opening cash modal
             $this->showOpeningCashModal = true;
@@ -1194,11 +1195,17 @@ class StoreBilling extends Component
             ->whereDate('date', $today)
             ->sum('amount');
         $supplierPaymentToday = DB::table('purchase_payments')
+
+            ->whereDate('payment_date', $today)
+            ->sum('amount');
+
+        $supplierCashPaymentToday = DB::table('purchase_payments')
+            ->where('payment_method', 'cash')
             ->whereDate('payment_date', $today)
             ->sum('amount');
 
         // Calculate Total Cash in Hand
-        $totalCashInHand = ($sessionOpeningCash + $totalCashPaymentsToday )- ($refundsToday + $expensesToday + $cashDepositBank + $supplierPaymentToday);
+        $totalCashInHand = ($sessionOpeningCash + $totalCashPaymentsToday) - ($refundsToday + $expensesToday + $cashDepositBank + $supplierCashPaymentToday);
 
         // Update session data
         $this->currentSession->update([
@@ -1249,6 +1256,7 @@ class StoreBilling extends Component
             'expenses' => $expensesToday,
             'cash_deposit_bank' => $cashDepositBank,
             'supplier_payment' => $supplierPaymentToday,
+            'supplier_cash_payment' => $supplierCashPaymentToday,
 
             // Final Cash in Hand
             'expected_cash' => $totalCashInHand,
@@ -1376,11 +1384,28 @@ class StoreBilling extends Component
         }
 
         try {
-            $session->status = 'open';
-            $session->save();
+            // Reset specified columns to 0 and change status to open
+            $session->update([
+                'status' => 'open',
+                'closing_cash' => 0,
+                'total_sales' => 0,
+                'cash_sales' => 0,
+                'cheque_payment' => 0,
+                'credit_card_payment' => 0,
+                'bank_transfer' => 0,
+                'late_payment_bulk' => 0,
+                'refunds' => 0,
+                'expenses' => 0,
+                'cash_deposit_bank' => 0,
+                'expected_cash' => 0,
+                'cash_difference' => 0,
+                'notes' => null,
+                'closed_at' => null
+            ]);
+
             return response()->json([
                 'success' => true,
-                'message' => 'POS session reopened successfully.'
+                'message' => 'POS session reopened successfully. All transaction data has been reset.'
             ]);
         } catch (\Exception $e) {
             return response()->json([
