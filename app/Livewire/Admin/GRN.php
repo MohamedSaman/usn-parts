@@ -19,9 +19,9 @@ use Livewire\WithPagination;
 #[Title("Goods Receive Note")]
 class GRN extends Component
 {
-    use WithDynamicLayout , WithPagination;
+    use WithDynamicLayout, WithPagination;
 
-    
+
     public $selectedPO = null;
     public $grnItems = [];
     public $searchProduct = '';
@@ -38,7 +38,7 @@ class GRN extends Component
 
     public function mount()
     {
-        
+
         $this->searchResults = ['unplanned' => []];
     }
 
@@ -503,11 +503,11 @@ class GRN extends Component
         // Apply search filter if search term exists
         if (!empty($this->search)) {
             $searchTerm = '%' . $this->search . '%';
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 $q->where('order_code', 'like', $searchTerm)
-                  ->orWhereHas('supplier', function($supplierQuery) use ($searchTerm) {
-                      $supplierQuery->where('name', 'like', $searchTerm);
-                  });
+                    ->orWhereHas('supplier', function ($supplierQuery) use ($searchTerm) {
+                        $supplierQuery->where('name', 'like', $searchTerm);
+                    });
             });
         }
 

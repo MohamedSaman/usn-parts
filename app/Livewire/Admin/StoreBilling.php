@@ -159,19 +159,19 @@ class StoreBilling extends Component
         }
 
         // Check for open session
-        $this->currentSession = POSSession::getTodaySession(Auth::id());        
-        
+        $this->currentSession = POSSession::getTodaySession(Auth::id());
+
         // If no session exists OR session is closed, show opening cash modal
         // This ensures modal shows on:
         // 1. First time opening POS each day (no session exists)
         // 2. After closing and reopening POS (session exists but is closed)
         if (!$this->currentSession || $this->currentSession->isClosed()) {
-            
+
             // Check if there's an existing session for today (closed or open)
             $todaySession = POSSession::where('user_id', Auth::id())
                 ->whereDate('session_date', now()->toDateString())
                 ->first();
-            
+
             if ($todaySession) {
                 // If session exists (reopening scenario), use the session's opening cash
                 $this->openingCashAmount = $todaySession->opening_cash;
@@ -1013,13 +1013,13 @@ class StoreBilling extends Component
                 ]);
                 $this->currentSession = $existingSession;
                 $message = 'POS Session Reopened!';
-                
+
                 // For reopening, don't update cash_in_hands as it should retain the session's opening amount
             } else {
                 // Create new POS session with opening cash (first time opening)
                 $this->currentSession = POSSession::openSession(Auth::id(), $this->openingCashAmount);
                 $message = 'POS Session Started!';
-                
+
                 // Update cash_in_hands table only for new sessions (first time opening)
                 $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
 
