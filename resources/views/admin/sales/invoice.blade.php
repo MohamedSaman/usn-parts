@@ -464,7 +464,7 @@
         </div>
         @endif
 
-        <div class="global-footer">
+        <div class="global-footer" style="position: absolute; bottom: 5;top: auto; width: 100%;">
             <table>
                 <tr>
                     <td>
