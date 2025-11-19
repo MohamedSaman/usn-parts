@@ -328,7 +328,7 @@
         </div>
 
         <!-- Global Footer -->
-        <div class="global-footer">
+        <div class="global-footer" style="position: absolute; bottom: 5;top: auto; width: 100%;">
             <div class="row text-center mb-3">
                 <div class="col-4">
                     <p class=""><strong>.............................</strong></p>
