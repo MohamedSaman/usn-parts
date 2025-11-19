@@ -96,7 +96,7 @@
 
         .dropdown-menu {
             position: absolute !important;
-            
+
             left: auto !important;
             right: 0 !important;
             top: 30% !important;

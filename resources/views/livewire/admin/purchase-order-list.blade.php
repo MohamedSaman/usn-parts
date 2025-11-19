@@ -82,6 +82,9 @@
                             $totalQuantity = $order->items->sum('quantity');
                             $totalReceivedQty = $order->items->sum('received_quantity');
                             $totalAmount = $order->items->sum(function($item) {
+                            return floatval($item->quantity) * floatval($item->unit_price);
+                            });
+                            $ReceivedTotalAmount = $order->items->sum(function($item) {
                             return floatval($item->received_quantity) * floatval($item->unit_price);
                             });
 
@@ -130,8 +133,12 @@
                                 </td>
                                 <td class="text-center">{{ $totalQuantity }}</td>
                                 <td class="text-center">{{ $totalReceivedQty }}</td>
-
+                                @if($grnStatus == 'Pending')
                                 <td>{{ number_format($totalAmount, 2) }}</td>
+                                @else
+
+                                <td>{{ number_format($ReceivedTotalAmount, 2) }}</td>
+                                @endif
                                 <td class="text-end pe-4">
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
