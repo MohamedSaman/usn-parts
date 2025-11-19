@@ -23,7 +23,6 @@ use App\Livewire\Concerns\WithDynamicLayout;
 class PurchaseOrderList extends Component
 {
     use WithDynamicLayout;
-
     use WithPagination;
 
     protected $paginationTheme = 'bootstrap';
@@ -31,7 +30,8 @@ class PurchaseOrderList extends Component
     public $suppliers = [];
     public $supplier_id = '';
     public $Product_id = '';
-    public $search = '';
+    public $search = ''; // Main search for table filtering
+    public $searchProduct = ''; // Separate search for product selection in modals
     public $products = [];
     public $selectedProduct = null;
     public $quantity = 1;
@@ -45,11 +45,11 @@ class PurchaseOrderList extends Component
     // Add these properties
     public $selectedProductPrice = 0;
     public $totalPrice = 0;
+    
     //GRN properties
     public $purchaseOrders = [];
     public $selectedPO = null;
     public $grnItems = [];
-    public $searchProduct = '';
     public $searchResults = [];
     public $newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'received'];
 
@@ -59,10 +59,17 @@ class PurchaseOrderList extends Component
 
     // Add this property to track new products
     public $newProducts = [];
+    
     public function mount()
     {
         $this->suppliers = ProductSupplier::all();
         $this->searchResults = []; // Initialize searchResults array
+    }
+
+    // Reset pagination when search changes
+    public function updatingSearch()
+    {
+        $this->resetPage();
     }
 
     public function calculateGrandTotal()
@@ -70,11 +77,12 @@ class PurchaseOrderList extends Component
         $this->grandTotal = floatval(collect($this->orderItems)->sum('total_price'));
     }
 
-    public function updatedSearch()
+    // Separate method for product search in modals
+    public function updatedSearchProduct()
     {
-        if (strlen($this->search) >= 2) {
-            $this->products = ProductDetail::where('name', 'like', '%' . $this->search . '%')
-                ->orWhere('code', 'like', '%' . $this->search . '%')
+        if (strlen($this->searchProduct) >= 2) {
+            $this->products = ProductDetail::where('name', 'like', '%' . $this->searchProduct . '%')
+                ->orWhere('code', 'like', '%' . $this->searchProduct . '%')
                 ->with(['stock', 'price'])
                 ->limit(10)
                 ->get();
@@ -148,7 +156,7 @@ class PurchaseOrderList extends Component
 
         // Clear search
         $this->products = [];
-        $this->search = '';
+        $this->searchProduct = '';
         $this->calculateGrandTotal();
 
         Log::info("Product added: " . $product->name . ", Price: " . $price);
@@ -259,7 +267,7 @@ class PurchaseOrderList extends Component
             DB::commit();
 
             // Reset form
-            $this->reset(['supplier_id', 'search', 'selectedProduct', 'selectedProductPrice', 'quantity', 'orderItems', 'totalPrice', 'grandTotal', 'products']);
+            $this->reset(['supplier_id', 'searchProduct', 'selectedProduct', 'selectedProductPrice', 'quantity', 'orderItems', 'totalPrice', 'grandTotal', 'products']);
 
             // Close modal and show success
             $this->js("
@@ -312,17 +320,18 @@ class PurchaseOrderList extends Component
         $this->editOrderItems = [];
         foreach ($order->items as $item) {
             $this->editOrderItems[] = [
-                'id' => $item->id,
+                'item_id' => $item->id,
                 'product_id' => $item->product_id,
                 'code' => $item->product->code ?? 'N/A',
                 'name' => $item->product->name ?? 'N/A',
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
+                'discount' => $item->discount ?? 0,
             ];
         }
 
         // Clear search to avoid conflicts
-        $this->search = '';
+        $this->searchProduct = '';
         $this->products = [];
 
         // Open modal using JavaScript
@@ -380,18 +389,19 @@ class PurchaseOrderList extends Component
         } else {
             // Add new product to the top of edit items
             array_unshift($this->editOrderItems, [
-                'id' => null, // New item, no database ID yet
+                'item_id' => null, // New item, no database ID yet
                 'product_id' => $product->id,
                 'code' => $product->code,
                 'name' => $product->name,
                 'quantity' => 1,
                 'unit_price' => $price,
+                'discount' => 0,
             ]);
         }
 
         // Clear search
         $this->products = [];
-        $this->search = '';
+        $this->searchProduct = '';
 
         Log::info("Product added to edit order: " . $product->name);
     }
@@ -977,8 +987,6 @@ class PurchaseOrderList extends Component
         }
     }
 
-    // Add these methods to your component
-
     public function calculateGRNTotal($index)
     {
         if (!isset($this->grnItems[$index])) {
@@ -1040,14 +1048,12 @@ class PurchaseOrderList extends Component
         }
     }
 
-    // Update the selectGRNProduct method to include discount
-    // Update selectGRNProduct method to populate code
     public function selectGRNProduct($index, $productId)
     {
         $product = ProductDetail::find($productId);
         if ($product) {
             $this->grnItems[$index]['product_id'] = $product->id;
-            $this->grnItems[$index]['code'] = $product->code; // Add this line
+            $this->grnItems[$index]['code'] = $product->code;
             $this->grnItems[$index]['name'] = $product->name;
 
             // Get product price
@@ -1069,7 +1075,6 @@ class PurchaseOrderList extends Component
         }
     }
 
-    // Update addNewRow to include discount
     public function addNewRow()
     {
         $this->grnItems[] = [
@@ -1081,14 +1086,12 @@ class PurchaseOrderList extends Component
             'unit_price' => 0,
             'discount' => 0,
             'discount_type' => 'rs',
-            'selling_price' => 0, // Add selling price
-            'status' => 'received ',
-            'is_new' => true // Flag to identify new products
+            'selling_price' => 0,
+            'status' => 'received',
+            'is_new' => true
         ];
     }
 
-
-    // Update convertToGRN to include discount
     public function convertToGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product.detail'])->find($orderId);
@@ -1111,21 +1114,19 @@ class PurchaseOrderList extends Component
                 'code' => $item->product->code ?? 'N/A',
                 'name' => $item->product->name ?? 'N/A',
                 'ordered_qty' => $item->quantity,
-                'received_quantity' => $item->quantity, // Default to ordered quantity
+                'received_quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,
-                'discount' => $item->discount ?? 0, // Include discount
-                'discount_type' => $item->discount_type ?? 'rs', // Get discount type from order
-                'selling_price' => $currentSellingPrice, // Add selling price
+                'discount' => $item->discount ?? 0,
+                'discount_type' => $item->discount_type ?? 'rs',
+                'selling_price' => $currentSellingPrice,
                 'status' => 'received'
             ];
         }
-
 
         // Open GRN modal using JavaScript
         $this->js("new bootstrap.Modal(document.getElementById('grnModal')).show();");
     }
 
-    // Re-Process GRN - Only load pending items
     public function reProcessGRN($orderId)
     {
         $this->selectedPO = PurchaseOrder::with(['supplier', 'items.product.detail'])->find($orderId);
@@ -1150,11 +1151,11 @@ class PurchaseOrderList extends Component
                     'code' => $item->product->code ?? 'N/A',
                     'name' => $item->product->name ?? 'N/A',
                     'ordered_qty' => $item->quantity,
-                    'received_quantity' => $item->quantity, // Default to ordered quantity
+                    'received_quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'discount' => $item->discount ?? 0,
                     'discount_type' => $item->discount_type ?? 'rs',
-                    'selling_price' => $currentSellingPrice, // Add selling price
+                    'selling_price' => $currentSellingPrice,
                     'status' => 'received'
                 ];
             }
@@ -1169,7 +1170,6 @@ class PurchaseOrderList extends Component
         $this->js("new bootstrap.Modal(document.getElementById('grnModal')).show();");
     }
 
-    // Calculate cost (supplier price - discount amount per unit)
     public function calculateCost($index)
     {
         if (!isset($this->grnItems[$index])) {
@@ -1193,7 +1193,7 @@ class PurchaseOrderList extends Component
         // Ensure cost is not negative
         return floatval(max(0, $costPerUnit));
     }
-    // Set discount type method
+
     public function setDiscountType($index, $type)
     {
         if (isset($this->grnItems[$index])) {
@@ -1202,7 +1202,7 @@ class PurchaseOrderList extends Component
             $this->calculateGRNTotal($index);
         }
     }
-    // Calculate discount amount for percentage display
+
     public function calculateDiscountAmount($index)
     {
         if (!isset($this->grnItems[$index])) {
@@ -1224,7 +1224,6 @@ class PurchaseOrderList extends Component
         return floatval($discount * $receivedQty);
     }
 
-
     public function loadPurchaseOrders()
     {
         $this->purchaseOrders = PurchaseOrder::where('status', 'pending')
@@ -1233,7 +1232,6 @@ class PurchaseOrderList extends Component
             ->get();
     }
 
-    public $orderId;
     public function confirmPermanentDelete($orderId)
     {
         $this->js("
@@ -1286,9 +1284,6 @@ class PurchaseOrderList extends Component
         }
     }
 
-    // Add these computed properties for totals
-
-    // Calculate grand total for view order modal
     public function getViewOrderTotalProperty()
     {
         if (!$this->selectedOrder) {
@@ -1296,11 +1291,11 @@ class PurchaseOrderList extends Component
         }
 
         return floatval($this->selectedOrder->items->sum(function ($item) {
-            return floatval($item->quantity) * floatval($item->unit_price);
+            $qty = $item->received_quantity > 0 ? $item->received_quantity : $item->quantity;
+            return floatval($qty) * floatval($item->unit_price);
         }));
     }
 
-    // Calculate grand total for GRN modal
     public function getGrnGrandTotalProperty()
     {
         $total = 0.0;
@@ -1310,17 +1305,12 @@ class PurchaseOrderList extends Component
         return floatval($total);
     }
 
-
     public function downloadPDF($orderId)
     {
         $order = PurchaseOrder::with('supplier', 'items.product')->find($orderId);
 
         if (!$order) {
-            $this->dispatchBrowserEvent('swal', [
-                'title' => 'Error',
-                'text' => 'Order not found!',
-                'icon' => 'error'
-            ]);
+            $this->js("Swal.fire('Error', 'Order not found!', 'error');");
             return;
         }
 
@@ -1355,16 +1345,20 @@ class PurchaseOrderList extends Component
             <tbody>';
 
         foreach ($order->items as $item) {
+            $qty = $item->received_quantity > 0 ? $item->received_quantity : $item->quantity;
             $html .= '<tr>
                     <td>' . $item->product->code . '</td>
                     <td>' . $item->product->name . '</td>
-                    <td>' . $item->quantity . '</td>
+                    <td>' . $qty . '</td>
                     <td>' . number_format(floatval($item->unit_price), 2) . '</td>
-                    <td>' . number_format(floatval($item->quantity) * floatval($item->unit_price), 2) . '</td>
+                    <td>' . number_format(floatval($qty) * floatval($item->unit_price), 2) . '</td>
                   </tr>';
         }
 
-        $totalAmount = floatval($order->items->sum(fn($item) => floatval($item->quantity) * floatval($item->unit_price)));
+        $totalAmount = floatval($order->items->sum(function($item) {
+            $qty = $item->received_quantity > 0 ? $item->received_quantity : $item->quantity;
+            return floatval($qty) * floatval($item->unit_price);
+        }));
 
         $html .= '</tbody>
         </table>
@@ -1380,7 +1374,6 @@ class PurchaseOrderList extends Component
         );
     }
 
-
     public function render()
     {
         $pendingCount = PurchaseOrder::where('status', 'pending')->count();
@@ -1393,10 +1386,22 @@ class PurchaseOrderList extends Component
             $query->where('status', '!=', 'received');
         })->count();
 
-        // Get paginated orders
-        $orders = PurchaseOrder::whereIn('status', ['pending', 'complete', 'received', 'cancelled'])
-            ->with(['supplier', 'items.product'])
-            ->orderByRaw("FIELD(status, 'pending', 'received', 'complete', 'cancelled')")
+        // Get paginated orders with search functionality
+        $query = PurchaseOrder::whereIn('status', ['pending', 'complete', 'received', 'cancelled'])
+            ->with(['supplier', 'items.product']);
+
+        // Apply search filter if search term exists
+        if (!empty($this->search)) {
+            $searchTerm = '%' . $this->search . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('order_code', 'like', $searchTerm)
+                  ->orWhereHas('supplier', function($supplierQuery) use ($searchTerm) {
+                      $supplierQuery->where('name', 'like', $searchTerm);
+                  });
+            });
+        }
+
+        $orders = $query->orderByRaw("FIELD(status, 'pending', 'received', 'complete', 'cancelled')")
             ->orderBy('id', 'desc')
             ->paginate(20);
 

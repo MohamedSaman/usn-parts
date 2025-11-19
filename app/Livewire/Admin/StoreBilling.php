@@ -159,19 +159,29 @@ class StoreBilling extends Component
         }
 
         // Check for open session
-        $this->currentSession = POSSession::getTodaySession(Auth::id());        // If no session exists OR session is closed, show opening cash modal
+        $this->currentSession = POSSession::getTodaySession(Auth::id());        
+        
+        // If no session exists OR session is closed, show opening cash modal
         // This ensures modal shows on:
         // 1. First time opening POS each day (no session exists)
         // 2. After closing and reopening POS (session exists but is closed)
         if (!$this->currentSession || $this->currentSession->isClosed()) {
-            // Get cash in hand from cash_in_hands table as default
-            // Check both 'cash in hand' and 'cash_amount' keys
-            $cashInHandRecord = DB::table('pos_sessions')
+            
+            // Check if there's an existing session for today (closed or open)
+            $todaySession = POSSession::where('user_id', Auth::id())
                 ->whereDate('session_date', now()->toDateString())
-                ->where('user_id', Auth::id())
-                ->select('opening_cash')
                 ->first();
-            $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->opening_cash : 0;
+            
+            if ($todaySession) {
+                // If session exists (reopening scenario), use the session's opening cash
+                $this->openingCashAmount = $todaySession->opening_cash;
+            } else {
+                // If no session exists (first time opening), get from cash_in_hands table
+                $cashInHandRecord = DB::table('cash_in_hands')
+                    ->whereIn('key', ['cash_amount', 'cash in hand'])
+                    ->first();
+                $this->openingCashAmount = $cashInHandRecord ? $cashInHandRecord->value : 0;
+            }
 
             // Show opening cash modal
             $this->showOpeningCashModal = true;
@@ -1003,29 +1013,31 @@ class StoreBilling extends Component
                 ]);
                 $this->currentSession = $existingSession;
                 $message = 'POS Session Reopened!';
+                
+                // For reopening, don't update cash_in_hands as it should retain the session's opening amount
             } else {
-                // Create new POS session with opening cash
+                // Create new POS session with opening cash (first time opening)
                 $this->currentSession = POSSession::openSession(Auth::id(), $this->openingCashAmount);
                 $message = 'POS Session Started!';
-            }
+                
+                // Update cash_in_hands table only for new sessions (first time opening)
+                $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
 
-            // Update cash_in_hands table with opening cash
-            $cashInHandRecord = DB::table('cash_in_hands')->where('key', 'cash_amount')->first();
-
-            if ($cashInHandRecord) {
-                DB::table('cash_in_hands')
-                    ->where('key', 'cash_amount')
-                    ->update([
+                if ($cashInHandRecord) {
+                    DB::table('cash_in_hands')
+                        ->where('key', 'cash_amount')
+                        ->update([
+                            'value' => $this->openingCashAmount,
+                            'updated_at' => now()
+                        ]);
+                } else {
+                    DB::table('cash_in_hands')->insert([
+                        'key' => 'cash_amount',
                         'value' => $this->openingCashAmount,
+                        'created_at' => now(),
                         'updated_at' => now()
                     ]);
-            } else {
-                DB::table('cash_in_hands')->insert([
-                    'key' => 'cash_amount',
-                    'value' => $this->openingCashAmount,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+                }
             }
 
             DB::commit();

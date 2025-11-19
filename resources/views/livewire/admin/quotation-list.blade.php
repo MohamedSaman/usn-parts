@@ -33,7 +33,7 @@
 
     <!-- Search and Actions -->
     <div class="inventory-header w-100 mb-3">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center w-100 gap-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
             <!-- 🔍 Search Bar -->
             <div class="search-bar flex-grow-1">
                 <div class="input-group">

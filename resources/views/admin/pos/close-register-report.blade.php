@@ -225,9 +225,14 @@
                                 <td class="text-end">Rs.{{ number_format($summary['refunds'] ?? 0, 2) }}</td>
                             </tr>
                             <tr>
-                                <td>Cash Deposit - Bank:</td>
-                                <td class="text-end">Rs.{{ number_format($summary['cash_deposit_bank'] ?? 0, 2) }}</td>
+                                <td>Total Cash Supplier Payment:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['supplier_cash_payment'] ?? 0, 2) }}</td>
                             </tr>
+                            <tr>
+                                <td>Total Supplier Payment:</td>
+                                <td class="text-end">Rs.{{ number_format($summary['supplier_payment'] ?? 0, 2) }}</td>
+                            </tr>
+
                             <tr class="table-success">
                                 <td class="fw-bold">Total Cash in Hand:</td>
                                 <td class="text-end fw-bold">Rs.{{ number_format($summary['expected_cash'] ?? 0, 2) }}</td>

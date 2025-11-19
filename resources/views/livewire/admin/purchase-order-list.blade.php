@@ -59,6 +59,18 @@
                     </h5>
                     <p class="text-muted small mb-0">View and manage all purchase orders</p>
                 </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
+                <!-- 🔍 Search Bar -->
+                    <div class="search-bar flex-grow-1">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" wire:model.live="search"
+                                placeholder="Search by order code or supplier name...">
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="card-body p-0 overflow-auto">
                 <div class="table-responsive" style="overflow:visible !important;">
@@ -251,7 +263,7 @@
                             <label class="form-label fw-semibold">Search & Add Product</label>
                             <input type="text"
                                 class="form-control"
-                                wire:model.live.debounce.300ms="search"
+                                wire:model.live.debounce.300ms="searchProduct"
                                 placeholder="Type product name or code (min 2 characters)..."
                                 autocomplete="off">
                             @if(!empty($products) && count($products) > 0)
@@ -283,7 +295,7 @@
                                 @endforeach
                             </ul>
                             @endif
-                            @if(strlen($search) >= 1 && strlen($search) < 2)
+                            @if(strlen($searchProduct) >= 1 && strlen($searchProduct) < 2)
                                 <div class="text-muted small mt-1">
                                 <i class="bi bi-info-circle"></i> Type at least 2 characters to search
                         </div>

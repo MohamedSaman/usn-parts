@@ -26,9 +26,15 @@ class GRN extends Component
     public $grnItems = [];
     public $searchProduct = '';
     public $searchResults = [];
+    public $search = '';
     public $newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'received'];
 
     protected $listeners = ['deleteGRNItem'];
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
 
     public function mount()
     {
@@ -491,10 +497,21 @@ class GRN extends Component
 
     public function render()
     {
-        $purchaseOrders = PurchaseOrder::whereIn('status', ['complete', 'received'])
-            ->with(['supplier', 'items.product'])
-            ->latest()
-            ->paginate(20);
+        $query = PurchaseOrder::whereIn('status', ['complete', 'received'])
+            ->with(['supplier', 'items.product']);
+
+        // Apply search filter if search term exists
+        if (!empty($this->search)) {
+            $searchTerm = '%' . $this->search . '%';
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('order_code', 'like', $searchTerm)
+                  ->orWhereHas('supplier', function($supplierQuery) use ($searchTerm) {
+                      $supplierQuery->where('name', 'like', $searchTerm);
+                  });
+            });
+        }
+
+        $purchaseOrders = $query->latest()->paginate(20);
 
         return view('livewire.admin.g-r-n', [
             'purchaseOrders' => $purchaseOrders,
