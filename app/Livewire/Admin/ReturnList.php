@@ -8,20 +8,50 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Livewire\Concerns\WithDynamicLayout;
+use Livewire\WithPagination;
 
 #[Title("Product Return")]
 class ReturnList extends Component
 {
-    use WithDynamicLayout;
+    use WithDynamicLayout, WithPagination;
 
-    public $returns = [];
+
+    // Do not store the full collection/paginator in a public property
+    public $returnsCount = 0;
+    public $returnSearch = '';
     public $selectedReturn = null;
     public $showReceiptModal = false;
     public $currentReturnId = null;
+    public $perPage = 10;
 
     public function mount()
     {
-        $this->returns = ReturnsProduct::with(['sale', 'product'])->orderByDesc('created_at')->get();
+        // Load lightweight count; actual paginated data is returned from render()
+        $this->loadReturns();
+    }
+
+    protected function loadReturns()
+    {
+        $query = ReturnsProduct::with(['sale', 'product']);
+
+        if (!empty($this->returnSearch)) {
+            $search = '%' . $this->returnSearch . '%';
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('sale', function ($sq) use ($search) {
+                    $sq->where('invoice_number', 'like', $search);
+                })->orWhereHas('product', function ($pq) use ($search) {
+                    $pq->where('name', 'like', $search)
+                        ->orWhere('code', 'like', $search);
+                });
+            });
+        }
+        $this->returnsCount = $query->count();
+    }
+
+    public function updatedReturnSearch()
+    {
+        $this->resetPage();
+        $this->loadReturns();
     }
 
     public function showReturnDetails($id)
@@ -83,11 +113,12 @@ class ReturnList extends Component
             if ($this->selectedReturn) {
                 // Restore the stock before deleting the return record
                 $this->restoreStock($this->selectedReturn);
-                
+
                 $this->selectedReturn->delete();
-                
-                $this->returns = ReturnsProduct::with(['sale', 'product'])->orderByDesc('created_at')->get();
-                
+                // Refresh lightweight data and reset pagination if needed
+                $this->loadReturns();
+                $this->resetPage();
+
                 $this->dispatch('hideModal', 'deleteReturnModal');
                 $this->dispatch('showToast', ['type' => 'success', 'message' => 'Return record deleted successfully!']);
             }
@@ -100,7 +131,7 @@ class ReturnList extends Component
     {
         // Decrease the available stock since we're deleting a return
         $productStock = \App\Models\ProductStock::where('product_id', $return->product_id)->first();
-        
+
         if ($productStock) {
             $productStock->available_stock -= $return->return_quantity;
             if ($productStock->sold_count >= $return->return_quantity) {
@@ -122,10 +153,30 @@ class ReturnList extends Component
 
     public function render()
     {
+        $query = ReturnsProduct::with(['sale', 'product'])->orderByDesc('created_at');
+
+        if (!empty($this->returnSearch)) {
+            $search = '%' . $this->returnSearch . '%';
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('sale', function ($sq) use ($search) {
+                    $sq->where('invoice_number', 'like', $search);
+                })->orWhereHas('product', function ($pq) use ($search) {
+                    $pq->where('name', 'like', $search)
+                        ->orWhere('code', 'like', $search);
+                });
+            });
+        }
+        $returns = $query->paginate($this->perPage);
+
         return view('livewire.admin.return-list', [
-            'returns' => $this->returns,
+            'returns' => $returns,
             'selectedReturn' => $this->selectedReturn,
             'currentReturnId' => $this->currentReturnId,
         ])->layout($this->layout);
+    }
+
+    public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 }

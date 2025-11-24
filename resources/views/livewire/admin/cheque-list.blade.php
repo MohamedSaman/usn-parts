@@ -7,6 +7,7 @@
             </h3>
             <p class="text-muted mb-0">View and manage all customer cheques</p>
         </div>
+
     </div>
 
     {{-- Statistics Cards --}}
@@ -55,10 +56,46 @@
     {{-- Cheque Table --}}
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0">
-                <i class="bi bi-list-ul text-primary me-2"></i> Cheque List
-            </h5>
-            <span class="badge bg-primary">{{ $cheques->total() ?? 0 }} records</span>
+            <div>
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-list-ul text-primary me-2"></i> Cheque List
+                </h5>
+                <span class="badge bg-primary">{{ $cheques->total() ?? 0 }} records</span>
+
+            </div>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
+                <!-- 🔍 Search Bar -->
+                <div class="search-bar flex-grow-1">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" wire:model.live="search"
+                            placeholder="Search by cheque number or customer name...">
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-sm text-muted fw-medium">Filter</label>
+                <select wire:model.live="statusFilter" class="form-select form-select-sm" style="width: 130px;">
+                    <option value="all">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="complete">Complete</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="return">Return</option>
+                </select>
+
+                <label class="text-sm text-muted fw-medium">Show</label>
+                <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+                <span class="text-sm text-muted">entries</span>
+            </div>
         </div>
         <div class="card-body p-0 overflow-auto">
             <div class="table-responsive">
@@ -91,16 +128,16 @@
                                 @if($cheque->status == 'pending' || $cheque->status == 'overdue')
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                            type="button"
-                                            data-bs-toggle="dropdown"
-                                            aria-expanded="false">
+                                        type="button"
+                                        data-bs-toggle="dropdown"
+                                        aria-expanded="false">
                                         <i class="bi bi-gear-fill"></i> Actions
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <!-- Mark as Complete -->
                                         <li>
                                             <button class="dropdown-item"
-                                                    wire:click="confirmComplete({{ $cheque->id }})">
+                                                wire:click="confirmComplete({{ $cheque->id }})">
                                                 <i class="bi bi-check2-circle text-success me-2"></i>
                                                 Complete
                                             </button>
@@ -108,7 +145,7 @@
                                         <!-- Return Cheque -->
                                         <li>
                                             <button class="dropdown-item"
-                                                    wire:click="confirmReturn({{ $cheque->id }})">
+                                                wire:click="confirmReturn({{ $cheque->id }})">
                                                 <i class="bi bi-arrow-counterclockwise text-danger me-2"></i>
                                                 Return
                                             </button>

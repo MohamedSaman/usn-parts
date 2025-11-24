@@ -30,6 +30,7 @@ class SupplierManage extends Component
     public $showCreateModal = false;
     public $showEditModal = false;
     public $showViewModal = false;
+    public $perPage= 10;
 
     protected $rules = [
         'name' => 'required|string|max:255',
@@ -200,10 +201,14 @@ class SupplierManage extends Component
         $this->status = 'active';
         $this->resetValidation();
     }
+    public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
-        $suppliers = ProductSupplier::latest()->paginate(10);
+        $suppliers = ProductSupplier::latest()->paginate($this->perPage);
         return view('livewire.admin.supplier-manage', compact('suppliers'))->layout($this->layout);
     }
 }

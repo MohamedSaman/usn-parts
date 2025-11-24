@@ -59,6 +59,7 @@ class PurchaseOrderList extends Component
 
     // Add this property to track new products
     public $newProducts = [];
+    public $perPage = 10;
     
     public function mount()
     {
@@ -71,6 +72,11 @@ class PurchaseOrderList extends Component
     {
         $this->resetPage();
     }
+
+    public function updatedPerPage()
+    {
+        $this->resetPage();
+    }   
 
     public function calculateGrandTotal()
     {
@@ -1403,7 +1409,7 @@ class PurchaseOrderList extends Component
 
         $orders = $query->orderByRaw("FIELD(status, 'pending', 'received', 'complete', 'cancelled')")
             ->orderBy('id', 'desc')
-            ->paginate(20);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.purchase-order-list', compact('pendingCount', 'completedCount', 'fullyReceivedCount', 'orders'))->layout($this->layout);
     }

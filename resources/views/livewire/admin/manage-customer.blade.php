@@ -36,6 +36,18 @@
                     <i class="bi bi-journal-text text-primary me-2"></i> Customer List
                 </h5>
             </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-sm text-muted fw-medium">Show</label>
+                <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+                <span class="text-sm text-muted">entries</span>
+            </div>
         </div>
         <div class="card-body p-0 overflow-auto">
             <div class="table-responsive">
@@ -144,6 +156,11 @@
                     </tbody>
                 </table>
             </div>
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-center">
+                    {{ $customers->links('livewire.custom-pagination') }}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -162,7 +179,7 @@
                 <form wire:submit.prevent="saveCustomer">
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Customer Name</label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" 
                                        wire:model="name" placeholder="Enter customer name" required>
@@ -170,17 +187,17 @@
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Contact Number</label>
                                 <input type="text" class="form-control @error('contactNumber') is-invalid @enderror" 
-                                       wire:model="contactNumber" placeholder="Enter contact number" required>
+                                       wire:model="contactNumber" placeholder="Enter contact number" >
                                 @error('contactNumber') <span class="text-danger small">{{ $message }}</span> @enderror
                             </div>
                         </div>
                     </div>
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Email</label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" 
                                        wire:model="email" placeholder="Enter email">
@@ -188,7 +205,7 @@
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Business Name</label>
                                 <input type="text" class="form-control @error('businessName') is-invalid @enderror" 
                                        wire:model="businessName" placeholder="Enter Business Name">
@@ -198,9 +215,9 @@
                     </div>
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
-                            <div class="mb-3">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Customer Type</label>
-                                <select class="form-select @error('customerType') is-invalid @enderror" wire:model="customerType" required>
+                                <select class="form-select @error('customerType') is-invalid @enderror" wire:model="customerType" >
                                     <option value="">Select customer type</option>
                                     <option value="retail">Retail</option>
                                     <option value="wholesale">Wholesale</option>
@@ -209,7 +226,7 @@
                             </div>
                         </div>
                         <div class="col-12 col-md-6">
-                            <div class="mb-4">
+                            <div class="mb-1">
                                 <label class="form-label fw-semibold">Address</label>
                                 <input type="text" class="form-control @error('address') is-invalid @enderror" 
                                        wire:model="address" placeholder="Enter address">

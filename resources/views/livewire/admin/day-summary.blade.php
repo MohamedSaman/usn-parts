@@ -63,10 +63,22 @@
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white py-3">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
                     <h5 class="mb-0 fw-bold" style="color:#3b5b0c;">
                         <i class="bi bi-list-ul me-2" style="color:#8eb922;"></i>POS Sessions ({{ $sessions->total() }})
                     </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-sm text-muted fw-medium">Show</label>
+                        <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                        <span class="text-sm text-muted">entries</span>
+                    </div>
                 </div>
                 <div class="card-body p-0 overflow-auto">
                     @if($sessions->count() > 0)
@@ -119,10 +131,13 @@
                         </table>
                     </div>
 
-                    {{-- Pagination --}}
-                    <div class="card-footer bg-white">
-                        {{ $sessions->links() }}
+            
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-center">
+                            {{ $sessions->links('livewire.custom-pagination') }}
+                        </div>
                     </div>
+            
                     @else
                     <div class="text-center py-5">
                         <i class="bi bi-inbox display-1 text-muted"></i>

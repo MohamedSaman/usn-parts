@@ -184,7 +184,7 @@ class Products extends Component
                     ->orWhere('product_details.status', 'like', '%' . $this->search . '%')
                     ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%');
             })
-            ->orderBy('product_details.created_at', 'desc')
+            ->orderBy('product_details.code', 'asc')
             ->paginate($this->perPage);
 
         return view('livewire.admin.Productes', [

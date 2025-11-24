@@ -17,14 +17,49 @@ class ChequeList extends Component
     use WithDynamicLayout;
 
     use WithPagination;
+    public $perPage = 10;
+    public $search = '';
+    public $statusFilter = 'all';
+
+    public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function getChequesProperty()
     {
         // Show pending cheques first, then others by cheque_date desc
-        return Cheque::with('customer')
+        $query = Cheque::with('customer')
             ->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END ASC")
-            ->orderByDesc('cheque_date')
-            ->paginate(20);
+            ->orderByDesc('cheque_date');
+
+        if (!empty($this->search)) {
+            $term = '%' . $this->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('cheque_number', 'like', $term)
+                    ->orWhere('bank_name', 'like', $term)
+                    ->orWhereHas('customer', function ($cq) use ($term) {
+                        $cq->where('name', 'like', $term)
+                            ->orWhere('phone', 'like', $term);
+                    });
+            });
+        }
+        // Apply status filter if set
+        if (!empty($this->statusFilter) && $this->statusFilter !== 'all') {
+            $query->where('status', $this->statusFilter);
+        }
+
+        return $query->paginate($this->perPage);
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatusFilter()
+    {
+        $this->resetPage();
     }
 
     public function getPendingCountProperty()
@@ -84,7 +119,7 @@ class ChequeList extends Component
     {
         try {
             $cheque = Cheque::find($id);
-            
+
             if (!$cheque) {
                 $this->js("Swal.fire('Error', 'Cheque not found!', 'error');");
                 return;
@@ -94,7 +129,7 @@ class ChequeList extends Component
             $cheque->save();
 
             // Refresh the data
-          
+
 
             $this->js("
                 Swal.fire({
@@ -105,7 +140,6 @@ class ChequeList extends Component
                     showConfirmButton: false
                 });
             ");
-
         } catch (\Exception $e) {
             Log::error("Error completing cheque: " . $e->getMessage());
             $this->js("Swal.fire('Error', 'Failed to mark cheque as complete!', 'error');");
@@ -116,7 +150,7 @@ class ChequeList extends Component
     {
         try {
             $cheque = Cheque::find($id);
-            
+
             if (!$cheque) {
                 $this->js("Swal.fire('Error', 'Cheque not found!', 'error');");
                 return;
@@ -126,7 +160,7 @@ class ChequeList extends Component
             $cheque->save();
 
             // Refresh the data
-            
+
 
             $this->js("
                 Swal.fire({
@@ -137,7 +171,6 @@ class ChequeList extends Component
                     showConfirmButton: false
                 });
             ");
-
         } catch (\Exception $e) {
             Log::error("Error returning cheque: " . $e->getMessage());
             $this->js("Swal.fire('Error', 'Failed to return cheque!', 'error');");

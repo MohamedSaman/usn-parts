@@ -12,10 +12,36 @@
     <!-- Returns Table -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0">
-                <i class="bi bi-list-ul text-primary me-2"></i> Returns List
-            </h5>
-            <span class="badge bg-primary">{{ count($returns) }} records</span>
+            <div>
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-list-ul text-primary me-2"></i> Returns List
+                </h5>
+                <span class="badge bg-primary">{{ count($returns) }} records</span>
+            </div>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
+                <!-- 🔍 Search Bar -->
+                    <div class="search-bar flex-grow-1">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                            <input type="text" class="form-control border-start-0" wire:model.live="returnSearch"
+                                placeholder="Search by invoice number or product name...">
+                        </div>
+                    </div>
+                </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-sm text-muted fw-medium">Show</label>
+                <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+                <span class="text-sm text-muted">entries</span>
+            </div>
         </div>
         <div class="card-body p-0 overflow-auto">
             <div class="table-responsive">
@@ -87,6 +113,13 @@
                     </tbody>
                 </table>
             </div>
+            @if ($returns->hasPages())
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-center">
+                    {{ $returns->links('livewire.custom-pagination') }}
+                </div>
+            </div>
+            @endif
         </div>
     </div>
     

@@ -35,10 +35,16 @@ class ManageCustomer extends Component
     public $showDeleteModal = false;
     public $showViewModal = false;
     public $viewCustomerDetail = [];
+    public $perPage= 10;
+
+     public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function render()
     {
-        $customers = Customer::all();
+        $customers = Customer::latest()->paginate($this->perPage);
         return view('livewire.admin.manage-customer', [
             'customers' => $customers,
         ])->layout($this->layout);
@@ -101,9 +107,9 @@ class ManageCustomer extends Component
     {
         $this->validate([
             'name' => 'required',
-            'customerType' => 'required',
-            'contactNumber' => 'required | max:10',
-            'address' => 'required',
+            'customerType' => 'nullable',
+            'contactNumber' => 'nullable | max:10',
+            'address' => 'nullable',
             'email' => 'email|unique:customers,email',
             'businessName' => 'nullable',
         ]);
@@ -152,10 +158,10 @@ class ManageCustomer extends Component
     {
         $this->validate([
             'editName' => 'required',
-            'editCustomerType' => 'required',
+            'editCustomerType' => 'nullable',
             'editBusinessName' => 'nullable',
-            'editContactNumber' => 'required | max:10',
-            'editAddress' => 'required',
+            'editContactNumber' => 'nullable | max:10',
+            'editAddress' => 'nullable',
             'editEmail' => 'email|unique:customers,email,' . $this->editCustomerId,
         ]);
 

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\Quotation;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -16,7 +17,9 @@ use App\Livewire\Concerns\WithDynamicLayout;
 class QuotationList extends Component
 {
     use WithDynamicLayout;
-    public $quotations;
+    use WithPagination;
+    // Do not store paginator in a public property (Livewire cannot serialize it)
+    public $quotationsCount = 0;
     public $search = '';
     public $selectedQuotation = null;
     public $createSaleModal = false;
@@ -38,36 +41,47 @@ class QuotationList extends Component
     public $quotationToDelete = null;
     public $searchTerms = [];
     public $showSearchResults = [];
+    public $perPage = 10;
 
     public function mount()
     {
+        // initial count only; the paginated list is returned from render()
         $this->loadQuotations();
     }
 
     public function loadQuotations()
     {
+        // Build base query and update only a lightweight property (count)
         $query = Quotation::with('customer');
-        
+
         if ($this->search) {
-            $query->where(function($q) {
-                $q->where('quotation_number', 'like', '%'.$this->search.'%')
-                  ->orWhere('customer_name', 'like', '%'.$this->search.'%')
-                  ->orWhere('customer_phone', 'like', '%'.$this->search.'%');
+            $query->where(function ($q) {
+                $q->where('quotation_number', 'like', '%' . $this->search . '%')
+                    ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
             });
         }
-        
-        $this->quotations = $query->orderBy('created_at', 'desc')->get();
+
+        // Keep a simple count for lightweight state (avoids serializing paginator)
+        $this->quotationsCount = $query->count();
     }
 
     public function updatedSearch()
     {
+        // Reset to first page when search changes and refresh lightweight data
+        $this->resetPage();
         $this->loadQuotations();
+    }
+
+    public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 
     public function viewQuotation($id)
     {
         $this->selectedQuotation = Quotation::find($id);
-        
+
         if ($this->selectedQuotation && is_string($this->selectedQuotation->items)) {
             $this->selectedQuotation->items = json_decode($this->selectedQuotation->items, true);
         }
@@ -78,20 +92,20 @@ class QuotationList extends Component
     public function openCreateSaleModal($quotationId)
     {
         $this->selectedQuotation = Quotation::find($quotationId);
-        
+
         if ($this->selectedQuotation) {
             // Decode items if stored as JSON
             $items = $this->selectedQuotation->items;
             if (is_string($items)) {
                 $items = json_decode($items, true);
             }
-            
+
             // Initialize editable items with quotation data and current stock
-            $this->editableItems = collect($items)->map(function($item) {
+            $this->editableItems = collect($items)->map(function ($item) {
                 $product = ProductDetail::find($item['product_id']);
                 $currentStock = $product->stock->available_stock ?? 0;
                 $discountPrice = $product->price->discount_price ?? 0;
-                
+
                 return [
                     'product_id' => $item['product_id'] ?? null,
                     'product_name' => $item['product_name'] ?? $item['name'] ?? 'N/A',
@@ -113,12 +127,12 @@ class QuotationList extends Component
 
             // Calculate initial totals to get subtotal first
             $this->calculateInitialTotals();
-            
+
             // Fetch additional discount data from quotation
             $additionalDiscountValue = $this->selectedQuotation->additional_discount_value ?? 0;
             $additionalDiscountType = $this->selectedQuotation->additional_discount_type ?? 'fixed';
             $additionalDiscountAmount = $this->selectedQuotation->additional_discount ?? 0;
-            
+
             // Set the discount data
             $this->saleData['additional_discount'] = $additionalDiscountValue;
             $this->saleData['additional_discount_type'] = $additionalDiscountType;
@@ -126,9 +140,9 @@ class QuotationList extends Component
 
             // Recalculate totals with proper discount amounts
             $this->calculateTotals();
-            
+
             $this->saleData['notes'] = "Created from Quotation #" . $this->selectedQuotation->quotation_number;
-            
+
             $this->createSaleModal = true;
             $this->dispatch('showCreateSaleModal');
         }
@@ -141,10 +155,10 @@ class QuotationList extends Component
             $quantity = $item['quantity'] ?? 1;
             $unitPrice = $item['unit_price'] ?? 0;
             $discountPerUnit = $item['discount_per_unit'] ?? 0;
-            
+
             $totalDiscount = $discountPerUnit * $quantity;
             $total = ($unitPrice * $quantity) - $totalDiscount;
-            
+
             $this->editableItems[$index]['total_discount'] = $totalDiscount;
             $this->editableItems[$index]['total'] = max(0, $total);
         }
@@ -182,10 +196,10 @@ class QuotationList extends Component
             $quantity = $item['quantity'] ?? 1;
             $unitPrice = $item['unit_price'] ?? 0;
             $discountPerUnit = $item['discount_per_unit'] ?? 0;
-            
+
             $totalDiscount = $discountPerUnit * $quantity;
             $total = ($unitPrice * $quantity) - $totalDiscount;
-            
+
             $this->editableItems[$index]['total_discount'] = $totalDiscount;
             $this->editableItems[$index]['total'] = max(0, $total);
         }
@@ -194,13 +208,13 @@ class QuotationList extends Component
         $this->totalDiscount = collect($this->editableItems)->sum('total_discount');
         $this->totalAmount = collect($this->editableItems)->sum('total');
         $this->subtotal = $this->totalAmount + $this->totalDiscount;
-        
+
         // Calculate additional discount
         $this->calculateAdditionalDiscount();
-        
+
         // Total discount = items discount + additional discount
         $totalCombinedDiscount = $this->totalDiscount + $this->additionalDiscountAmount;
-        
+
         // Grand total = subtotal - total combined discount
         $this->grandTotal = $this->subtotal - $totalCombinedDiscount;
     }
@@ -216,7 +230,7 @@ class QuotationList extends Component
 
         // Otherwise calculate from percentage/fixed
         $additionalDiscount = floatval($this->saleData['additional_discount'] ?? 0);
-        
+
         if ($additionalDiscount <= 0) {
             $this->additionalDiscountAmount = 0;
             return;
@@ -252,14 +266,14 @@ class QuotationList extends Component
                 $this->saleData['additional_discount'] = $value;
             }
         }
-        
+
         // Update the direct discount amount when percentage/fixed changes
         if ($this->saleData['additional_discount_type'] === 'percentage') {
             $this->saleData['additional_discount_amount'] = ($this->subtotal * $this->saleData['additional_discount']) / 100;
         } else {
             $this->saleData['additional_discount_amount'] = $this->saleData['additional_discount'];
         }
-        
+
         $this->calculateTotals();
     }
 
@@ -267,18 +281,18 @@ class QuotationList extends Component
     public function updateAdditionalDiscountAmount($amount)
     {
         $amount = floatval($amount);
-        
+
         if ($amount < 0) {
             $amount = 0;
         }
-        
+
         // Ensure discount doesn't exceed subtotal
         if ($amount > $this->subtotal) {
             $amount = $this->subtotal;
         }
-        
+
         $this->saleData['additional_discount_amount'] = $amount;
-        
+
         // If we're in percentage mode, calculate what percentage this amount represents
         if ($this->saleData['additional_discount_type'] === 'percentage' && $this->subtotal > 0) {
             $percentage = ($amount / $this->subtotal) * 100;
@@ -287,7 +301,7 @@ class QuotationList extends Component
             // In fixed mode, just set the discount amount
             $this->saleData['additional_discount'] = $amount;
         }
-        
+
         $this->calculateTotals();
     }
 
@@ -297,12 +311,12 @@ class QuotationList extends Component
         if (isset($this->editableItems[$index])) {
             $quantity = max(1, intval($quantity));
             $maxStock = $this->editableItems[$index]['current_stock'];
-            
+
             if ($quantity > $maxStock) {
                 $this->dispatch('show-error', "Not enough stock! Maximum available: {$maxStock}");
                 $quantity = $maxStock;
             }
-            
+
             $this->editableItems[$index]['quantity'] = $quantity;
             $this->calculateTotals();
         }
@@ -333,7 +347,7 @@ class QuotationList extends Component
             'current_stock' => 0,
             'original_quantity' => 1
         ];
-        
+
         $this->searchTerms[] = '';
         $this->showSearchResults[] = false;
         $this->calculateTotals();
@@ -346,11 +360,11 @@ class QuotationList extends Component
             unset($this->editableItems[$index]);
             unset($this->searchTerms[$index]);
             unset($this->showSearchResults[$index]);
-            
+
             $this->editableItems = array_values($this->editableItems);
             $this->searchTerms = array_values($this->searchTerms);
             $this->showSearchResults = array_values($this->showSearchResults);
-            
+
             $this->calculateTotals();
         } else {
             $this->dispatch('show-error', 'Cannot remove the only item. Sale must have at least one product.');
@@ -367,7 +381,7 @@ class QuotationList extends Component
                 ->orWhere('model', 'like', '%' . $searchTerm . '%')
                 ->take(10)
                 ->get()
-                ->map(function($product) {
+                ->map(function ($product) {
                     return [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -398,7 +412,7 @@ class QuotationList extends Component
     public function selectProduct($index, $productId)
     {
         $product = ProductDetail::with(['stock', 'price'])->find($productId);
-        
+
         if ($product && isset($this->editableItems[$index])) {
             $this->editableItems[$index]['product_id'] = $product->id;
             $this->editableItems[$index]['product_name'] = $product->name;
@@ -407,11 +421,11 @@ class QuotationList extends Component
             $this->editableItems[$index]['unit_price'] = $product->price->selling_price ?? 0;
             $this->editableItems[$index]['discount_per_unit'] = $product->price->discount_price ?? 0;
             $this->editableItems[$index]['current_stock'] = $product->stock->available_stock ?? 0;
-            
+
             // Clear search term and hide results for this index
             $this->searchTerms[$index] = '';
             $this->showSearchResults[$index] = false;
-            
+
             $this->calculateTotals();
             $this->dispatch('product-selected');
         }
@@ -431,7 +445,7 @@ class QuotationList extends Component
                 $this->dispatch('show-error', "Please select a product for item #" . ($index + 1));
                 return;
             }
-            
+
             if ($item['quantity'] > $item['current_stock']) {
                 $this->dispatch('show-error', "Not enough stock for {$item['product_name']}. Available: {$item['current_stock']}");
                 return;
@@ -442,7 +456,7 @@ class QuotationList extends Component
             DB::transaction(function () {
                 // Find or create customer
                 $customer = Customer::where('phone', $this->selectedQuotation->customer_phone)->first();
-                
+
                 if (!$customer) {
                     $customer = Customer::create([
                         'name' => $this->selectedQuotation->customer_name,
@@ -504,7 +518,7 @@ class QuotationList extends Component
                 ]);
 
                 $this->dispatch('show-success', 'Sale created successfully from quotation!');
-               
+
                 $this->loadQuotations();
                 $this->dispatch('refreshPage');
                 // close model using js
@@ -512,7 +526,6 @@ class QuotationList extends Component
                 $this->dispatch('close-modal.create-sale-modal');
                 $this->js('window.location.reload();');
             });
-
         } catch (\Exception $e) {
             $this->dispatch('show-error', 'Failed to create sale: ' . $e->getMessage());
         }
@@ -534,21 +547,21 @@ class QuotationList extends Component
             }
 
             $quotation = Quotation::find($this->quotationToDelete);
-            
+
             if ($quotation) {
                 $quotationNumber = $quotation->quotation_number;
-                
+
                 // Check if quotation is converted to sale
                 if ($quotation->status === 'converted') {
                     $this->dispatch('show-error', "Cannot delete quotation #{$quotationNumber} because it has been converted to a sale!");
                     $this->quotationToDelete = null;
                     return;
                 }
-                
+
                 $quotation->delete();
                 $this->loadQuotations();
                 $this->quotationToDelete = null;
-                
+
                 $this->dispatch('show-success', "Quotation #{$quotationNumber} deleted successfully!");
             } else {
                 $this->dispatch('show-error', 'Quotation not found!');
@@ -560,6 +573,21 @@ class QuotationList extends Component
 
     public function render()
     {
-        return view('livewire.admin.quotation-list')->layout($this->layout);
+        // Build the paginated query here instead of storing paginator in public property
+        $query = Quotation::with('customer');
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('quotation_number', 'like', '%' . $this->search . '%')
+                    ->orWhere('customer_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('customer_phone', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        $quotations = $query->orderBy('created_at', 'desc')->paginate($this->perPage);
+
+        return view('livewire.admin.quotation-list', [
+            'quotations' => $quotations,
+        ])->layout($this->layout);
     }
 }

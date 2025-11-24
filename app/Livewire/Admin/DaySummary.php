@@ -36,6 +36,12 @@ class DaySummary extends Component
     public $todayExpenses = 0;
     public $todayRefunds = 0;
     public $openingCash = 0;
+    public $perPage = 10;
+
+     public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function mount()
     {
@@ -141,7 +147,7 @@ class DaySummary extends Component
                 $query->whereDate('session_date', '<=', $this->dateTo);
             })
             ->orderBy('session_date', 'desc')
-            ->paginate(15);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.day-summary', [
             'sessions' => $sessions

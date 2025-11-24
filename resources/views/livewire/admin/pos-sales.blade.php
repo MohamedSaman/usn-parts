@@ -133,10 +133,24 @@ use App\Models\Sale;
     {{-- Sales Table --}}
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0">
-                <i class="bi bi-list-ul text-primary me-2"></i> POS Sales List
-            </h5>
-            <span class="badge bg-primary">{{ $sales->total() }} records</span>
+            <div>
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-list-ul text-primary me-2"></i> POS Sales List
+                </h5>
+                <span class="badge bg-primary">{{ $sales->total() }} records</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <label class="text-sm text-muted fw-medium">Show</label>
+                <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                    <option value="500">500</option>
+                </select>
+                <span class="text-sm text-muted">entries</span>
+            </div>
         </div>
         <div class="card-body p-0 overflow-auto">
             <div class="table-responsive">

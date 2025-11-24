@@ -31,22 +31,6 @@
     </div>
     @endif
 
-    <!-- Search and Actions -->
-    <div class="inventory-header w-100 mb-3">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
-            <!-- 🔍 Search Bar -->
-            <div class="search-bar flex-grow-1">
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-                    <input type="text" class="form-control border-start-0" wire:model.live="search"
-                        placeholder="Search by quotation number, customer name or phone...">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Quotations Table -->
     <div class="row g-4">
         <div class="col-12">
@@ -57,6 +41,30 @@
                             <i class="bi bi-journal-text text-primary me-2"></i> Quotation List
                         </h5>
                         <p class="text-muted small mb-0">View and manage all quotations in your system</p>
+                    </div>
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3" style="width: 60%; margin: auto">
+                        <!-- 🔍 Search Bar -->
+                        <div class="search-bar flex-grow-1">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" class="form-control border-start-0" wire:model.live="search"
+                                    placeholder="Search by quotation number, customer name or phone...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="text-sm text-muted fw-medium">Show</label>
+                        <select wire:model.live="perPage" class="form-select form-select-sm" style="width: 80px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                        <span class="text-sm text-muted">entries</span>
                     </div>
                 </div>
 
@@ -164,6 +172,13 @@
                             </tbody>
                         </table>
                     </div>
+                    @if ($quotations->hasPages())
+                    <div class="card-footer bg-light">
+                        <div class="d-flex justify-content-center">
+                            {{ $quotations->links('livewire.custom-pagination') }}
+                        </div>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

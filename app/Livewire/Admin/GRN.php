@@ -30,6 +30,12 @@ class GRN extends Component
     public $newItem = ['product_id' => null, 'name' => '', 'qty' => 1, 'unit_price' => 0, 'discount' => 0, 'status' => 'received'];
 
     protected $listeners = ['deleteGRNItem'];
+    public $perPage = 10;
+
+     public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
 
     public function updatedSearch()
     {
@@ -511,7 +517,7 @@ class GRN extends Component
             });
         }
 
-        $purchaseOrders = $query->latest()->paginate(20);
+        $purchaseOrders = $query->latest()->paginate($this->perPage);
 
         return view('livewire.admin.g-r-n', [
             'purchaseOrders' => $purchaseOrders,

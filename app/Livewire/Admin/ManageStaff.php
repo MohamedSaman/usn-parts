@@ -52,13 +52,18 @@ class ManageStaff extends Component
     public $showCreateModal = false;
     public $showDeleteModal = false;
     public $showViewModal = false;
+    public $perPage= 10;
 
     public function render()
     {
-        $staffs = User::where('role', 'staff')->get();
+        $staffs = User::where('role', 'staff')->latest()->paginate($this->perPage);
         return view('livewire.admin.manage-staff', [
             'staffs' => $staffs,
         ])->layout($this->layout);
+    }
+     public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 
     /** ----------------------------

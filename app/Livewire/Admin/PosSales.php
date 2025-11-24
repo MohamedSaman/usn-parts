@@ -37,6 +37,7 @@ class PosSales extends Component
     public $editDueAmount;
     public $editPaidAmount;
     public $editPayBalanceAmount = 0;
+    public $perPage = 10;
 
     public function mount()
     {
@@ -347,7 +348,11 @@ class PosSales extends Component
                 $query->whereDate('created_at', $this->dateFilter);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate($this->perPage);
+    }
+     public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 
     public function getSalesStatsProperty()

@@ -43,6 +43,7 @@ class SalesList extends Component
     // Return properties
     public $returnItems = [];
     public $totalReturnValue = 0;
+    public $perPage = 10;
 
     public function mount()
     {
@@ -480,7 +481,11 @@ class SalesList extends Component
                 $query->whereDate('created_at', $this->dateFilter);
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate($this->perPage);
+    }
+    public function updatedPerPage()
+    {
+        $this->resetPage();
     }
 
     public function getSalesStatsProperty()
