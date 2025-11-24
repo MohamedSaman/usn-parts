@@ -127,7 +127,7 @@ class ReturnProduct extends Component
                         'discount_per_unit' => $itemDiscount,
                         'overall_discount_per_unit' => $proportionalOverallDiscount,
                         'total_discount_per_unit' => $totalDiscountPerUnit,
-                        'net_unit_price' => $item->unit_price - $totalDiscountPerUnit,
+                        'net_unit_price' => ($item->unit_price + $itemDiscount) - $totalDiscountPerUnit,
                         'original_qty' => $item->quantity,
                         'already_returned' => $alreadyReturned,
                         'max_qty' => $remainingQty,

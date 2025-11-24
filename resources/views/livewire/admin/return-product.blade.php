@@ -349,7 +349,7 @@
                                     <td>
                                         {{ $item['name'] }}
                                         @if($item['total_discount_per_unit'] > 0)
-                                        <br><small class="text-muted">(Discounts applied: Rs.{{ number_format($item['total_discount_per_unit'], 2) }}/unit)</small>
+                                        <br><small class="text-muted">(Discounts applied: Rs.{{ number_format($item['overall_discount_per_unit'], 2) }}/unit)</small>
                                         @endif
                                     </td>
                                     <td>{{ $item['return_qty'] }}</td>
