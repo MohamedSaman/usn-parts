@@ -59,7 +59,7 @@ class Expenses extends Component
         $this->dailyCategories = ExpenseCategory::where('expense_category', 'Daily Expenses')
             ->pluck('type')
             ->toArray();
-        
+
         // Load Monthly Expenses categories
         $this->monthlyCategories = ExpenseCategory::where('expense_category', 'Monthly Expenses')
             ->pluck('type')
