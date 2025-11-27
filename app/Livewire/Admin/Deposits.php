@@ -36,6 +36,7 @@ class Deposits extends Component
     public $todayRefunds = 0;
     public $todayDepositAmount = 0;
     public $todaySupplierPayments = 0;
+    public $todayAdminCashAmount = 0;
 
     protected $rules = [
         'depositDate' => 'required|date',
@@ -60,6 +61,7 @@ class Deposits extends Component
             // Sum up all sessions for today
             $this->openingCash = $todaySessions->sum('opening_cash');
             $this->todayCashAmount = $todaySessions->sum('cash_sales');
+            $this->todayAdminCashAmount = $todaySessions->sum('late_payment_bulk');
             $this->todayExpenses = $todaySessions->sum('expenses');
             $this->todayRefunds = $todaySessions->sum('refunds');
             $this->todaySupplierPayments = $todaySessions->sum('supplier_payment');
@@ -76,6 +78,7 @@ class Deposits extends Component
                 $this->todayExpenses = 0; // No expenses yet today
                 $this->todayRefunds = 0; // No refunds yet today
                 $this->todaySupplierPayments = 0; // No supplier payments yet today
+                $this->todayAdminCashAmount = 0; // No admin cash amount yet today
             } else {
                 // Complete fallback to defaults if no sessions exist
                 $this->openingCash = 0;
@@ -83,6 +86,7 @@ class Deposits extends Component
                 $this->todayExpenses = 0;
                 $this->todayRefunds = 0;
                 $this->todaySupplierPayments = 0;
+                $this->todayAdminCashAmount = 0;
             }
         }
 
