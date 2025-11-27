@@ -855,6 +855,22 @@ class StoreBilling extends Component
 
             DB::commit();
 
+            // Ensure there is an open POS session for this user and update its totals
+            $this->currentSession = POSSession::getTodaySession(Auth::id());
+            if (! $this->currentSession) {
+                // If no open session, create one with zero opening cash so sales still get tracked
+                $this->currentSession = POSSession::openSession(Auth::id(), 0);
+            }
+
+            // Recalculate session totals from sales/payments for the day
+            try {
+                $this->currentSession->updateFromSales();
+                // Recalculate expected cash (cash difference will stay null until close)
+                $this->currentSession->calculateDifference();
+            } catch (\Exception $e) {
+                Log::error('Failed to update POS session after sale: ' . $e->getMessage());
+            }
+
             $this->lastSaleId = $sale->id;
             $this->createdSale = Sale::with(['customer', 'items', 'payments'])->find($sale->id);
             $this->showSaleModal = true;

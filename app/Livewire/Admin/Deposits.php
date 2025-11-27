@@ -35,6 +35,7 @@ class Deposits extends Component
     public $todayExpenses = 0;
     public $todayRefunds = 0;
     public $todayDepositAmount = 0;
+    public $todaySupplierPayments = 0;
 
     protected $rules = [
         'depositDate' => 'required|date',
@@ -61,6 +62,7 @@ class Deposits extends Component
             $this->todayCashAmount = $todaySessions->sum('cash_sales');
             $this->todayExpenses = $todaySessions->sum('expenses');
             $this->todayRefunds = $todaySessions->sum('refunds');
+            $this->todaySupplierPayments = $todaySessions->sum('supplier_payment');
         } else {
             // No sessions today, get the latest closed session to determine opening cash
             $latestSession = POSSession::where('status', 'closed')
@@ -73,12 +75,14 @@ class Deposits extends Component
                 $this->todayCashAmount = 0; // No sales yet today
                 $this->todayExpenses = 0; // No expenses yet today
                 $this->todayRefunds = 0; // No refunds yet today
+                $this->todaySupplierPayments = 0; // No supplier payments yet today
             } else {
                 // Complete fallback to defaults if no sessions exist
                 $this->openingCash = 0;
                 $this->todayCashAmount = 0;
                 $this->todayExpenses = 0;
                 $this->todayRefunds = 0;
+                $this->todaySupplierPayments = 0;
             }
         }
 

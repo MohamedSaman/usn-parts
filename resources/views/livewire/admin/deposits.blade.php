@@ -55,7 +55,7 @@
                         <div class="col-md-3">
                             <div class="text-center p-3 rounded" style="background-color: #d1ecf1;">
                                 <h6 class="text-muted mb-1">Remaining</h6>
-                                <h5 class="fw-bold text-info">Rs. {{ number_format($openingCash + $todayCashAmount - $todayExpenses - $todayRefunds - $todayDepositAmount, 2) }}</h5>
+                                <h5 class="fw-bold text-info">Rs. {{ number_format($openingCash + $todayCashAmount - $todayExpenses - $todayRefunds - $todayDepositAmount - $todaySupplierPayments, 2) }}</h5>
                             </div>
                         </div>
                     </div>

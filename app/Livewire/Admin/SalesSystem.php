@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\ProductDetail;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\POSSession;
 use App\Services\FIFOStockService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -55,6 +56,8 @@ class SalesSystem extends Component
     public $showCustomerModal = false;
     public $lastSaleId = null;
     public $createdSale = null;
+    // POS Session (to track/update daily totals)
+    public $currentSession = null;
 
     public function mount()
     {
@@ -470,6 +473,22 @@ class SalesSystem extends Component
             }
 
             DB::commit();
+
+            // Ensure there is an open POS session for this user and update its totals
+            try {
+                $this->currentSession = POSSession::getTodaySession(Auth::id());
+                if (! $this->currentSession) {
+                    // Create a session with zero opening cash so admin sales are still tracked
+                    $this->currentSession = POSSession::openSession(Auth::id(), 0);
+                }
+
+                // Update session totals from today's sales/payments
+                $this->currentSession->updateFromSales();
+                // Recalculate expected cash (cash_difference remains until close)
+                $this->currentSession->calculateDifference();
+            } catch (\Exception $e) {
+                Log::error('Failed to update POS session after admin sale: ' . $e->getMessage());
+            }
 
             $this->lastSaleId = $sale->id;
             $this->createdSale = Sale::with(['customer', 'items'])->find($sale->id);

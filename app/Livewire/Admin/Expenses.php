@@ -9,6 +9,9 @@ use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\POSSession;
+use Illuminate\Support\Facades\Log;
 use App\Livewire\Concerns\WithDynamicLayout;
 
 #[Title("Expenses")]
@@ -104,6 +107,22 @@ class Expenses extends Component
                 ]);
         }
 
+        // Update today's POS session expenses and recalculate expected cash
+        try {
+            $session = POSSession::getTodaySession(Auth::id());
+            if (! $session) {
+                // create an open session with zero opening cash so expense is tracked
+                $session = POSSession::openSession(Auth::id(), 0);
+            }
+
+            $session->expenses = ($session->expenses ?? 0) + $this->amount;
+            $session->save();
+            // Recalculate expected cash / difference
+            $session->calculateDifference();
+        } catch (\Exception $e) {
+            Log::error('Failed to update POS session after daily expense: ' . $e->getMessage());
+        }
+
         $this->reset(['category', 'amount', 'description']);
         $this->loadExpenses();
         $this->js("swal.fire('Success!', 'Daily expense added successfully.', 'success')");
@@ -138,6 +157,22 @@ class Expenses extends Component
                     'value' => $cashInHandRecord->value - $this->amount,
                     'updated_at' => now()
                 ]);
+        }
+
+        // If the monthly expense is for today, update today's POS session totals
+        try {
+            if ($this->date && Carbon::parse($this->date)->toDateString() === Carbon::today()->toDateString()) {
+                $session = POSSession::getTodaySession(Auth::id());
+                if (! $session) {
+                    $session = POSSession::openSession(Auth::id(), 0);
+                }
+
+                $session->expenses = ($session->expenses ?? 0) + $this->amount;
+                $session->save();
+                $session->calculateDifference();
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to update POS session after monthly expense: ' . $e->getMessage());
         }
 
         $this->reset(['date', 'category', 'amount', 'status', 'description']);
