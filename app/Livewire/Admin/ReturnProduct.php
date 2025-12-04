@@ -117,13 +117,13 @@ class ReturnProduct extends Component
                 if ($remainingQty > 0) {
                     // Apply unit discount first
                     $unitDiscount = $item->discount_per_unit ?? 0;
-                    
+
                     // Apply proportional overall discount per item
                     $proportionalOverallDiscount = $this->overallDiscountPerItem;
-                    
+
                     // Total discount per unit is unit discount + proportional overall discount
                     $totalDiscountPerUnit = $unitDiscount + $proportionalOverallDiscount;
-                    
+
                     // Net price after all discounts
                     $netUnitPrice = $item->unit_price - $totalDiscountPerUnit;
 
@@ -158,15 +158,15 @@ class ReturnProduct extends Component
 
         $totalQuantity = $this->selectedInvoice->items->sum('quantity');
         $totalDiscountAmount = $this->selectedInvoice->discount_amount ?? 0;
-        
+
         // Calculate total unit discounts from all sale items
-        $totalUnitDiscounts = $this->selectedInvoice->items->sum(function($item) {
+        $totalUnitDiscounts = $this->selectedInvoice->items->sum(function ($item) {
             return ($item->discount_per_unit ?? 0) * $item->quantity;
         });
-        
+
         // Calculate remaining overall discount after unit discounts
         $remainingOverallDiscount = $totalDiscountAmount - $totalUnitDiscounts;
-        
+
         // Distribute remaining overall discount per item
         $this->overallDiscountPerItem = $totalQuantity > 0 ? ($remainingOverallDiscount / $totalQuantity) : 0;
     }
@@ -218,12 +218,12 @@ class ReturnProduct extends Component
         if ($invoice) {
             $totalDiscountAmount = $invoice->discount_amount ?? 0;
             $totalQty = $invoice->items->sum('quantity');
-            
+
             // Calculate total unit discounts
-            $totalUnitDiscounts = $invoice->items->sum(function($item) {
+            $totalUnitDiscounts = $invoice->items->sum(function ($item) {
                 return ($item->discount_per_unit ?? 0) * $item->quantity;
             });
-            
+
             // Calculate remaining overall discount per item
             $remainingOverallDiscount = $totalDiscountAmount - $totalUnitDiscounts;
             $overallDiscountPerItem = $totalQty > 0 ? ($remainingOverallDiscount / $totalQty) : 0;
