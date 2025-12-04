@@ -519,6 +519,9 @@ class SalesSystem extends Component
         }
 
         $pdf = PDF::loadView('admin.sales.invoice', compact('sale'));
+        $pdf->setPaper('a4', 'portrait');
+        $pdf->setOption('dpi', 150);
+        $pdf->setOption('defaultFont', 'sans-serif');
 
         return response()->streamDownload(
             function () use ($pdf) {

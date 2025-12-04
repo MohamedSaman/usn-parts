@@ -115,19 +115,26 @@ class ReturnProduct extends Component
                 $remainingQty = $item->quantity - $alreadyReturned;
 
                 if ($remainingQty > 0) {
-                    // Calculate per-unit discount (item discount + proportional overall discount)
-                    $itemDiscount = $item->discount_per_unit ?? 0;
+                    // Apply unit discount first
+                    $unitDiscount = $item->discount_per_unit ?? 0;
+                    
+                    // Apply proportional overall discount per item
                     $proportionalOverallDiscount = $this->overallDiscountPerItem;
-                    $totalDiscountPerUnit = $itemDiscount + $proportionalOverallDiscount;
+                    
+                    // Total discount per unit is unit discount + proportional overall discount
+                    $totalDiscountPerUnit = $unitDiscount + $proportionalOverallDiscount;
+                    
+                    // Net price after all discounts
+                    $netUnitPrice = $item->unit_price - $totalDiscountPerUnit;
 
                     $this->returnItems[] = [
                         'product_id' => $item->product->id,
                         'name' => $item->product->name,
                         'unit_price' => $item->unit_price,
-                        'discount_per_unit' => $itemDiscount,
+                        'discount_per_unit' => $unitDiscount,
                         'overall_discount_per_unit' => $proportionalOverallDiscount,
                         'total_discount_per_unit' => $totalDiscountPerUnit,
-                        'net_unit_price' => ($item->unit_price + $itemDiscount) - $totalDiscountPerUnit,
+                        'net_unit_price' => $netUnitPrice,
                         'original_qty' => $item->quantity,
                         'already_returned' => $alreadyReturned,
                         'max_qty' => $remainingQty,
@@ -150,9 +157,18 @@ class ReturnProduct extends Component
         }
 
         $totalQuantity = $this->selectedInvoice->items->sum('quantity');
-        $overallDiscount = $this->selectedInvoice->discount_amount ?? 0;
-
-        $this->overallDiscountPerItem = $totalQuantity > 0 ? ($overallDiscount / $totalQuantity) : 0;
+        $totalDiscountAmount = $this->selectedInvoice->discount_amount ?? 0;
+        
+        // Calculate total unit discounts from all sale items
+        $totalUnitDiscounts = $this->selectedInvoice->items->sum(function($item) {
+            return ($item->discount_per_unit ?? 0) * $item->quantity;
+        });
+        
+        // Calculate remaining overall discount after unit discounts
+        $remainingOverallDiscount = $totalDiscountAmount - $totalUnitDiscounts;
+        
+        // Distribute remaining overall discount per item
+        $this->overallDiscountPerItem = $totalQuantity > 0 ? ($remainingOverallDiscount / $totalQuantity) : 0;
     }
 
     /** 📜 Load Previous Returns */
@@ -200,19 +216,27 @@ class ReturnProduct extends Component
         $invoice = Sale::with(['items.product', 'customer'])->find($invoiceId);
 
         if ($invoice) {
-            $overallDiscount = $invoice->discount_amount ?? 0;
+            $totalDiscountAmount = $invoice->discount_amount ?? 0;
             $totalQty = $invoice->items->sum('quantity');
-            $discountPerItem = $totalQty > 0 ? ($overallDiscount / $totalQty) : 0;
+            
+            // Calculate total unit discounts
+            $totalUnitDiscounts = $invoice->items->sum(function($item) {
+                return ($item->discount_per_unit ?? 0) * $item->quantity;
+            });
+            
+            // Calculate remaining overall discount per item
+            $remainingOverallDiscount = $totalDiscountAmount - $totalUnitDiscounts;
+            $overallDiscountPerItem = $totalQty > 0 ? ($remainingOverallDiscount / $totalQty) : 0;
 
             $this->invoiceModalData = [
                 'invoice_number' => $invoice->invoice_number,
                 'customer_name' => $invoice->customer->name,
                 'date' => $invoice->created_at->format('Y-m-d H:i:s'),
                 'total_amount' => $invoice->total_amount,
-                'overall_discount' => $overallDiscount,
-                'items' => $invoice->items->map(function ($item) use ($discountPerItem) {
+                'overall_discount' => $totalDiscountAmount,
+                'items' => $invoice->items->map(function ($item) use ($overallDiscountPerItem) {
                     $itemDiscount = $item->discount_per_unit ?? 0;
-                    $totalDiscountPerUnit = $itemDiscount + $discountPerItem;
+                    $totalDiscountPerUnit = $itemDiscount + $overallDiscountPerItem;
                     $netPrice = $item->unit_price - $totalDiscountPerUnit;
 
                     return [
@@ -221,7 +245,7 @@ class ReturnProduct extends Component
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
                         'item_discount' => $itemDiscount,
-                        'overall_discount' => $discountPerItem,
+                        'overall_discount' => $overallDiscountPerItem,
                         'net_price' => $netPrice,
                         'total' => $item->quantity * $netPrice,
                     ];

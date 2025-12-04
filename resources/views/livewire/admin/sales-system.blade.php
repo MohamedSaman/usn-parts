@@ -436,6 +436,7 @@
                                         <th>DESCRIPTION</th>
                                         <th width="80" class="text-center">QTY</th>
                                         <th width="120" class="text-end">UNIT PRICE</th>
+                                        <th width="120" class="text-end">UNIT DISCOUNT</th>
                                         <th width="120" class="text-end">SUBTOTAL</th>
                                     </tr>
                                 </thead>
@@ -447,6 +448,7 @@
                                         <td>{{ $item->product_name }}</td>
                                         <td class="text-center">{{ $item->quantity }}</td>
                                         <td class="text-end">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                                        <td class="text-end">- Rs.{{ number_format($item->discount_per_unit, 2) }}</td>
                                         <td class="text-end">Rs.{{ number_format($item->total, 2) }}</td>
                                     </tr>
                                     @endforeach
@@ -458,7 +460,7 @@
                                     });
                                     @endphp
                                     <tr class="totals-row">
-                                        <td colspan="5" class="text-end"><strong>Subtotal</strong></td>
+                                        <td colspan="6" class="text-end"><strong>Subtotal</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->subtotal + $itemDiscountTotal, 2) }}</strong></td>
                                     </tr>
                                     @php
@@ -466,12 +468,12 @@
                                     @endphp
                                     @if($totalDiscount > 0)
                                     <tr class="totals-row">
-                                        <td colspan="5" class="text-end"><strong>Discount</strong></td>
+                                        <td colspan="6" class="text-end"><strong>Discount</strong></td>
                                         <td class="text-end"><strong>-Rs.{{ number_format($totalDiscount, 2) }}</strong></td>
                                     </tr>
                                     @endif
                                     <tr class="totals-row grand-total">
-                                        <td colspan="5" class="text-end"><strong>Grand Total</strong></td>
+                                        <td colspan="6" class="text-end"><strong>Grand Total</strong></td>
                                         <td class="text-end"><strong>Rs.{{ number_format($createdSale->total_amount, 2) }}</strong></td>
                                     </tr>
                                 </tfoot>
