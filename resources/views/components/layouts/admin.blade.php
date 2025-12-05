@@ -1109,7 +1109,7 @@
 
         <!-- Centered Company Name (hidden on small screens) -->
         <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-
+            <h5 class="m-0 fw-bold" style="color: var(--primary-100); letter-spacing: -0.02em;">USN Auto Parts</h5>
         </div>
         @php
         use App\Models\CashInHand as CashModel;
