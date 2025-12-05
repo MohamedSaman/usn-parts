@@ -184,6 +184,7 @@ class Products extends Component
                     ->orWhere('product_details.status', 'like', '%' . $this->search . '%')
                     ->orWhere('product_details.barcode', 'like', '%' . $this->search . '%');
             })
+            ->orderByRaw("CASE WHEN product_details.code LIKE 'G-%' THEN 1 ELSE 0 END ASC")
             ->orderBy('product_details.code', 'asc')
             ->paginate($this->perPage);
 

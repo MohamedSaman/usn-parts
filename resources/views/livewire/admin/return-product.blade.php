@@ -233,7 +233,7 @@
                                     <th>Available</th>
                                     <th>Return Qty</th>
                                     <th>Unit Price</th>
-                                    <th>Item Disc.</th>
+                                    <th>Unit Disc.</th>
                                     <th>Overall Disc.</th>
                                     <th>Net Price</th>
                                     <th>Total</th>
