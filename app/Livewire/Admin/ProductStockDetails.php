@@ -16,6 +16,7 @@ class ProductStockDetails extends Component
 {
     use WithDynamicLayout , WithPagination;
     public $search;
+    public $perPage = 10;
 
     public function render()
     {
@@ -33,7 +34,9 @@ class ProductStockDetails extends Component
                 $query->where('product_details.name', 'like', '%' . $this->search . '%')
                     ->orWhere('product_details.code', 'like', '%' . $this->search . '%');
                     
-            })->paginate(20);
+            })
+            ->orderby('product_stocks.available_stock', 'desc')
+            ->paginate($this->perPage);
         return view('livewire.admin.Product-stock-details', [
             'ProductStocks' => $ProductStocks
         ])->layout($this->layout);
